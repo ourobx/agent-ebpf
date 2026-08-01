@@ -125,9 +125,19 @@ async def execute_tool(name: str, args: dict) -> dict:
     else:
         raise ValueError(f"Unknown tool: {name}")
 
+@app.get("/")
+async def root():
+    return {
+        "status": "active",
+        "service": "Agent-eBPF MCP Gateway",
+        "mcp_sse_endpoint": "/sse",
+        "message": "MCP Server is running. Connect Gemini Spark to /sse"
+    }
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "Agent-eBPF MCP Gateway"}
+
 
 @app.get("/sse")
 async def sse(request: Request):
