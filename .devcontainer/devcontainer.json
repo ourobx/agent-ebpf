@@ -1,0 +1,14 @@
+{
+  "name": "Agent-eBPF MCP Gateway Codespace",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install -r requirements.txt",
+  "postStartCommand": "nohup uvicorn mcp_server:app --host 0.0.0.0 --port 8000 > mcp.log 2>&1 &",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Agent-eBPF MCP SSE Endpoint",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  }
+}
