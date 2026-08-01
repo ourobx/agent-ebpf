@@ -14,3 +14,15 @@ services:
       - /sys/fs/bpf:/sys/fs/bpf
       - ./policy.yaml:/etc/agent-ebpf/policy.yaml:ro
     restart: always
+
+  mcp-gateway:
+    build: .
+    container_name: agent_ebpf_mcp_gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - POLICY_FILE=policy.yaml
+    volumes:
+      - ./policy.yaml:/app/policy.yaml
+    restart: always
+
