@@ -1,0 +1,19 @@
+name: "Codespaces Prebuild"
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Prebuild Image for Codespaces
+        uses: devcontainers/ci@v0.3
+        with:
+          subFolder: .
+          runCmd: pip install -r requirements.txt
