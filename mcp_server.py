@@ -22,6 +22,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Standard OAuth 2.0 Endpoints for Gemini Spark Integration
+@app.get("/.well-known/oauth-authorization-server")
+@app.get("/.well-known/openid-configuration")
+async def oauth_config(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    return {
+        "issuer": base_url,
+        "authorization_endpoint": f"{base_url}/oauth/authorize",
+        "token_endpoint": f"{base_url}/oauth/token",
+        "response_types_supported": ["token", "code"],
+        "grant_types_supported": ["client_credentials", "authorization_code", "implicit"]
+    }
+
+@app.get("/oauth/authorize")
+async def oauth_authorize(redirect_uri: str = "", state: str = ""):
+    from fastapi.responses import RedirectResponse
+    if redirect_uri:
+        sep = "&" if "?" in redirect_uri else "?"
+        return RedirectResponse(f"{redirect_uri}{sep}code=mcp_auth_code&state={state}")
+    return {"status": "authorized", "code": "mcp_auth_code"}
+
+@app.api_route("/oauth/token", methods=["GET", "POST"])
+async def oauth_token():
+    return {
+        "access_token": "agent_ebpf_mcp_access_token",
+        "token_type": "bearer",
+        "expires_in": 86400
+    }
+
+
 POLICY_FILE = os.getenv("POLICY_FILE", "policy.yaml")
 sessions: Dict[str, asyncio.Queue] = {}
 
