@@ -1,12 +1,13 @@
 import asyncio
 import json
 import os
+import re
 import uuid
 import yaml
 from typing import Dict, Any
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sse_starlette.sse import EventSourceResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 
 app = FastAPI(
     title="Agent-eBPF MCP Gateway for Gemini Spark",
@@ -37,7 +38,6 @@ async def oauth_config(request: Request):
 
 @app.get("/oauth/authorize")
 async def oauth_authorize(redirect_uri: str = "", state: str = ""):
-    from fastapi.responses import RedirectResponse
     if redirect_uri:
         sep = "&" if "?" in redirect_uri else "?"
         return RedirectResponse(f"{redirect_uri}{sep}code=mcp_auth_code&state={state}")
@@ -51,14 +51,13 @@ async def oauth_token():
         "expires_in": 86400
     }
 
-
 POLICY_FILE = os.getenv("POLICY_FILE", "policy.yaml")
 sessions: Dict[str, asyncio.Queue] = {}
 
 def load_policy():
     if os.path.exists(POLICY_FILE):
         with open(POLICY_FILE, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f) or {"rules": []}
     return {"rules": []}
 
 def save_policy(data):
@@ -140,7 +139,6 @@ async def execute_tool(name: str, args: dict) -> dict:
         return {"success": True, "message": f"Rule '{args['rule_id']}' loaded into kernel memory.", "rule": new_rule}
     elif name == "simulate_query_check":
         payload = args.get("payload", "")
-        import re
         policy = load_policy()
         for rule in policy.get("rules", []):
             pattern = rule.get("match", {}).get("pattern")
@@ -168,7 +166,6 @@ async def root():
 async def health():
     return {"status": "ok", "service": "Agent-eBPF MCP Gateway"}
 
-
 @app.get("/sse")
 async def sse(request: Request):
     session_id = str(uuid.uuid4())
@@ -176,20 +173,20 @@ async def sse(request: Request):
     sessions[session_id] = queue
 
     async def event_generator():
-        yield {"event": "endpoint", "data": f"/messages?session_id={session_id}"}
+        yield f"event: endpoint\ndata: /messages?session_id={session_id}\n\n"
         try:
             while True:
                 if await request.is_disconnected():
                     break
                 try:
                     msg = await asyncio.wait_for(queue.get(), timeout=1.0)
-                    yield {"event": "message", "data": json.dumps(msg)}
+                    yield f"event: message\ndata: {json.dumps(msg)}\n\n"
                 except asyncio.TimeoutError:
                     continue
         finally:
             sessions.pop(session_id, None)
 
-    return EventSourceResponse(event_generator())
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.post("/messages")
 async def messages(request: Request, session_id: str):

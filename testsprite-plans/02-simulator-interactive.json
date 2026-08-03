@@ -1,0 +1,23 @@
+{
+  "projectId": "ca29435d-018e-4b47-8db6-70715290a00e",
+  "type": "frontend",
+  "name": "Live eBPF Simulator Interaction Flow",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Click the button labeled 'Tahrip Edici SQL Simüle Et' inside the simulator control panel"
+    },
+    {
+      "type": "assertion",
+      "description": "The terminal window appends a red log entry containing '[DROP (TCP_RST)]' and intercepted SQL text"
+    },
+    {
+      "type": "action",
+      "description": "Click the button labeled 'Güvenli SQL Simüle Et'"
+    },
+    {
+      "type": "assertion",
+      "description": "The terminal window appends a green log entry containing '[PASS]' and allowed query text"
+    }
+  ]
+}

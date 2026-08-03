@@ -1,0 +1,19 @@
+{
+  "projectId": "ca29435d-018e-4b47-8db6-70715290a00e",
+  "type": "frontend",
+  "name": "Navigation & Hero Section Verification",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to /index.html and view the top hero section"
+    },
+    {
+      "type": "assertion",
+      "description": "The brand header shows 'Agent-eBPF' with a 'Kernel v5.4+' badge and the hero heading contains 'Yapay Zeka Ajanları İçin Otonom Kernel Zırhı'"
+    },
+    {
+      "type": "assertion",
+      "description": "The 1-click install command box displays 'curl -fsSL https://get.agent-ebpf.dev | sh'"
+    }
+  ]
+}
