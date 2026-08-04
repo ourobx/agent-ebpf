@@ -159,7 +159,7 @@ async def root():
         "status": "active",
         "service": "Agent-eBPF MCP Gateway",
         "mcp_sse_endpoint": "/sse",
-        "message": "MCP Server is running. Connect Gemini Spark to /sse"
+        "message": "MCP SSE Server is active. Connect remote clients (Gemini Spark, Claude Desktop) to /sse"
     }
 
 @app.get("/health")
@@ -173,6 +173,7 @@ async def sse(request: Request):
     sessions[session_id] = queue
 
     async def event_generator():
+        # MCP SSE standard event: endpoint
         yield f"event: endpoint\ndata: /messages?session_id={session_id}\n\n"
         try:
             while True:
@@ -180,36 +181,75 @@ async def sse(request: Request):
                     break
                 try:
                     msg = await asyncio.wait_for(queue.get(), timeout=1.0)
-                    yield f"event: message\ndata: {json.dumps(msg)}\n\n"
+                    yield f"event: message\ndata: {json.dumps(msg, ensure_ascii=False)}\n\n"
                 except asyncio.TimeoutError:
                     continue
         finally:
             sessions.pop(session_id, None)
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
-@app.post("/messages")
-async def messages(request: Request, session_id: str):
-    if session_id not in sessions:
-        raise HTTPException(status_code=404, detail="Session expired")
+@app.api_route("/messages", methods=["GET", "POST"])
+@app.api_route("/message", methods=["GET", "POST"])
+async def messages(request: Request, session_id: str = ""):
+    if not session_id:
+        session_id = request.query_params.get("session_id", "")
+
+    if not session_id or session_id not in sessions:
+        raise HTTPException(status_code=404, detail="Active SSE session not found or expired")
+
+    if request.method == "GET":
+        return {"status": "active", "session_id": session_id}
 
     body = await request.json()
     method = body.get("method")
     msg_id = body.get("id")
 
+    # Notifications do not have an 'id' and do not expect a response over SSE
+    if method == "notifications/initialized" or (msg_id is None and method is not None):
+        return {"status": "accepted"}
+
     if method == "initialize":
         response = {
-            "jsonrpc": "2.0", "id": msg_id,
+            "jsonrpc": "2.0",
+            "id": msg_id,
             "result": {
                 "protocolVersion": "2024-11-05",
-                "capabilities": {"tools": {}},
+                "capabilities": {"tools": {}, "prompts": {}, "resources": {}},
                 "serverInfo": {"name": "Agent-eBPF MCP Gateway", "version": "1.0.0"}
             }
         }
+    elif method == "ping":
+        response = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "result": {}
+        }
     elif method == "tools/list":
         response = {
-            "jsonrpc": "2.0", "id": msg_id,
+            "jsonrpc": "2.0",
+            "id": msg_id,
             "result": {"tools": TOOLS}
+        }
+    elif method == "prompts/list":
+        response = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "result": {"prompts": []}
+        }
+    elif method == "resources/list":
+        response = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "result": {"resources": []}
         }
     elif method == "tools/call":
         params = body.get("params", {})
@@ -218,19 +258,27 @@ async def messages(request: Request, session_id: str):
         try:
             res = await execute_tool(tool_name, arguments)
             response = {
-                "jsonrpc": "2.0", "id": msg_id,
-                "result": {"content": [{"type": "text", "text": json.dumps(res)}]}
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "result": {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False)}]}
             }
         except Exception as e:
             response = {
-                "jsonrpc": "2.0", "id": msg_id,
+                "jsonrpc": "2.0",
+                "id": msg_id,
                 "error": {"code": -32603, "message": str(e)}
             }
     else:
         response = {
-            "jsonrpc": "2.0", "id": msg_id,
+            "jsonrpc": "2.0",
+            "id": msg_id,
             "error": {"code": -32601, "message": f"Method '{method}' not supported"}
         }
 
     await sessions[session_id].put(response)
     return {"status": "accepted"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
