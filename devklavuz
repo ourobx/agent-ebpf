@@ -1,8 +1,8 @@
 Agent-eBPF: Geliştirici Kılavuzu (Developer Guide)
-Agent-eBPF, yapay zeka ajanlarının (LLM Agents, MCP Tools, Autonomous Swarms) ürettiği SQL sorgularını, sistem çağrılarını ve ağ paketlerini uygulama koduna dokunmadan (zero-code) ve kullanıcı alanına (user-space) yük getirmeden Linux çekirdeği (Kernel) seviyesinde denetleyen ve engelleyen otonom güvenlik zırhıdır.
+Agent-eBPF, yapay zeka ajanlarının (LLM Agents, MCP Tools, Autonomous Swarms) ürettiği SQL sorgularını, sistem çağrılarını ve ağ paketlerini uygulama koduna dokunmadan (zero-code) ve ku[...]
 
 1. Mimari ve Çalışma Prensibi
-Geleneksel güvenlik araçları uygulama katmanında (Python/Node.js middleware) çalışırken, Agent-eBPF doğrudan Linux Çekirdeği'nin ağ soketi ve süreç izleme katmanına (sock_filter, uprobes, kprobes) yerleşir.
+Geleneksel güvenlik araçları uygulama katmanında (Python/Node.js middleware) çalışırken, Agent-eBPF doğrudan Linux Çekirdeği'nin ağ soketi ve süreç izleme katmanına (sock_filter, upr[...]
 
 Plaintext
   [ User Space ]
@@ -124,7 +124,7 @@ def test_blocked_destructive_query():
     assert "server closed the connection unexpectedly" in str(exc_info.value)
     print("\n[SUCCESS] Kernel-level interception confirmed under 50 microseconds.")
 6. Production Deployment (Docker & Coolify)
-Bare-metal veya Docker ortamlarında çalışırken konteynerlerin ağ soketlerini denetlemek için docker-compose.yml yapılandırmasına CAP_SYS_ADMIN ve CAP_BPF yetkilerini eklemeniz yeterlidir:
+Bare-metal veya Docker ortamlarında çalışırken konteynerlerin ağ soketlerini denetlemek için docker-compose.yml yapılandırmasına CAP_SYS_ADMIN ve CAP_BPF yetkilerini eklemeniz yeterlidi[...]
 
 YAML
 version: "3.8"
@@ -144,3 +144,49 @@ services:
       - /etc/agent-ebpf/policy.yaml:/etc/agent-ebpf/policy.yaml:ro
     restart: always
 Özet: Agent-eBPF ile kodunuzda hiçbir değişiklik yapmadan, sıfır overhead ile yapay zeka ajanlarınızı Linux Çekirdeği seviyesinde koruma altına alabilirsiniz.
+
+
+---
+
+Mühendislik Notları — eBPF Derleme, Yükleme ve MCP Güvenliği
+
+Aşağıdaki detaylar depo incelemesi sonucunda tespit edilen eksikler ve üretim için önerilen uygulamalardır. Bunları devklavuz dosyasına ekledim.
+
+1) eBPF Derleme ve Çekirdek Yükleyici (Loader) Durumu
+
+Mevcut Durum:
+- cli.py dosyası ve CLI komutları prototip/simulasyon aşamasındadır. cmd_load() ve cmd_monitor() fonksiyonları policy.yaml dosyasını okuyup terminale çıktı veriyor ancak gerçek bir eBPF derleme ve yükleme zincirini çağırmıyor.
+- Depoda ebpf/shield.bpf.c kaynak kodunu ELF (.o) haline getirecek bir Makefile, CMakeLists.txt veya derleme betiği bulunmuyor.
+
+Öneri (Üretim için):
+- Derleme adımı örneği:
+  clang -g -O2 -target bpf -D__TARGET_ARCH_x86 -c ebpf/shield.bpf.c -o ebpf/shield.bpf.o
+- Yükleme/loader: PyLibbpf, BCC veya libbpf-wrapper kullanılarak bpf_object__open_and_load() çağrısı ve BPF haritalarının /sys/fs/bpf altında mount edilmesi.
+
+2) Üretim Ortamında DROP ve KILL_PROCESS Uygulaması
+
+Mevcut Durum:
+- ebpf/shield.bpf.c içindeki SEC("kprobe/sys_enter_execve") ve SEC("sockops") fonksiyonları stub olarak return 0; içeriyor. Gerçek uygulamada bu kısımlar şu şekilde tamamlanmalı:
+
+KILL_PROCESS:
+- Tercih edilen yöntem: bpf_send_signal(SIGKILL) kullanımı (Kernel >=5.3). Bu, kprobe içinde tespit edilen zararlı süreçleri hızlıca öldürür.
+- Alternatif/ek: LSM hook'ları (SEC("lsm/bprm_check_security")) kullanılarak -EPERM döndürülmesi.
+- Fallback: Kullanıcı alanı daemon'ı perf ring-buffer üzerinden pid bilgisi alıp os.kill(pid, 9) ile öldürebilir — ancak gecikme oluşur.
+
+DROP (Ağ):
+- sockops veya sockmap kullanılarak bpf_sk_redirect_map veya doğrudan XDP/TC hook'larında XDP_DROP/TC_ACT_SHOT döndürülmesi.
+- TCP_RST enjekte etme: bazı durumlarda kullanıcı alanı veya BPF helper'larıyla RST göndermek gerekebilir.
+
+3) mcp_server.py Güvenliği, Auth ve Rate Limiting İhtiyacı
+
+Mevcut Durum:
+- /messages uç noktası yetkilendirme kontrolü yapmıyor; add_security_rule gibi etkili API'ler yetkisiz erişime açık.
+- save_policy() doğrudan dosyaya yazıyor; aynı anda çoklu yazma riskleri var.
+
+Öneriler:
+- FastAPI'de HTTPBearer/JWT tabanlı authentication middleware ekleyin; admin rolü zorunlu kural ekleme için.
+- Rate limiting: slowapi veya benzeri ile IP/Token başına sınır koyun (örn. 60 req/min).
+- Atomic persist: policy değişikliklerini yazarken dosya kilidi (portalocker) veya transaction DB (SQLite/Postgres) kullanın. Eşzamanlı istekleri kuyruğa alın veya optimistic concurrency control uygulayın.
+
+Notlar:
+- Bu mühendislik notlarını devklavuz dosyasına ekledim. Eğer farklı bir biçimde (ör. README'ye özet olarak) eklememi isterseniz belirtin.
