@@ -1,69 +1,121 @@
-// SPDX-License-Identifier: GPL-2.0 OR MIT
-/*
- * Agent-eBPF: Kernel-Level Autonomous Security Shield for LLM/AI Agents
- * Filters destructive SQL mutations, multi-tenant leaks, and unauthorized syscalls in <50us.
- */
-
-#include <linux/bpf.h>
-#include <linux/ptrace.h>
+// SEC("xdp") eBPF Firewall Core with BTF & CO-RE Support
+#include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
+#include <bpf/bpf_endian.h>
 
-#define MAX_RULES 256
-#define PAYLOAD_MAX_LEN 1024
+#define ETH_P_IP 0x0800
+#define ACTION_PASSED 1
+#define ACTION_BLOCKED 2
 
-/* Map for storing dynamic security rules loaded from policy.yaml */
-struct rule_entry {
-    __u32 rule_id;
-    __u32 action; // 0 = PASS, 1 = DROP, 2 = KILL_PROCESS
-    char pattern[128];
+struct blocked_entry_t {
+    __u64 blocked_at;
+    __u64 rule_id;
 };
 
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, MAX_RULES);
-    __type(key, __u32);
-    __type(value, struct rule_entry);
-} policy_map SEC(".maps");
-
-/* Map for telemetry event stream to user-space CLI/monitor */
-struct event_log {
-    __u64 timestamp;
-    __u32 pid;
-    __u32 rule_id;
+struct security_event_t {
+    __u32 src_ip;
+    __u32 dst_ip;
+    __u16 src_port;
+    __u16 dst_port;
+    __u32 protocol;
     __u32 action;
-    char comm[16];
-    char payload[256];
+    __u64 timestamp_ns;
 };
 
+// 1. Map: IP Engelleme Listesi (LRU Hash Map for Auto Eviction)
 struct {
-    __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-    __uint(key_size, sizeof(__u32));
-    __uint(value_size, sizeof(__u32));
-} events SEC(".maps");
+    __uint(type, BPF_MAP_TYPE_LRU_HASH);
+    __uint(max_entries, 10000);
+    __type(key, __u32);               // IPv4 Address
+    __type(value, struct blocked_entry_t);
+} blocked_ips SEC(".maps");
 
-SEC("kprobe/sys_enter_execve")
-int BPF_KPROBE(trace_sys_enter_execve)
-{
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u32 pid = pid_tgid >> 32;
+// 2. Map: Canlı Güvenlik İhlal Olayları (RingBuffer)
+struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 256 * 1024); // 256 KB
+} events_ringbuf SEC(".maps");
 
-    char comm[16];
-    bpf_get_current_comm(&comm, sizeof(comm));
+// 3. Map: Paket İstatistikleri Sayaçları
+struct {
+    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(max_entries, 2);
+    __type(key, __u32);   // 0 = Total, 1 = Dropped
+    __type(value, __u64);
+} stats_map SEC(".maps");
 
-    // Check if process matches restricted binary policies (e.g., unauthorized subprocesses)
-    // Send event telemetry to user-space
-    return 0;
+static __always_inline void increment_stat(__u32 index) {
+    __u64 *val = bpf_map_lookup_elem(&stats_map, &index);
+    if (val) {
+        __sync_fetch_and_add(val, 1);
+    }
 }
 
-SEC("sockops")
-int agent_sock_filter(struct bpf_sock_ops *skops)
-{
-    __u32 op = skops->op;
-    if (op == BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB || op == BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB) {
-        // Attach socket filter / inspect socket buffer payload (<50us latency target)
+SEC("xdp")
+int xdp_shield_filter(struct xdp_md *ctx) {
+    void *data_end = (void *)(long)ctx->data_end;
+    void *data     = (void *)(long)ctx->data;
+
+    __u32 total_idx = 0;
+    __u32 drop_idx  = 1;
+
+    increment_stat(total_idx);
+
+    // Ethernet Header Parse
+    struct ethhdr *eth = data;
+    if ((void *)(eth + 1) > data_end)
+        return XDP_PASS;
+
+    if (eth->h_proto != bpf_htons(ETH_P_IP))
+        return XDP_PASS;
+
+    // IP Header Parse
+    struct iphdr *iph = (void *)(eth + 1);
+    if ((void *)(iph + 1) > data_end)
+        return XDP_PASS;
+
+    __u32 src_ip = iph->saddr;
+    __u32 dst_ip = iph->daddr;
+    __u32 protocol = iph->protocol;
+
+    __u16 src_port = 0;
+    __u16 dst_port = 0;
+
+    if (protocol == IPPROTO_TCP) {
+        struct tcphdr *tcph = (void *)iph + (iph->ihl * 4);
+        if ((void *)(tcph + 1) <= data_end) {
+            src_port = bpf_ntohs(tcph->source);
+            dst_port = bpf_ntohs(tcph->dest);
+        }
+    } else if (protocol == IPPROTO_UDP) {
+        struct udphdr *udph = (void *)iph + (iph->ihl * 4);
+        if ((void *)(udph + 1) <= data_end) {
+            src_port = bpf_ntohs(udph->source);
+            dst_port = bpf_ntohs(udph->dest);
+        }
     }
-    return 0;
+
+    // IP Kontrolü
+    struct blocked_entry_t *entry = bpf_map_lookup_elem(&blocked_ips, &src_ip);
+    if (entry) {
+        increment_stat(drop_idx);
+
+        // RingBuffer Olay Bildirimi
+        struct security_event_t *evt = bpf_ringbuf_reserve(&events_ringbuf, sizeof(*evt), 0);
+        if (evt) {
+            evt->src_ip = src_ip;
+            evt->dst_ip = dst_ip;
+            evt->src_port = src_port;
+            evt->dst_port = dst_port;
+            evt->protocol = protocol;
+            evt->action = ACTION_BLOCKED;
+            evt->timestamp_ns = bpf_ktime_get_ns();
+            bpf_ringbuf_submit(evt, 0);
+        }
+        return XDP_DROP;
+    }
+
+    return XDP_PASS;
 }
 
 char _license[] SEC("license") = "GPL";

@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: agent-ebpf-gateway
     restart: always
-    network_mode: "host"
+    network_mode: "host" # Host fiziksel NIC arayüzüne XDP hook bağlamak için gereklidir
     cap_add:
       - CAP_BPF
       - CAP_NET_ADMIN
@@ -27,9 +27,9 @@ services:
         hard: -1
     environment:
       - PORT=8000
-      - DATABASE_URL=postgresql://agent_user:${POSTGRES_PASSWORD:-UltraSecurePostgresPass2026!}@127.0.0.1:5432/agent_ebpf_db
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-UltraSecureRedisPass2026!}@127.0.0.1:6379/0
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-9a8f7c6e5d4c3b2a10987654321fedcba9876543210123456789abcdef012345}
+      - DATABASE_URL=postgresql://agent_user:${POSTGRES_PASSWORD}@127.0.0.1:5432/agent_ebpf_db
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@127.0.0.1:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ENVIRONMENT=production
       - XDP_INTERFACE=${XDP_INTERFACE:-eth0}
     depends_on:
@@ -46,7 +46,7 @@ services:
     environment:
       POSTGRES_DB: agent_ebpf_db
       POSTGRES_USER: agent_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-UltraSecurePostgresPass2026!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -60,11 +60,11 @@ services:
     container_name: agent-ebpf-redis
     restart: always
     network_mode: "host"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-UltraSecureRedisPass2026!} --appendonly yes
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     volumes:
       - redis_data:/var/lib/redis/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-UltraSecureRedisPass2026!}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
