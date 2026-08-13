@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import asyncio
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -64,14 +65,18 @@ def test_mcp_unauthenticated_request_fails():
 
 
 def test_mcp_tools_execution():
-    """Verify MCP tool execution functions directly"""
+    """Verify MCP tool execution functions directly (production mocks in test only)."""
     admin_user = {"sub": "admin", "role": "admin"}
     viewer_user = {"sub": "viewer", "role": "viewer"}
 
-    # 1. get_security_status
-    sec_res = asyncio.run(execute_tool("get_security_status", {}, user=admin_user))
+    # 1. get_security_status (real eBPF state is mocked here for the test env)
+    with patch("mcp_server.ebpf_loader.inspect_maps", return_value={
+        "status": "active", "total_packets": 100, "dropped_packets": 3
+    }):
+        sec_res = asyncio.run(execute_tool("get_security_status", {}, user=admin_user))
     assert sec_res.get("status") == "active"
-    assert "kernel_hooks" in sec_res
+    assert sec_res.get("ebpf_program_loaded") is True
+    assert sec_res.get("packets_processed") == 100
     print("[PASS] Tool 'get_security_status' executed successfully")
 
     # 2. get_active_policies

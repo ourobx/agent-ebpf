@@ -27,94 +27,110 @@ console = Console()
 
 @app.command("build")
 def cmd_build():
-    """Derleme: CO-RE eBPF C kodunu BPF bytecode nesnesine derler."""
-    console.print("[bold blue]==> eBPF Bytecode Derleme İşlemi Başlatılıyor...[/bold blue]")
+    """Build: Compiles CO-RE eBPF C code into a BPF bytecode object file."""
+    console.print("[bold blue]==> Starting eBPF Bytecode Compilation Process...[/bold blue]")
     try:
         obj_file = ebpf_loader.compile_ebpf()
-        console.print(f"[bold green]✓ Derleme Başarılı:[/bold green] {obj_file}")
+        console.print(f"[bold green]✓ Compilation Successful:[/bold green] {obj_file}")
     except Exception as e:
-        console.print(f"[bold red]✗ Derleme Hatası:[/bold red] {e}")
+        console.print(f"[bold red]✗ Compilation Error:[/bold red] {e}")
         raise typer.Exit(code=1)
 
 @app.command("load")
 def cmd_load(
-    interface: str = typer.Option("eth0", "--iface", "-i", help="Bağlanacak Ağ Arayüzü"),
-    obj_path: str = typer.Option("ebpf/shield.bpf.o", "--obj", "-o", help="Bytecode Nesne Dosyası")
+    interface: str = typer.Option("eth0", "--iface", "-i", help="Network Interface to attach"),
+    obj_path: str = typer.Option("ebpf/shield.bpf.o", "--obj", "-o", help="Bytecode Object File")
 ):
-    """Yükleme: eBPF programını çekirdeğe yükler ve XDP hook'una bağlar."""
-    console.print(f"[bold yellow]==> eBPF Programı '{interface}' Arayüzüne Yükleniyor...[/bold yellow]")
+    """Load: Loads eBPF program into kernel and binds to XDP hook."""
+    console.print(f"[bold yellow]==> Loading eBPF Program onto Interface '{interface}'...[/bold yellow]")
     try:
         path = Path(obj_path)
         if not path.exists():
-            console.print("[yellow]Bytecode bulunamadı, önce derleme başlatılıyor...[/yellow]")
+            console.print("[yellow]Bytecode not found, building first...[/yellow]")
             path = ebpf_loader.compile_ebpf()
 
         res = ebpf_loader.load_with_bpftool(path, iface=interface)
-        console.print(Panel(f"[bold green]eBPF Başarıyla Yüklendi ve Pinlendi![/bold green]\n"
-                            f"Pin Konumu: {res['pinned_at']}\n"
-                            f"Arayüz: {res['iface']}", title="Sözleşme Durumu"))
+        console.print(Panel(f"[bold green]eBPF Successfully Loaded and Pinned![/bold green]\n"
+                            f"Pin Location: {res['pinned_at']}\n"
+                            f"Interface: {res['iface']}", title="Attachment Status"))
     except Exception as e:
-        console.print(f"[bold red]✗ Yükleme Başarısız:[/bold red] {e}")
+        console.print(f"[bold red]✗ Load Failed:[/bold red] {e}")
         raise typer.Exit(code=1)
 
 @app.command("unload")
-def cmd_unload(interface: str = typer.Option("eth0", "--iface", "-i", help="Ağ Arayüzü")):
-    """Kaldırma: Yüklü eBPF programını XDP arayüzünden çıkarır ve pinleri siler."""
-    console.print(f"[bold red]==> eBPF Programı Kaldırılıyor ({interface})...[/bold red]")
+def cmd_unload(interface: str = typer.Option("eth0", "--iface", "-i", help="Network Interface")):
+    """Unload: Detaches loaded eBPF program from XDP interface and cleans pins."""
+    console.print(f"[bold red]==> Unloading eBPF Program ({interface})...[/bold red]")
     try:
         res = ebpf_loader.unload_ebpf(iface=interface)
-        console.print(f"[bold green]✓ Program başarıyla kaldırıldı.[/bold green]")
+        console.print(f"[bold green]✓ Program successfully unloaded.[/bold green]")
     except Exception as e:
-        console.print(f"[bold red]✗ Kaldırma Hatası:[/bold red] {e}")
+        console.print(f"[bold red]✗ Unload Error:[/bold red] {e}")
         raise typer.Exit(code=1)
 
 @app.command("status")
 def cmd_status():
-    """Durum: Yüklü eBPF programlarını ve paket sayaç istatistiklerini gösterir."""
+    """Status: Displays loaded eBPF program state and packet counters."""
     try:
         stats = ebpf_loader.inspect_maps()
-        table = Table(title="Agent-eBPF Çekirdek Durum Raporu")
-        table.add_column("Metrik / Durum", style="cyan")
-        table.add_column("Değer", style="magenta")
+        table = Table(title="Agent-eBPF Kernel Status Report")
+        table.add_column("Metric / State", style="cyan")
+        table.add_column("Value", style="magenta")
 
-        table.add_row("Çekirdek Durumu", stats["status"].upper())
-        table.add_row("İşlenen Toplam Paket", str(stats["total_packets"]))
-        table.add_row("Engellenen Paket (Drop)", str(stats["dropped_packets"]))
+        table.add_row("Kernel Status", stats["status"].upper())
+        table.add_row("Total Packets Processed", str(stats["total_packets"]))
+        table.add_row("Dropped Packets (Drop)", str(stats["dropped_packets"]))
 
         console.print(table)
     except Exception as e:
-        console.print(f"[bold red]✗ Durum Sorgulama Hatası:[/bold red] {e}")
+        console.print(f"[bold red]✗ Status Query Error:[/bold red] {e}")
 
 @app.command("add-rule")
 def cmd_add_rule(
-    ip: str = typer.Argument(..., help="Engellenecek IPv4 Adresi"),
-    rule_id: int = typer.Option(100, "--rule-id", "-r", help="Kural Kimliği")
+    ip: str = typer.Argument(..., help="IPv4 Address to block"),
+    rule_id: int = typer.Option(100, "--rule-id", "-r", help="Rule ID")
 ):
-    """Kural Ekle: BPF Hash Map'e engellenecek IP adresi yazar."""
+    """Add Rule: Adds IPv4 block entry to BPF Hash Map."""
     try:
         ebpf_loader.add_blocked_ip(ip, rule_id=rule_id)
-        console.print(f"[bold green]✓ IP Kuralı BPF Map'e Eklendi:[/bold green] {ip} (Rule: {rule_id})")
+        console.print(f"[bold green]✓ IP Rule Added to BPF Map:[/bold green] {ip} (Rule ID: {rule_id})")
     except Exception as e:
-        console.print(f"[bold red]✗ Kural Ekleme Hatası:[/bold red] {e}")
+        console.print(f"[bold red]✗ Rule Addition Error:[/bold red] {e}")
 
 @app.command("events")
 def cmd_events():
-    """Canlı İzleme: BPF RingBuffer üzerindeki ihlal akışını canlı ekrana basar."""
-    console.print("[bold cyan]==> RingBuffer Canlı İhlal Akışı Dinleniyor (Çıkış için Ctrl+C)...[/bold cyan]")
+    """Live Stream: Displays real-time violation event stream from BPF RingBuffer."""
+    console.print("[bold cyan]==> Listening to RingBuffer Live Violation Stream (Press Ctrl+C to exit)...[/bold cyan]")
     try:
-        with Live(console=console, refresh_per_second=4) as live:
-            while True:
-                table = Table(title="Canlı Security Event Akışı")
-                table.add_column("Zaman", style="dim")
-                table.add_column("Kaynak IP", style="red")
-                table.add_column("Hedef IP", style="blue")
-                table.add_column("Eylem", style="bold yellow")
+        while True:
+            try:
+                events = ebpf_loader.poll_security_events(window_ms=1000)
+            except Exception as e:
+                console.print(f"[bold red]✗ Cannot read kernel events:[/bold red] {e}")
+                raise typer.Exit(code=1)
 
-                table.add_row(time.strftime("%H:%M:%S"), "192.168.1.105", "10.0.0.1", "XDP_DROP")
+            if not events:
+                # No violations in this window — that is a real (empty) reading.
+                time.sleep(1)
+                continue
+
+            with Live(console=console, refresh_per_second=4) as live:
+                table = Table(title="Live Security Event Stream (Real Kernel Data)")
+                table.add_column("Time", style="dim")
+                table.add_column("Source IP", style="red")
+                table.add_column("Destination IP", style="blue")
+                table.add_column("Action", style="bold yellow")
+
+                for evt in events:
+                    table.add_row(
+                        time.strftime("%H:%M:%S"),
+                        evt["src_ip"],
+                        evt["dst_ip"],
+                        evt["action"],
+                    )
                 live.update(table)
-                time.sleep(2)
     except KeyboardInterrupt:
-        console.print("\n[yellow]Canlı izleme sonlandırıldı.[/yellow]")
+        console.print("\n[yellow]Live event stream terminated.[/yellow]")
 
 if __name__ == "__main__":
     app()

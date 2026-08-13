@@ -1,18 +1,18 @@
 # 🛡️⚡ Agent-eBPF: AI Sentinel in Kernel Space
 
-**Agent-eBPF**, otonom yapay zeka ajanları (AI Agents), LLM servisleri ve uygulama süreçleri için Linux çekirdek seviyesinde (Ring 0) mikrosaniye-altı (<35µs) güvenlik kalkanı ve telemetri ağ geçididir.
+**Agent-eBPF** is a sub-microsecond (<35µs) Linux kernel space (Ring 0) security shield and telemetry gateway engineered for autonomous AI agents, LLM services, and containerized application swarms.
 
-Sıfır-Güven (Zero-Trust) ilkeleriyle çalışan bu mimari, yapay zeka ajanlarının veritabanı, ağ veya sistem çağrılarında gerçekleştirebileceği tahrip edici eylemleri (örneğin `WHERE` şartı olmayan `DELETE` sorguları veya yetkisiz paket iletimleri) çekirdek katmanında (XDP) sıfır gecikmeyle engeller.
+Operating under **Zero-Trust** principles, this architecture intercepts destructive database queries, illegal network packets, and unauthorized system calls (such as unconstrained `DELETE`/`UPDATE` operations without `WHERE` clauses) directly inside the Linux kernel (XDP/Ring-Buffer) with zero latency impact.
 
 ---
 
-## 🚀 Hızlı Başlangıç (Tek Tıkla / 1-Click Launch)
+## 🚀 Quick Start (1-Click Launch)
 
-Teknik veya kod detayına ihtiyaç duymadan **Agent-eBPF** sistemini ve **Görsel Web Dashboard**'unu başlatmak için işletim sisteminize uygun başlatıcıyı çalıştırmanız yeterlidir:
+Launch the **Agent-eBPF** system and **Visual Web Dashboard** instantly without manual setup or configuration:
 
 ### 💻 Windows
 
-Proje kök dizininde bulunan başlatıcıya çift tıklayın:
+Double-click the launcher script in the project root:
 
 ```cmd
 start.bat
@@ -20,136 +20,99 @@ start.bat
 
 ### 🐧 Linux / 🍎 macOS
 
-Terminal veya dosya yöneticisinde betiği çalıştırın:
+Run the shell script in terminal or file manager:
 
 ```bash
 chmod +x start.sh
 ./start.sh
 ```
 
-> **💡 Otomatik İşlem:** Başlatıcı script bağımlılıkları kontrol eder, gerekli Python kütüphanelerini yükler, eBPF & MCP Gateway servisini ayağa kaldırır ve varsayılan tarayıcınızda otomatik olarak **`http://localhost:8000`** adresini açar.
+> **💡 Automatic Execution:** The launcher validates dependencies, installs necessary Python packages, initializes the eBPF & MCP Gateway server, and automatically opens **`http://localhost:8000`** in your default web browser.
 
 ---
 
-## 🖥️ Görsel Web Kontrol Paneli (Web UI)
+## 🖥️ Visual Web Control Panel (Web UI)
 
-Tarayıcınızda açılan görsel kontrol paneli (`http://localhost:8000`) üzerinden tüm çekirdek güvenlik operasyonlarını kod yazmadan yönetebilirsiniz:
+Manage kernel security operations visually without writing code via the Web UI (`http://localhost:8000`):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 🛡️⚡ Agent-eBPF | Autonomous Linux Kernel Shield                      │
+│ 🛡️⚡ Agent-eBPF | Autonomous Linux Kernel Shield                       │
 ├────────────────────────────────────────────────────────────────────────┤
 │                                                                        │
-│  [1. CANLI TELEMETRİ]         [2. AST SANDBOX]                         │
-│  • Anlık Kernel Logları       • Sınama SQL sorgusu girin:              │
-│  • Engellenen Paketler        • UPDATE users SET role='admin'          │
-│  • Tepki Süresi (<35µs)       • [⚡ DENE] -> Kernel Engelledi (DROP)    │
+│  [1. LIVE TELEMETRY]          [2. AST SANDBOX]                         │
+│  • Real-time Kernel Logs      • Test sample SQL query:                 │
+│  • Dropped Packet Stream      • UPDATE users SET role='admin'          │
+│  • Latency (<35µs)            • [⚡ EVALUATE] -> Blocked (DROP)        │
 │                                                                        │
-│  [3. KURAL POLİTİKALARI]      [4. MCP SSE BAĞLANTISI]                  │
-│  • policy.yaml Önizleme       • SSE Bağlantı Adresi:                   │
-│  • Tek Tıkla Kural Ekle       • http://localhost:8000/sse              │
+│  [3. RULE POLICIES]           [4. MCP SSE CONNECTION]                  │
+│  • policy.yaml Preview        • SSE Endpoint Address:                  │
+│  • 1-Click Policy Injection   • http://localhost:8000/sse              │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Etkileşimli AST Sandbox:** `DELETE` veya `UPDATE` gibi tahrip edici sorguları sınayabilir, sistemin çekirdek seviyesindeki mikrosaniye altı engelleme mantığını canlı olarak simüle edebilirsiniz.
-2. **Canlı Telemetri Akışı:** Yapay zeka ajanlarının gerçekleştirdiği veritabanı mutasyonlarını ve sistem çağrılarını anlık akan log ekranından takip edebilirsiniz.
-3. **Kural & Politika Yönetimi:** Aktif güvenlik politikalarını (`policy.yaml`) listeleyebilir ve dinamik kurallar ekleyebilirsiniz.
+1. **Interactive AST Sandbox:** Test destructive `DELETE` or `UPDATE` queries live and observe kernel-level sub-microsecond interception in real time.
+2. **Live Telemetry Stream:** Monitor database mutations and system calls issued by AI agents through a streaming event terminal.
+3. **Policy & Rule Management:** View active security policies (`policy.yaml`) and dynamically inject enforcement rules.
 
 ---
 
-## 🤖 Yapay Zeka Ajanları ile Entegrasyon (MCP SSE)
+## 🤖 AI Agent Integration (MCP SSE)
 
-**Agent-eBPF**, Anthropic Model Context Protocol (MCP) standartlarını yerleşik olarak destekler. Yapay zeka asistanınızı (Claude Desktop, Cursor, Gemini Spark / Orchestrator) bağlamak için aşağıdaki SSE adresini MCP aracı olarak tanımlamanız yeterlidir:
+Agent-eBPF provides native support for **Model Context Protocol (MCP)** via Server-Sent Events (SSE).
 
-```text
-http://localhost:8000/sse
-```
+### MCP Server Connection
 
-### Kullanılabilir MCP Araçları (Tools)
+- **SSE Endpoint:** `http://localhost:8000/sse`
+- **Messages Endpoint:** `http://localhost:8000/messages`
+- **OAuth 2.0 Discovery:** `http://localhost:8000/.well-known/oauth-authorization-server`
 
-* `add_security_rule`: XDP / BPF haritasına dinamik IP/Sorgu engelleme kuralı ekler.
-* `get_ebpf_status`: Çekirdek paket sayaçlarını ve harita kullanım istatistiklerini getirir.
-* `simulate_query_check`: SQL/AST sorgusunun güvenlik politikalarına uyumunu sınar.
-* `get_active_policies`: Aktif güvenlik kurallarını ve politika metinlerini döndürür.
+### Exposed MCP Tools
 
----
-
-## 🏗️ Sistem Mimarisi
-
-```text
-[ Network Interface / XDP Hook ]
-       │
-       ├──► BPF_MAP_TYPE_LRU_HASH (blocked_ips) ──► XDP_DROP (<35µs)
-       │
-       └──► BPF_MAP_TYPE_RINGBUF (events_ringbuf)
-                   │
-                   ▼ (Async Event Loop)
-       [ ebpf_loader.py (Python / Ctypes / bpftool) ]
-                   │
-                   ▼ (Zero-Trust Guard)
-       [ mcp_server.py (FastAPI / OAuth2 / SlowAPI / Prometheus) ]
-                   │
-                   ├──► Dashboard Web UI (http://localhost:8000)
-                   └──► MCP SSE Gateway (http://localhost:8000/sse)
-```
-
-* **Kernel Space (XDP & eBPF CO-RE):** Paketler ve sistem çağrıları TCP/IP yığınına girmeden doğrudan NIC sürücüsünde filtrelenir. `BPF_MAP_TYPE_LRU_HASH` yapısı ile bellek sızıntısı ve DoS riski engellenir.
-* **User Space (FastAPI & MCP Gateway):** OWASP güvenlik başlıkları, JWT (OAuth2) kimlik doğrulama, RBAC/ABAC yetkilendirme, SlowAPI rate limiting ve Prometheus (`/metrics`) telemetrisi.
+- `get_security_status`: Fetches active kernel hooks, inspection latency, and blocked threat metrics.
+- `get_ebpf_status`: Retrieves real-time BPF map packet counters and kernel hook state.
+- `get_active_policies`: Fetches declarative rules loaded from `policy.yaml`.
+- `add_security_rule`: Injects new IP block entries or query enforcement rules into kernel memory.
+- `simulate_query_check`: Validates proposed SQL payloads against active eBPF policies prior to execution.
 
 ---
 
-## 🐳 Coolify / Docker Compose ile Canlıya Alma
+## 💻 CLI Command Line Interface
 
-Agent-eBPF, **Coolify** veya herhangi bir Docker sunucusu üzerinde eBPF yetkileri (`CAP_BPF`, `CAP_NET_ADMIN`) ile tek tıkla canlıya alınabilir.
+Manage Agent-eBPF via the rich command-line tool `cli.py`:
 
 ```bash
-docker compose -f docker-compose.coolify.yml up -d
-```
-
-### Çevre Değişkenleri (`.env`)
-
-```env
-POSTGRES_PASSWORD=UltraSecurePostgresPass2026!
-REDIS_PASSWORD=UltraSecureRedisPass2026!
-JWT_SECRET_KEY=9a8f7c6e5d4c3b2a10987654321fedcba9876543210123456789abcdef012345
-XDP_INTERFACE=eth0
-ENVIRONMENT=production
-```
-
----
-
-## 💻 CLI Arayüzü (Typer & Rich)
-
-Geliştiriciler ve sistem yöneticileri için komut satırı arayüzü:
-
-```bash
-# eBPF C Bytecode derleme
+# Build eBPF C bytecode
 python cli.py build
 
-# Çekirdeğe BPF programını yükleme ve XDP bağlama
-python cli.py load --interface eth0
+# Load eBPF program into kernel (eth0)
+python cli.py load --iface eth0
 
-# Çekirdek istatistiklerini ve paket sayaçlarını sorgulama
+# Inspect kernel status and packet counters
 python cli.py status
 
-# RingBuffer ihlal akışını canlı izleme
+# Stream live RingBuffer security violations
 python cli.py events
+
+# Add IP block rule to BPF map
+python cli.py add-rule 192.168.1.105 --rule-id 201
+
+# Unload eBPF program from kernel
+python cli.py unload --iface eth0
 ```
 
 ---
 
-## 🧪 Test ve Doğrulama
+## 🔬 Automated Testing
 
-Sistem testlerini çalıştırmak için:
+Run the full pytest suite to verify MCP endpoints, JWT authentication, and eBPF loader contracts:
 
 ```bash
-python -m pytest tests/
+python -m pytest -v
 ```
-
-* **15 Passed Test:** BPF Loader, Ctypes arayüzü, FastAPI OAuth2/JWT yetkilendirme ve MCP REST uç noktalarının doğrulama testleri.
 
 ---
 
-## 📄 Lisans
+## 📜 License
 
-Bu proje **MIT Lisansı** altında sunulmaktadır. Detaylı bilgi için [LICENSE](file:///c:/Users/win10/sysauto.org/Sysauto.org/Agent-eBPF/LICENSE) dosyasına göz atabilirsiniz.
+Distributed under the **MIT License**. Created by Sysauto & Agent-eBPF Core Engineering.

@@ -5,11 +5,11 @@
   "planSteps": [
     {
       "type": "action",
-      "description": "Scroll down to the 'Deklaratif Güvenlik Politikaları' section"
+      "description": "Scroll down to the 'Declarative Security Policies' section"
     },
     {
       "type": "action",
-      "description": "Click the second policy tab titled '2. Multi-Tenant İzolasyon Zorunluluğu'"
+      "description": "Click the second policy tab titled '2. Enforce Multi-Tenant Isolation'"
     },
     {
       "type": "assertion",
@@ -17,7 +17,7 @@
     },
     {
       "type": "action",
-      "description": "Click the third policy tab titled '3. Yasaklı Sistem Çağrıları (Syscall)'"
+      "description": "Click the third policy tab titled '3. Block Forbidden System Calls (Syscall)'"
     },
     {
       "type": "assertion",

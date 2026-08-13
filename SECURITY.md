@@ -14,10 +14,12 @@ The security of **Agent-eBPF** is paramount, especially given its role as a Linu
 If you discover a security vulnerability, please **DO NOT** open a public GitHub issue.
 
 Instead, please report it privately:
-- **Email**: `security@sysauto.org`
+
+- **Email**: `admin@ksec.space`
 - **Response Time**: We aim to acknowledge vulnerability reports within **24 hours** and provide a patch timeline within **72 hours**.
 
 Please include:
+
 - A description of the vulnerability and potential impact.
 - Step-by-step instructions or proof-of-concept (PoC) code to reproduce.
 - Any suggested mitigations.

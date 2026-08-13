@@ -9,11 +9,11 @@
     },
     {
       "type": "assertion",
-      "description": "The brand header shows 'Agent-eBPF' with a 'Kernel v5.4+' badge and the hero heading contains 'Yapay Zeka Ajanları İçin Otonom Kernel Zırhı'"
+      "description": "The brand header shows 'Agent-eBPF' with a 'Kernel v5.4+' badge and the hero heading contains 'Autonomous Kernel Shield'"
     },
     {
       "type": "assertion",
-      "description": "The 1-click install command box displays 'curl -fsSL https://get.agent-ebpf.dev | sh'"
+      "description": "The 1-click install command box displays 'git clone https://github.com/bohemist/agent-ebpf.git'"
     }
   ]
 }

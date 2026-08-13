@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: agent-ebpf-gateway
     restart: always
-    network_mode: "host" # Host fiziksel NIC arayüzüne XDP hook bağlamak için gereklidir
+    network_mode: "host" # required to attach the XDP hook to the host's physical NIC interface
     cap_add:
       - CAP_BPF
       - CAP_NET_ADMIN

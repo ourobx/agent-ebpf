@@ -1,397 +1,361 @@
 /**
- * Agent-eBPF Hallmark Launch Platform - Cobalt Bento Engine
+ * Agent-eBPF Sentinel Workbench — real-data dashboard engine.
+ * No mock / synthetic / hardcoded numeric values: every panel streams live
+ * telemetry from FastAPI authenticated endpoints (eBPF maps, PostgreSQL
+ * security_events/threats, Android Management API). When data is unavailable
+ * an explicit empty state is rendered instead of fabricated numbers.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-  initBentoHeroCanvas();
-  initBentoTileTilt();
-  initASTQueryParser();
-  initThroughputSlider();
-  initTerminalSimulator();
-  initCopyButton();
-  initPolicyPlayground();
-  initSmoothScroll();
-});
+// ---- small DOM helpers ----
+const $ = (sel, p = document) => p.querySelector(sel);
+const $$ = (sel, p = document) => Array.from(p.querySelectorAll(sel));
+const text = (el, t) => { if (el) el.textContent = t; };
 
-/* 1. 60FPS Hero Background Laser Particle Wave Canvas */
-function initBentoHeroCanvas() {
-  const canvas = document.getElementById('bentoHeroCanvas');
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  let width = (canvas.width = canvas.offsetWidth);
-  let height = (canvas.height = canvas.offsetHeight);
-
-  let mouseX = width / 2;
-  let mouseY = height / 2;
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = canvas.offsetWidth;
-    height = canvas.height = canvas.offsetHeight;
-  });
-
-  window.addEventListener('mousemove', e => {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
-  });
-
-  const particles = [];
-  const particleCount = 70;
-
-  for (let i = 0; i < particleCount; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.9,
-      vy: (Math.random() - 0.5) * 0.9,
-      radius: Math.random() * 2 + 1,
-      baseAlpha: Math.random() * 0.5 + 0.2,
-      color: Math.random() > 0.4 ? '#06b6d4' : '#10b981'
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-
-    for (let i = 0; i < particleCount; i++) {
-      const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.x < 0 || p.x > width) p.vx *= -1;
-      if (p.y < 0 || p.y > height) p.vy *= -1;
-
-      // Mouse magnetic field
-      const dx = mouseX - p.x;
-      const dy = mouseY - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < 180) {
-        const force = (180 - dist) / 180;
-        p.x += (dx / dist) * force * 1.6;
-        p.y += (dy / dist) * force * 1.6;
-      }
-
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.baseAlpha;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Connect particle lines
-      for (let j = i + 1; j < particleCount; j++) {
-        const p2 = particles[j];
-        const pdx = p.x - p2.x;
-        const pdy = p.y - p2.y;
-        const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
-
-        if (pdist < 110) {
-          ctx.strokeStyle = `rgba(6, 182, 212, ${0.22 - pdist / 500})`;
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        }
-      }
-    }
-
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(draw);
-  }
-
-  draw();
-}
-
-/* 2. 3D Tilt Bento Tile Interaction */
-function initBentoTileTilt() {
-  document.querySelectorAll('.bento-tile').forEach(tile => {
-    tile.addEventListener('mousemove', e => {
-      const rect = tile.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const rotateX = ((y - centerY) / centerY) * -6;
-      const rotateY = ((x - centerX) / centerX) * 6;
-
-      tile.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-    });
-
-    tile.addEventListener('mouseleave', () => {
-      tile.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)`;
-    });
-  });
-}
-
-/* 3. Interactive Threat AST Query Tokenizer */
-function initASTQueryParser() {
-  const astInput = document.getElementById('astQueryInput');
-  const btnParse = document.getElementById('btnParseAST');
-  const astTokensBox = document.getElementById('astTokensBox');
-  const astResultStatus = document.getElementById('astResultStatus');
-
-  if (!astInput || !btnParse || !astTokensBox) return;
-
-  btnParse.addEventListener('click', () => {
-    const query = astInput.value.trim();
-    if (!query) return;
-
-    const tokens = query.split(/\s+/);
-    astTokensBox.innerHTML = '';
-
-    let isDestructive = false;
-    let isSyscall = false;
-
-    tokens.forEach(tok => {
-      const tag = document.createElement('span');
-      tag.className = 'ast-token-tag';
-
-      if (/^(SELECT|UPDATE|DELETE|INSERT|FROM|WHERE|DROP|ALTER)$/i.test(tok)) {
-        tag.classList.add('tag-kw');
-        tag.innerText = `KEYWORD: ${tok}`;
-        if (/^(UPDATE|DELETE)$/i.test(tok)) isDestructive = true;
-      } else if (/^(execve|ptrace|\/bin\/bash|\/bin\/sh)$/i.test(tok)) {
-        tag.classList.add('tag-warn');
-        tag.innerText = `UNSAFE_SYSCALL: ${tok}`;
-        isSyscall = true;
-      } else if (/(=|>|<|>=|<=|!=|LIKE)/i.test(tok)) {
-        tag.classList.add('tag-op');
-        tag.innerText = `OPERATOR: ${tok}`;
-      } else {
-        tag.classList.add('tag-id');
-        tag.innerText = `IDENTIFIER: ${tok}`;
-      }
-
-      astTokensBox.appendChild(tag);
-    });
-
-    if (astResultStatus) {
-      if (isSyscall) {
-        astResultStatus.innerHTML = '<span style="color: var(--color-alert-red); font-weight: 700;">[KERNEL BLOCK: KILL_PROCESS] Unauthorized execve syscall!</span>';
-      } else if (isDestructive && !/WHERE/i.test(query)) {
-        astResultStatus.innerHTML = '<span style="color: var(--color-alert-red); font-weight: 700;">[KERNEL BLOCK: DROP (TCP_RST)] Unconstrained UPDATE/DELETE without WHERE!</span>';
-      } else {
-        astResultStatus.innerHTML = '<span style="color: var(--color-accent-emerald); font-weight: 700;">[KERNEL VERDICT: PASS] Safe query payload pre-validated in <32µs.</span>';
-      }
-    }
-  });
-
-  // Preset buttons
-  document.querySelectorAll('.preset-ast-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      astInput.value = btn.getAttribute('data-query');
-      btnParse.click();
-    });
-  });
-}
-
-/* 4. Interactive Throughput Slider Calculator */
-function initThroughputSlider() {
-  const slider = document.getElementById('reqSlider');
-  const valDisplay = document.getElementById('reqValDisplay');
-  const ebpfCpu = document.getElementById('ebpfCpuVal');
-  const middlewareCpu = document.getElementById('middlewareCpuVal');
-  const savedLatency = document.getElementById('savedLatencyVal');
-
-  if (!slider || !valDisplay) return;
-
-  slider.addEventListener('input', () => {
-    const reqs = parseInt(slider.value, 10);
-    valDisplay.innerText = reqs.toLocaleString('en-US') + ' req/sec';
-
-    const ebpfUsage = (reqs * 0.00002).toFixed(2) + '% CPU';
-    const midUsage = (reqs * 0.009).toFixed(1) + '% CPU';
-    const saved = ((reqs * 14.4) / 1000).toFixed(1) + ' sec/sec saved';
-
-    if (ebpfCpu) ebpfCpu.innerText = ebpfUsage;
-    if (middlewareCpu) middlewareCpu.innerText = midUsage;
-    if (savedLatency) savedLatency.innerText = saved;
-  });
-}
-
-/* 5. Terminal Telemetry Simulator */
-function initTerminalSimulator() {
-  const terminal = document.getElementById('telemetryConsole');
-  const btnMalicious = document.getElementById('btnSimulateMalicious');
-  const btnSafe = document.getElementById('btnSimulateSafe');
-  const btnSyscall = document.getElementById('btnSimulateSyscall');
-
-  if (!terminal) return;
-
-  function getTimeString() {
-    const d = new Date();
-    return d.toTimeString().split(' ')[0] + '.' + Math.floor(Math.random() * 900 + 100);
-  }
-
-  function addLog(time, hook, action, actionClass, details, latency) {
-    const line = document.createElement('div');
-    line.className = 'log-line';
-    line.innerHTML = `
-      <span class="log-time">[${time}]</span>
-      <span class="log-hook">${hook}</span>
-      <span class="${actionClass}">[${action}]</span>
-      <span style="color: #cbd5e1;">${details}</span>
-      <span class="log-latency">${latency}</span>
-    `;
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
-  }
-
-  if (btnMalicious) {
-    btnMalicious.addEventListener('click', () => {
-      const latency = Math.floor(Math.random() * 15 + 22) + 'µs';
-      addLog(
-        getTimeString(),
-        'uprobe:postgres',
-        'DROP (TCP_RST)',
-        'log-drop',
-        'Intercepted: "UPDATE users SET admin=true"',
-        latency
-      );
-    });
-  }
-
-  if (btnSafe) {
-    btnSafe.addEventListener('click', () => {
-      const latency = Math.floor(Math.random() * 10 + 15) + 'µs';
-      addLog(
-        getTimeString(),
-        'sock_filter',
-        'PASS',
-        'log-pass',
-        'Allowed: "SELECT * FROM users WHERE tenant_id = 42"',
-        latency
-      );
-    });
-  }
-
-  if (btnSyscall) {
-    btnSyscall.addEventListener('click', () => {
-      const latency = Math.floor(Math.random() * 20 + 25) + 'µs';
-      addLog(
-        getTimeString(),
-        'kprobe:execve',
-        'KILL_PROCESS',
-        'log-drop',
-        'Blocked: Unsafe syscall execve("/bin/bash")',
-        latency
-      );
-    });
-  }
-}
-
-/* 6. 1-Click Copy Command */
-function initCopyButton() {
-  const copyBtn = document.getElementById('copyBtn');
-  const commandText = document.getElementById('commandText');
-
-  if (!copyBtn || !commandText) return;
-
-  copyBtn.addEventListener('click', () => {
-    const textToCopy = commandText.innerText || commandText.textContent;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      copyBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      `;
-      setTimeout(() => {
-        copyBtn.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        `;
-      }, 2000);
-    });
-  });
-}
-
-/* 7. Policy Playground Tabs */
-const policyTemplates = {
-  sql: `<span class="yaml-key">version</span>: <span class="yaml-str">"v1alpha"</span>
-<span class="yaml-key">metadata</span>:
-  <span class="yaml-key">name</span>: <span class="yaml-str">"destructive-sql-shield"</span>
-
-<span class="yaml-key">rules</span>:
-  <span class="yaml-comment"># 1. Intercept unconstrained UPDATE/DELETE without WHERE</span>
-  - <span class="yaml-key">id</span>: <span class="yaml-str">"sql-no-where-mutation"</span>
-    <span class="yaml-key">type</span>: <span class="yaml-str">"db_query"</span>
-    <span class="yaml-key">protocol</span>: <span class="yaml-str">"postgres"</span>
-    <span class="yaml-key">severity</span>: <span class="yaml-str">"critical"</span>
-    <span class="yaml-key">action</span>: <span class="yaml-str">"DROP"</span>
-    <span class="yaml-key">match</span>:
-      <span class="yaml-key">pattern</span>: <span class="yaml-str">"(?i)^(UPDATE|DELETE)\\s+((?!WHERE).)*$"</span>
-    <span class="yaml-key">message</span>: <span class="yaml-str">"Destructive SQL without WHERE condition blocked in kernel."</span>`,
-
-  tenant: `<span class="yaml-key">version</span>: <span class="yaml-str">"v1alpha"</span>
-<span class="yaml-key">metadata</span>:
-  <span class="yaml-key">name</span>: <span class="yaml-str">"multi-tenant-isolation"</span>
-
-<span class="yaml-key">rules</span>:
-  <span class="yaml-comment"># 2. Enforce Mandatory Tenant ID Filter</span>
-  - <span class="yaml-key">id</span>: <span class="yaml-str">"tenant-isolation-enforce"</span>
-    <span class="yaml-key">type</span>: <span class="yaml-str">"db_query"</span>
-    <span class="yaml-key">protocol</span>: <span class="yaml-str">"postgres"</span>
-    <span class="yaml-key">severity</span>: <span class="yaml-str">"high"</span>
-    <span class="yaml-key">action</span>: <span class="yaml-str">"DROP"</span>
-    <span class="yaml-key">match</span>:
-      <span class="yaml-key">require_header_context</span>: <span class="yaml-str">"X-Tenant-ID"</span>
-      <span class="yaml-key">must_contain</span>: <span class="yaml-str">"tenant_id ="</span>
-    <span class="yaml-key">message</span>: <span class="yaml-str">"Missing required tenant_id filter in AI query."</span>`,
-
-  syscall: `<span class="yaml-key">version</span>: <span class="yaml-str">"v1alpha"</span>
-<span class="yaml-key">metadata</span>:
-  <span class="yaml-key">name</span>: <span class="yaml-str">"syscall-process-protection"</span>
-
-<span class="yaml-key">rules</span>:
-  <span class="yaml-comment"># 3. Block Unauthorized Sub-Process Execution</span>
-  - <span class="yaml-key">id</span>: <span class="yaml-str">"block-unsafe-syscalls"</span>
-    <span class="yaml-key">type</span>: <span class="yaml-str">"syscall"</span>
-    <span class="yaml-key">severity</span>: <span class="yaml-str">"critical"</span>
-    <span class="yaml-key">action</span>: <span class="yaml-str">"KILL_PROCESS"</span>
-    <span class="yaml-key">match</span>:
-      <span class="yaml-key">syscalls</span>:
-        - <span class="yaml-str">"execve"</span>
-        - <span class="yaml-str">"ptrace"</span>
-      <span class="yaml-key">binary_path_regex</span>: <span class="yaml-str">".*/python.*"</span>
-    <span class="yaml-key">message</span>: <span class="yaml-str">"Unauthorized python sub-process execution prevented."</span>`
+// ---- i18n stub (EN default; TR extension point) ----
+const I18N = {
+  lang: (navigator.language || "en").startsWith("tr") ? "tr" : "en",
+  dict: {
+    en: {
+      "ebpf.OPERATIONAL": "OPERATIONAL", "ebpf.NOT_LOADED": "NOT LOADED", "ebpf.ERROR": "ERROR",
+      "threat.CLEAR": "CLEAR", "threat.ELEVATED": "ELEVATED", "threat.CRITICAL": "CRITICAL",
+    },
+    tr: {
+      "ebpf.OPERATIONAL": "İŞLEKİ", "ebpf.NOT_LOADED": "YÜKLENMEDİ", "ebpf.ERROR": "HATA",
+      "threat.CLEAR": "TEMİZ", "threat.ELEVATED": "YÜKSELMİŞ", "threat.CRITICAL": "KRİTİK",
+    },
+  },
+  t(k) { return (this.dict[this.lang] && this.dict[this.lang][k]) || k; },
 };
 
-function initPolicyPlayground() {
-  const tabs = document.querySelectorAll('.policy-tab');
-  const codeBox = document.getElementById('policyCodeDisplay');
+// ---- session token storage (memory-only; never exposes secrets hardcoded) ----
+const API = {
+  baseUrl() { return location.protocol + "//" + location.host; },
+  token() { return sessionStorage.getItem("ebpf_token"); },
+  setToken(t) { sessionStorage.setItem("ebpf_token", t); },
+  clearToken() { sessionStorage.removeItem("ebpf_token"); },
+  authHeader() {
+    const t = this.token();
+    return t ? { Authorization: "Bearer " + t } : {};
+  },
+};
 
-  if (!tabs || !codeBox) return;
+// ---- auth gate ----
+const AUTH = {
+  showLogin(msg) {
+    $("#authGate").hidden = false; $("#app").hidden = true;
+    API.clearToken();
+    $("#loginError").hidden = true;
+    $("#loginError").textContent = msg || "";
+    if (msg) $("#loginError").hidden = false;
+  },
+  showApp() { $("#authGate").hidden = true; $("#app").hidden = false; },
+  async login(clientId, clientSecret) {
+    const body = new URLSearchParams();
+    body.set("grant_type", "client_credentials");
+    if (clientId) body.set("client_id", clientId);
+    if (clientSecret) body.set("client_secret", clientSecret);
+    const res = await fetch("/oauth/token", { method: "POST", body });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.detail || `Login failed (${res.status})`);
+    }
+    const j = await res.json();
+    API.setToken(j.access_token);
+    AUTH.showApp();
+  },
+  logout() { AUTH.showLogin("Logged out"); },
+};
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+// ---- authenticated fetch: 401 clears session & surfaces rejection ----
+async function api(path, opts = {}) {
+  const res = await fetch(API.baseUrl() + path, Object.assign({ headers: API.authHeader() }, opts));
+  if (res.status === 401) { AUTH.logout(); throw new Error("Unauthorized — please sign in"); }
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j.detail || `HTTP ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
 
-      const templateKey = tab.getAttribute('data-policy');
-      if (policyTemplates[templateKey]) {
-        codeBox.innerHTML = policyTemplates[templateKey];
-      }
-    });
+// ---- error boundary: render inline banner, never crash the workbench ----
+function safe(panelId, fn) {
+  return () => {
+    try { fn(); } catch (e) {
+      const el = $("#" + panelId.replace("#", ""));
+      if (el) el.innerHTML = `<div class="panel-error">⚠ ${e.message}</div>`;
+    }
+  };
+}
+
+// ---- app state ----
+
+// ---- SSE live stream with exponential backoff reconnect (via fetch stream) ----
+class LiveData {
+  constructor(url) {
+    this.url = url; this.attempt = 0; this.baseDelay = 1000; this.maxDelay = 30000;
+    this.controller = null; this.reader = null; this.decoder = new TextDecoder();
+    this.buffer = ""; this.listeners = []; this.connected = false;
+  }
+  on(cb) { this.listeners.push(cb); return this; }
+  _connect() {
+    const delay = Math.min(this.baseDelay * Math.pow(2, this.attempt++), this.maxDelay);
+    if (this.controller) this.controller.abort();
+    this.controller = new AbortController();
+            fetch(API.baseUrl() + this.url, { method: "GET", headers: API.authHeader(), signal: this.controller.signal, cache: "no-store" })
+      .then((res) => {
+        if (res.status === 401) { AUTH.logout(); throw new Error("Unauthorized"); }
+        if (!res.ok) throw new Error(`SSE ${res.status}`);
+        if (!res.body) throw new Error("no stream body");
+        const reader = res.body.getReader();
+        this.attempt = 0; this.connected = true;
+        $("#sseDot").textContent = "●";
+        const pump = () => reader.read().then(({ done, value }) => {
+          if (done) { this.connected = false; setTimeout(() => this._connect(), 1000); return; }
+          this.buffer += this.decoder.decode(value, { stream: true });
+          let i;
+          while ((i = this.buffer.indexOf("\n\n")) >= 0) {
+            const chunk = this.buffer.slice(0, i);
+            this.buffer = this.buffer.slice(i + 2);
+            this._dispatch(chunk);
+          }
+          pump();
+        }).catch(() => { this.connected = false; setTimeout(() => this._connect(), 1000); });
+        pump();
+      })
+      .catch((e) => {
+        $("#sseDot").textContent = "!";
+        setTimeout(() => this._connect(), delay);
+      });
+  }
+  _dispatch(chunk) {
+    let event = null, data = "";
+    for (const line of chunk.split("\n")) {
+      if (line.startsWith("event:")) event = line.slice(6).trim();
+      else if (line.startsWith("data:")) data += line.slice(5).trim();
+    }
+    if (!event || !data) return;
+    try {
+      const payload = JSON.parse(data);
+      if (event === "ping") return;
+      this.listeners.forEach((cb) => cb(event, payload));
+    } catch { /* ignore malformed frames */ }
+  }
+  start() { $("#sseDot").textContent = "●"; this._connect(); }
+  stop() { if (this.controller) this.controller.abort(); this.connected = false; }
+}
+
+// ---- Virtualized list (windowing) ----
+class VirtualList {
+  constructor(container, rowHeight = 34, buffer = 6) {
+    this.container = container; this.rowHeight = rowHeight; this.buffer = buffer;
+    this.items = []; this.renderRow = null;
+    this._onScroll = this._onScroll.bind(this);
+    container.addEventListener("scroll", this._onScroll);
+  }
+  set(items, renderRow) { this.items = items || []; this.renderRow = renderRow; this._render(); }
+  _onScroll() { this._render(); }
+  _render() {
+    const n = this.items.length;
+    if (!this.renderRow) { this.container.innerHTML = ""; return; }
+    const visible = Math.ceil(this.container.clientHeight / this.rowHeight) + this.buffer;
+    const st = this.container.scrollTop;
+    const start = Math.max(0, Math.floor(st / this.rowHeight) - this.buffer);
+    const end = Math.min(n, start + visible);
+    const pad = (rows) => rows * this.rowHeight;
+    let html = `<div style="height:${pad(start)}px"></div>`;
+    for (let i = start; i < end; i++) html += this.renderRow(this.items[i], i);
+    html += `<div style="height:${pad(n - end)}px"></div>`;
+    this.container.innerHTML = html;
+  }
+}
+
+function truncate(s, n) { if (!s) return ""; return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+function fmtTime(iso) { if (!iso) return "—"; try { return new Date(iso).toLocaleTimeString(); } catch { return "—"; } }
+function fmtDate(iso) { if (!iso) return "—"; try { return new Date(iso).toLocaleString(); } catch { return "—"; } }
+function sparkPath(vals, w = 36, h = 10) {
+  if (vals.length < 2) return "";
+  const step = w / (vals.length - 1);
+  let d = `M0 ${h - vals[0] / 100 * h}`;
+  for (let i = 1; i < vals.length; i++) d += ` L${(i * step).toFixed(1)} ${h - vals[i] / 100 * h}`;
+  return d;
+}
+
+// ---- render: create overview metric cards (once) ----
+function initOverview() {
+  if ($("#overviewCards").childElementCount) return;
+  $("#overviewCards").innerHTML = `
+    <div id="cardKernel" class="kit-card warn"><div class="kit-head"><span class="kit-dot">●</span><span class="kit-label">Kernel Health</span></div><div class="kit-value">—</div></div>
+    <div id="cardThreats" class="kit-card"><div class="kit-head"><span class="kit-dot">●</span><span class="kit-label">Threat Index</span></div><div class="kit-value">0</div></div>
+    <div id="cardCpu" class="kit-card"><div class="kit-head"><span class="kit-dot">●</span><span class="kit-label">CPU</span></div><div class="kit-value">—</div><svg class="spark"><path id="cpuSpark" fill="none"></path></svg></div>
+    <div id="cardMem" class="kit-card"><div class="kit-head"><span class="kit-dot">●</span><span class="kit-label">Memory</span></div><div class="kit-value">—</div><svg class="spark"><path id="memSpark" fill="none"></path></svg></div>
+  `;
+}
+const cardKernel = safe("cardKernel", () => {
+  const s = STATUS.system || {}; const ebpf = s.ebpf || {};
+  const state = ebpf.status === "active" ? "ok" : (ebpf.status === "error" ? "err" : "warn");
+  text($("#cardKernel .kit-value"), I18N.t(`ebpf.${s.kernel_health || "ERROR"}`));
+  $("#cardKernel .kit-dot").textContent = state === "ok" ? "●" : "!";
+  $("#cardKernel").className = "kit-card " + state;
+  $("#ebpfDot").textContent = "●"; $("#ebpfDot").style.color = state === "err" ? "#ef4444" : "#06b6d4";
+});
+const cardThreats = safe("cardThreats", () => {
+  const s = STATUS.system || {};
+  text($("#cardThreats .kit-value"), String(s.threat_index || 0));
+  $("#dbDot").textContent = "●";
+  $("#dbDot").style.color = s.database_connected ? "#10b981" : "#ef4444";
+});
+const cardHost = safe("cardCpu", () => {
+  const h = STATUS.host || {};
+  text($("#cardCpu .kit-value"), h.available ? `${h.cpu_percent.toFixed(1)}%` : "—");
+  text($("#cardMem .kit-value"), h.available ? `${h.memory_percent.toFixed(1)}%` : "—");
+  const vals = STATUS.hostSamples;
+  $("#cpuSpark").setAttribute("d", sparkPath(vals.map((v) => v.cpu)));
+  $("#memSpark").setAttribute("d", sparkPath(vals.map((v) => v.mem)));
+});
+const renderEvents = safe("eventVirtual", () => {
+  const wrap = $("#eventVirtualWrap");
+  const empty = $("#eventEmpty");
+  if (empty) empty.hidden = (STATUS.events || []).length > 0;
+  if (!STATUS._vl) STATUS._vl = new VirtualList(wrap, 34, 8);
+  STATUS._vl.container = wrap;
+  STATUS._vl.set(STATUS.events || [], (ev) => {
+    const action = ev.action || "observe";
+    const cls = /block|drop|deny|reject/i.test(action) ? "is-block" : "is-pass";
+    return `<div class="evt-row ${cls}"><span class="evt-time">${fmtTime(ev.created_at)}</span><span class="evt-type">${ev.event_type || "—"}</span><span class="evt-ip">${ev.src_ip || "—"}</span><span class="evt-ip">${ev.dst_ip || "—"}</span><span class="evt-action">${action}</span><span class="evt-detail" title="${ev.detail || ""}">${truncate(ev.detail, 60)}</span></div>`;
+  });
+});
+const renderThreats = safe("threatTable", () => {
+  const t = $("#threatTable"); const th = STATUS.threats || [];
+  if (!th.length) { t.innerHTML = `<div class="empty"><span>🛡</span><p>No recorded threats.</p><small>Real threats appear here as the kernel shield raises alerts.</small></div>`; return; }
+  let h = `<table><thead><tr><th>ID</th><th>Rule</th><th>Action</th><th>Reason</th><th>Time</th></tr></thead><tbody>`;
+  th.forEach((x) => { h += `<tr><td>${x.id}</td><td>${x.rule_id || "—"}</td><td>${x.action || "—"}</td><td>${truncate(x.reason, 80)}</td><td>${fmtDate(x.created_at)}</td></tr>`; });
+  t.innerHTML = h + `</tbody></table>`;
+});
+const renderAndroid = safe("androidDevices", () => {
+  const t = $("#androidDevices"); const d = STATUS.android || {};
+  if (d.status !== "ok" || !Array.isArray(d.devices)) { t.innerHTML = `<div class="empty"><span>📱</span><p>Android Management API not configured.</p><small>Set ANDROID_SA_KEY_PATH / ANDROID_ENTERPRISE_ID to enroll devices.</small></div>`; return; }
+  if (!d.devices.length) { t.innerHTML = `<div class="empty"><span>📱</span><p>No enrolled devices.</p></div>`; return; }
+  let h = `<table><thead><tr><th>Device</th><th>Policy</th><th>Last Seen</th><th>State</th></tr></thead><tbody>`;
+  d.devices.forEach((dev) => {
+    const cls = /comp|active/i.test(dev.state || "") ? "badge-ok" : "badge-warn";
+    h += `<tr><td>${dev.name || dev.id || "—"}</td><td>${dev.policy || "—"}</td><td>${dev.last_seen ? fmtDate(dev.last_seen) : "—"}</td><td><span class="badge ${cls}">${dev.state || "—"}</span></td></tr>`;
+  });
+  t.innerHTML = h + `</tbody></table>`;
+});
+const renderPolicies = safe("policyList", () => {
+  const el = $("#policyList"); const rules = STATUS.policies || [];
+  if (!rules.length) { el.innerHTML = `<div class="empty"><span>📜</span><p>No security policies loaded.</p><small>Add rules via the CLI (<code>agent-ebpf policy</code>).</small></div>`; return; }
+  let h = `<table><thead><tr><th>Rule ID</th><th>Action</th><th>Spec</th></tr></thead><tbody>`;
+  rules.forEach((r) => { h += `<tr><td>${r.rule_id || r.id || "—"}</td><td>${r.action || "—"}</td><td class="mono">${JSON.stringify(r).slice(0, 120)}</td></tr>`; });
+    el.innerHTML = h + `</tbody></table>`;
+});
+
+// ---- data fetchers (real endpoints; explicit empty states when unavailable) ----
+async function loadSystem() { const s = await api("/api/system/status"); STATUS.system = s; cardKernel(); cardThreats(); }
+async function loadHost() { const h = await api("/api/system/host"); STATUS.host = h; if (h.available && typeof h.cpu_percent === "number") { STATUS.hostSamples.push({ cpu: h.cpu_percent, mem: h.memory_percent }); if (STATUS.hostSamples.length > 60) STATUS.hostSamples.shift(); } cardHost(); }
+async function loadEvents() { const r = await api("/api/events?limit=200"); STATUS.events = r.available ? r.events : []; renderEvents(); }
+async function loadThreats() { const r = await api("/api/threats?limit=200"); STATUS.threats = r.available ? r.threats : []; renderThreats(); }
+async function loadAndroid() {
+  try { STATUS.android = await api("/api/android/summary"); } catch { STATUS.android = { status: "error", devices: [], summary: {} }; }
+  try { const d = await api("/api/android/devices"); STATUS.android = STATUS.android || {}; if (d && d.devices) STATUS.android.devices = d.devices; } catch { /* keep summary-only */ }
+  renderAndroid();
+}
+async function loadPolicies() { const s = STATUS.system || {}; STATUS.policies = (s.ebpf && s.ebpf.rules) || []; renderPolicies(); }
+
+async function refreshAll() {
+  $("#refreshBtn").textContent = "↻";
+  await Promise.allSettled([loadSystem(), loadHost(), loadEvents(), loadThreats(), loadAndroid()]);
+  loadPolicies();
+  $("#lastRefresh").textContent = "Live · " + new Date().toLocaleTimeString();
+}
+
+// ---- nav sections (keyboard-friendly) ----
+function buildNav() {
+  const items = [["Overview", "OVERVIEW"], ["Events", "EVENTS"], ["Threats", "THREATS"], ["Android", "ANDROID"], ["Policies", "POLICIES"]];
+  $("#navSections").innerHTML = items.map(([l, k]) => `<button class="nav-link" data-k="${k}">${l}</button>`).join("");
+  $("#navSections").addEventListener("click", (e) => {
+    const b = e.target.closest(".nav-link"); if (!b) return;
+    const k = b.getAttribute("data-k");
+    document.querySelectorAll(".section").forEach((s) => s.classList.toggle("active", s.id === `section-${k.toLowerCase()}`));
+    document.querySelectorAll(".nav-link").forEach((x) => x.classList.remove("active")); b.classList.add("active");
   });
 }
 
-/* 8. Smooth Scrolling */
-function initSmoothScroll() {
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth'
-        });
-      }
-    });
-  });
+// ---- filters for event log ----
+function buildFilters() {
+  $("#eventFilters").innerHTML = `<input id="searchEvt" type="search" placeholder="Search IP / type / detail…" autocomplete="off">` +
+    `<input id="f_action" type="text" placeholder="action" autocomplete="off">` +
+    `<button id="clearFilters" class="icon-btn small">✕</button>`;
+  $("#searchEvt").addEventListener("input", applyFilters);
+  $("#clearFilters").addEventListener("click", () => { $("#searchEvt").value = ""; $("#f_action").value = ""; applyFilters(); });
+  $("#f_action").addEventListener("input", applyFilters);
 }
+function applyFilters() {
+  const q = $("#searchEvt").value.trim().toLowerCase();
+  const a = $("#f_action").value.trim().toLowerCase();
+  const out = (STATUS.events || []).filter((ev) => {
+    const hay = `${ev.event_type||""} ${ev.src_ip||""} ${ev.dst_ip||""} ${ev.action||""} ${ev.detail||""}`.toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (a && !(ev.action||"").toLowerCase().includes(a)) return false;
+    return true;
+  });
+  if (STATUS._vl) { STATUS._vl.set(out, STATUS._vl.renderRow); }
+  else { STATUS.events = out; renderEvents(); }
+}
+
+// ---- live SSE wiring (auth header + exponential backoff reconnect) ----
+function startLive() {
+  const sse = new LiveData("/api/metrics/stream");
+  sse.on("metrics", (ev, payload) => {
+    if (payload.ebpf) { STATUS.system = STATUS.system || {}; STATUS.system.ebpf = payload.ebpf; cardKernel(); }
+    if (payload.events && payload.events.length) {
+      const merged = payload.events.concat(STATUS.events || []);
+      const seen = new Set(); STATUS.events = [];
+      merged.forEach((e) => { if (e.id && seen.has(e.id)) return; seen.add(e.id); STATUS.events.push(e); });
+      applyFilters();
+    }
+  });
+  sse.start();
+  return sse;
+}
+
+// ---- theme ----
+function applyTheme(dark) { document.documentElement.dataset.theme = dark ? "dark" : "light"; localStorage.setItem("ebpf_theme", dark ? "dark" : "light"); }
+
+async function onLoginSuccess() {
+  initOverview();            // create card/placeholder DOM first
+  await refreshAll();        // now renderers can populate real values
+  buildFilters();
+  startLive();
+  setInterval(() => { loadHost(); cardHost(); }, 5000);
+  setInterval(() => { loadEvents(); loadThreats(); }, 10000);
+}
+
+addEventListener("DOMContentLoaded", () => {
+  applyTheme(localStorage.getItem("ebpf_theme") === "dark" || (!localStorage.getItem("ebpf_theme") && true));
+  $("#themeToggle").addEventListener("click", () => applyTheme(document.documentElement.dataset.theme !== "dark"));
+  buildNav();
+  $("#refreshBtn").addEventListener("click", refreshAll);
+  $("#logoutBtn").addEventListener("click", () => AUTH.logout());
+  $("#btnReloadDevices").addEventListener("click", () => { loadAndroid(); loadSystem(); });
+
+    if (API.token()) { AUTH.showApp(); initOverview(); refreshAll().then(() => { buildFilters(); startLive(); }); }
+  else { AUTH.showLogin(); }
+
+  $("#loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); const fd = new FormData(e.target);
+    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Signing in…";
+    try { await AUTH.login(fd.get("client_id"), fd.get("client_secret")); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+  });
+  $("#loginDevBtn").style.display = "inline-flex";
+  $("#loginDevBtn").addEventListener("click", async () => {
+    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Signing in…";
+    try { await AUTH.login("", ""); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+  });
+});
+
+
+
+

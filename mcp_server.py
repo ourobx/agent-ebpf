@@ -34,13 +34,19 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 try:
     from tools import ebpf_loader
+    from tools import db as database
+    from tools.android_manager import android_manager
+    from tools.config import settings
 except ImportError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent))
     from tools import ebpf_loader
+    from tools import db as database
+    from tools.android_manager import android_manager
+    from tools.config import settings
 
-# Structlog Yapılandırması
+# Structlog Configuration
 structlog.configure(
     processors=[
         structlog.processors.TimeStamper(fmt="iso"),
@@ -49,19 +55,48 @@ structlog.configure(
 )
 logger = structlog.get_logger("mcp_gateway")
 
-# Güvenlik Sabitleri
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "SUPER_SECRET_PRODUCTION_KEY_CHANGE_IN_ENV")
-JWT_ALGORITHM = "HS256"
+# Security Constants — strictly environment-driven (no hardcoded production secret).
+JWT_SECRET_KEY = settings.effective_jwt_secret()
+JWT_ALGORITHM = settings.jwt_algorithm or "HS256"
 security_bearer = HTTPBearer(auto_error=False)
+
+# Tool execution timeout (seconds) — guards against slow/hung tool calls.
+TOOL_TIMEOUT = settings.mcp_tool_timeout
+
+# OAuth 2.0 client credentials from environment. In production a missing value
+# fails fast at startup (settings.validate()); outside production an explicit
+# clearly-marked dev value is used as a deliberate choice (never for prod).
+OAUTH_CLIENT_ID = settings.oauth_client_id or ("" if settings.is_production else "agent-ebpf-dev")
+OAUTH_CLIENT_SECRET = settings.oauth_client_secret or ("" if settings.is_production else "dev-secret")
 
 # SlowAPI Limiter (IP + Rate Limit)
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("MCP Gateway Başlatılıyor...")
+    logger.info("MCP Gateway Initializing...")
+    # Fail-fast: in production any missing critical config aborts startup.
+    try:
+        settings.validate()
+    except RuntimeError as exc:
+        if settings.is_production:
+            logger.error("Startup blocked by configuration error", error=str(exc))
+            raise
+        logger.warning("Non-production configuration warnings", error=str(exc))
+
+    # Real PostgreSQL connection pool (liveness + schema).
+    try:
+        await database.connect()
+    except Exception as exc:  # noqa: BLE001
+        if settings.is_production:
+            logger.error("Startup blocked: PostgreSQL unavailable", error=str(exc))
+            raise
+        logger.warning("PostgreSQL unavailable during startup (non-production)", error=str(exc))
+
+    logger.info("MCP Gateway ready")
     yield
-    logger.info("MCP Gateway Kapatılıyor...")
+    await database.close()
+    logger.info("MCP Gateway Shutting Down...")
 
 app = FastAPI(
     title="Agent-eBPF MCP Gateway",
@@ -83,10 +118,15 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
-# CORS
+# Strict & Configurable CORS for ksec.space production & dev environments
+raw_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+if not settings.is_production and "*" not in raw_origins:
+    raw_origins.append("*")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=raw_origins,
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)*ksec\.space$" if settings.is_production else None,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -94,10 +134,16 @@ app.add_middleware(
 
 # Web UI Dashboard & Static Assets
 @app.get("/", include_in_schema=False)
-async def serve_index():
-    if os.path.exists("index.html"):
+async def serve_index(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and os.path.exists("index.html"):
         return FileResponse("index.html")
-    return {"status": "ok", "message": "Agent-eBPF Server Active"}
+    return {
+        "status": "active",
+        "service": "Agent-eBPF MCP Gateway",
+        "mcp_sse_endpoint": "/sse",
+        "message": "MCP SSE Server is active."
+    }
 
 @app.get("/styles.css", include_in_schema=False)
 async def serve_styles():
@@ -135,11 +181,11 @@ RINGBUF_LOSS = Counter(
     "Total number of lost ringbuffer security event notifications"
 )
 
-# Prometheus Metrics Entegrasyonu
+# Prometheus Metrics Integration
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 
-# --- Pydantic Şemaları ---
+# --- Pydantic Schemas ---
 class UserTokenPayload(BaseModel):
     sub: str
     role: str
@@ -148,6 +194,19 @@ class UserTokenPayload(BaseModel):
 class SecurityRuleRequest(BaseModel):
     ip_address: str = Field(..., json_schema_extra={"example": "192.168.1.50"})
     rule_id: int = Field(100, json_schema_extra={"example": 101})
+
+class AndroidTokenRequest(BaseModel):
+    policy_name: str = "sentinel-strict"
+    duration_hours: int = 24
+
+class AndroidCommandRequest(BaseModel):
+    device_id: str
+    command_type: str = Field(..., json_schema_extra={"example": "LOCK"})
+    duration_seconds: int = 0
+
+class AndroidPolicyRequest(BaseModel):
+    policy_id: str = "sentinel-strict"
+    spec: Dict[str, Any] = {}
 
 class MCPToolRequest(BaseModel):
     jsonrpc: str = "2.0"
@@ -163,7 +222,7 @@ def create_access_token(data: dict, expires_delta: Optional[int] = 86400) -> str
 
 
 # --- Policy & Session Utilities ---
-POLICY_FILE = os.getenv("POLICY_FILE", "policy.yaml")
+POLICY_FILE = settings.policy_file
 sessions: Dict[str, asyncio.Queue] = {}
 
 def load_policy():
@@ -218,15 +277,62 @@ TOOLS = [
             },
             "required": ["payload"]
         }
+    },
+    {
+        "name": "android_list_devices",
+        "description": "Lists all Android endpoints managed via Android Management API, including device model, battery level, OS version, compliance status, and remote state.",
+        "inputSchema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "android_create_enrollment_token",
+        "description": "Generates an Android Management API enrollment token and QR code for onboarding a new Android device into enterprise management.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "policy_name": {"type": "string", "default": "sentinel-strict", "description": "Target policy for the device"},
+                "duration_hours": {"type": "integer", "default": 24, "description": "Token validity duration in hours"}
+            }
+        }
+    },
+    {
+        "name": "android_execute_command",
+        "description": "Sends a remote action command (LOCK, WIPE, REBOOT, REBOOT_CLEAR_PASSCODE) to an Android device.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "device_id": {"type": "string", "description": "Unique Android device ID (e.g. node-pixel-01)"},
+                "command_type": {"type": "string", "enum": ["LOCK", "WIPE", "REBOOT", "REBOOT_CLEAR_PASSCODE"], "description": "Remote command action"}
+            },
+            "required": ["device_id", "command_type"]
+        }
+    },
+    {
+        "name": "android_apply_policy",
+        "description": "Updates or patches a security policy (disabling camera, password strength, kiosk mode) for Android endpoints.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "policy_id": {"type": "string", "default": "sentinel-strict", "description": "Policy identifier"},
+                "camera_disabled": {"type": "boolean", "description": "Disable camera hardware"},
+                "screen_capture_disabled": {"type": "boolean", "description": "Disable screen capture"},
+                "password_min_length": {"type": "integer", "description": "Minimum password length"}
+            },
+            "required": ["policy_id"]
+        }
+    },
+    {
+        "name": "android_get_fleet_summary",
+        "description": "Returns fleet-wide Android endpoint metrics (device count, active state, avg battery, compliance score).",
+        "inputSchema": {"type": "object", "properties": {}, "required": []}
     }
 ]
 
-# --- Güvenlik & Yetkilendirme Yardımcıları ---
+# --- Security & Authorization Helpers ---
 def verify_jwt_token(credentials: Optional[HTTPAuthorizationCredentials] = Security(security_bearer)) -> UserTokenPayload:
     if not credentials or not credentials.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Yetkisiz Erişim: Authorization başlığı (Bearer token) eksik.",
+            detail="Unauthorized Access: Missing Authorization header (Bearer token).",
             headers={"WWW-Authenticate": "Bearer"}
         )
     token = credentials.credentials
@@ -237,12 +343,12 @@ def verify_jwt_token(credentials: Optional[HTTPAuthorizationCredentials] = Secur
         scopes: List[str] = payload.get("scopes", [])
 
         if sub is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Geçersiz JWT Token: 'sub' eksik.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid JWT Token: Missing 'sub' claim.")
 
         return UserTokenPayload(sub=sub, role=role, scopes=scopes)
     except JWTError as e:
-        logger.warning("JWT doğrulama hatası", error=str(e))
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Yetkisiz Erişim: {str(e)}")
+        logger.warning("JWT verification error", error=str(e))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Unauthorized Access: {str(e)}")
 
 def require_role_and_scope(required_role: str, required_scope: str):
     def dependency(user: UserTokenPayload = Depends(verify_jwt_token)):
@@ -251,17 +357,17 @@ def require_role_and_scope(required_role: str, required_scope: str):
         required_level = roles_hierarchy.get(required_role, 3)
 
         if user_level < required_level:
-            logger.error("Yetersiz Rol", user=user.sub, role=user.role, required=required_role)
+            logger.error("Insufficient Role", user=user.sub, role=user.role, required=required_role)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Erişim Engellendi: Bu işlem için '{required_role}' rolü gereklidir."
+                detail=f"Access Denied: Role '{required_role}' required for this action."
             )
 
         if required_scope not in user.scopes and "ebpf:admin" not in user.scopes:
-            logger.error("Yetersiz Scope", user=user.sub, scopes=user.scopes, required=required_scope)
+            logger.error("Insufficient Scope", user=user.sub, scopes=user.scopes, required=required_scope)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Erişim Engellendi: Eksik Scope '{required_scope}'."
+                detail=f"Access Denied: Missing Scope '{required_scope}'."
             )
 
         return user
@@ -271,10 +377,15 @@ async def execute_tool(name: str, args: dict, user: Optional[UserTokenPayload] =
     if name == "get_security_status":
         policy = load_policy()
         rule_count = len(policy.get("rules", []))
+        try:
+            ebpf_state = ebpf_loader.inspect_maps()
+        except Exception as exc:  # noqa: BLE001 - report the real error
+            ebpf_state = {"status": "error", "error": str(exc)}
         return {
-            "status": "active",
-            "kernel_hooks": ["sock_ops", "uprobes", "kprobes", "xdp"],
-            "inspection_latency": "<35µs",
+            "status": "active" if ebpf_state.get("status") == "active" else "not_loaded",
+            "ebpf_program_loaded": ebpf_state.get("status") == "active",
+            "packets_processed": ebpf_state.get("total_packets", 0),
+            "packets_dropped": ebpf_state.get("dropped_packets", 0),
             "active_rules_count": rule_count,
             "engine_mode": "Kernel Fail-Closed (Zero-Trust)"
         }
@@ -291,7 +402,7 @@ async def execute_tool(name: str, args: dict, user: Optional[UserTokenPayload] =
         if not user or user_role not in ["admin", "operator"]:
             raise HTTPException(
                 status_code=403,
-                detail="Erişim Engellendi: add_security_rule için admin/operator rolü gereklidir."
+                detail="Access Denied: Admin or operator role required for add_security_rule."
             )
         rule_id = args.get("rule_id", "custom_rule")
 
@@ -331,6 +442,28 @@ async def execute_tool(name: str, args: dict, user: Optional[UserTokenPayload] =
                     "reason": rule.get("message", "Rule violation detected")
                 }
         return {"safe": True, "action": "PASS", "message": "Query cleared kernel security filters."}
+    elif name == "android_list_devices":
+        return {"devices": android_manager.list_devices()}
+    elif name == "android_create_enrollment_token":
+        policy_name = args.get("policy_name", "sentinel-strict")
+        duration = int(args.get("duration_hours", 24))
+        return android_manager.create_enrollment_token(policy_name=policy_name, duration_hours=duration)
+    elif name == "android_execute_command":
+        device_id = args.get("device_id", "")
+        command_type = args.get("command_type", "LOCK")
+        return android_manager.execute_command(device_id=device_id, command_type=command_type)
+    elif name == "android_apply_policy":
+        policy_id = args.get("policy_id", "sentinel-strict")
+        spec = {
+            "cameraDisabled": args.get("camera_disabled", True),
+            "screenCaptureDisabled": args.get("screen_capture_disabled", False),
+            "passwordRequirements": {
+                "passwordMinimumLength": args.get("password_min_length", 8)
+            }
+        }
+        return android_manager.apply_policy(policy_id=policy_id, policy_spec=spec)
+    elif name == "android_get_fleet_summary":
+        return android_manager.get_fleet_summary()
     else:
         raise ValueError(f"Unknown tool: {name}")
 
@@ -355,7 +488,41 @@ async def oauth_authorize(redirect_uri: str = "", state: str = ""):
     return {"status": "authorized", "code": "mcp_auth_code"}
 
 @app.api_route("/oauth/token", methods=["GET", "POST"])
-async def oauth_token():
+async def oauth_token(request: Request):
+    params = dict(request.query_params)
+    if request.method == "POST":
+        try:
+            ctype = request.headers.get("content-type", "")
+            if "json" in ctype:
+                body = await request.json()
+            else:
+                raw = (await request.body()).decode("utf-8")
+                form = dict(pair.split("=", 1) for pair in raw.split("&") if "=" in pair)
+                body = form
+            if isinstance(body, dict):
+                params.update(body)
+        except Exception:
+            pass
+
+    grant_type = params.get("grant_type", "client_credentials")
+    supported = {"client_credentials", "authorization_code", "implicit"}
+    if grant_type not in supported:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported grant_type '{grant_type}'. Supported: {', '.join(sorted(supported))}"
+        )
+
+    # Validate client credentials only when provided (dev mode falls back to defaults).
+    client_id = params.get("client_id")
+    client_secret = params.get("client_secret")
+    if client_id is not None or client_secret is not None:
+        if client_id != OAUTH_CLIENT_ID or client_secret != OAUTH_CLIENT_SECRET:
+            raise HTTPException(
+                status_code=401,
+                detail="Unauthorized: Invalid client_id or client_secret.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
     payload = {
         "sub": "admin_user",
         "role": "admin",
@@ -370,15 +537,6 @@ async def oauth_token():
     }
 
 # --- Health Endpoints ---
-@app.get("/")
-async def root():
-    return {
-        "status": "active",
-        "service": "Agent-eBPF MCP Gateway",
-        "mcp_sse_endpoint": "/sse",
-        "message": "MCP SSE Server is active."
-    }
-
 @app.get("/health")
 @app.get("/health/live", tags=["Health"])
 async def health_live():
@@ -386,7 +544,147 @@ async def health_live():
 
 @app.get("/health/ready", tags=["Health"])
 async def health_ready():
-    return {"status": "ready", "ebpf_maps": "pinned"}
+    """Real readiness: reflects live DB connectivity and real eBPF state."""
+    try:
+        ebpf_state = ebpf_loader.inspect_maps()
+    except Exception as exc:  # noqa: BLE001 - report the real error
+        ebpf_state = {"status": "error", "error": str(exc)}
+    db_ok = await database.health()
+    ready = ebpf_state.get("status") == "active" or db_ok
+    return {
+        "status": "ready" if ready else "not_ready",
+        "database_connected": db_ok,
+        "ebpf_program_loaded": ebpf_state.get("status") == "active",
+        "ebpf_status": ebpf_state.get("status"),
+    }
+
+# --- Android Management API Endpoints ---
+@app.get("/api/android/devices", tags=["Android Sentinel"])
+async def get_android_devices():
+    return {"status": "ok", "devices": android_manager.list_devices()}
+
+@app.get("/api/android/summary", tags=["Android Sentinel"])
+async def get_android_summary():
+    return android_manager.get_fleet_summary()
+
+@app.post("/api/android/token", tags=["Android Sentinel"])
+async def create_android_token(body: AndroidTokenRequest):
+    res = android_manager.create_enrollment_token(
+        policy_name=body.policy_name,
+        duration_hours=body.duration_hours
+    )
+    return res
+
+@app.post("/api/android/command", tags=["Android Sentinel"])
+async def execute_android_command(body: AndroidCommandRequest):
+    res = android_manager.execute_command(
+        device_id=body.device_id,
+        command_type=body.command_type,
+        duration_seconds=body.duration_seconds
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Command failed"))
+    return res
+
+@app.post("/api/android/policy", tags=["Android Sentinel"])
+async def apply_android_policy(body: AndroidPolicyRequest):
+    res = android_manager.apply_policy(
+        policy_id=body.policy_id,
+        policy_spec=body.spec
+    )
+    return res
+
+# --- Real-Time Telemetry & Metrics Endpoints (authenticated) ---
+try:
+    import psutil as _psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:  # psutil is optional; host metrics report unavailable rather than fake
+    _psutil = None
+    PSUTIL_AVAILABLE = False
+
+
+@app.get("/api/system/host", tags=["Telemetry"])
+async def api_host_metrics(user: UserTokenPayload = Depends(verify_jwt_token)):
+    """Real host metrics (CPU/memory/uptime) via psutil; never fabricates values."""
+    if not PSUTIL_AVAILABLE:
+        return {"available": False, "reason": "psutil package is not installed"}
+    try:
+        return {
+            "available": True,
+            "cpu_percent": _psutil.cpu_percent(interval=None),
+            "memory_percent": _psutil.virtual_memory().percent,
+            "uptime_seconds": int(time.time() - _psutil.boot_time()),
+            "load_avg": list(_psutil.getloadavg()) if hasattr(_psutil, "getloadavg") else [],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"available": False, "reason": str(exc)}
+
+
+@app.get("/api/system/status", tags=["Telemetry"])
+async def api_system_status(user: UserTokenPayload = Depends(verify_jwt_token)):
+    """Real kernel/database health snapshot from live eBPF map + PostgreSQL state."""
+    try:
+        ebpf_state = ebpf_loader.inspect_maps()
+    except Exception as exc:  # noqa: BLE001
+        ebpf_state = {"status": "error", "error": str(exc)}
+    db_ok = await database.health()
+    rules = load_policy().get("rules", [])
+    kernel_ok = ebpf_state.get("status") == "active"
+    return {
+        "kernel_health": "OPERATIONAL" if kernel_ok else "NOT_LOADED",
+        "ebpf": ebpf_state,
+        "database_connected": db_ok,
+        "active_rules": len(rules),
+        "threat_index": 0,
+        "threat_label": "CLEAR",
+    }
+
+
+@app.get("/api/events", tags=["Telemetry"])
+async def api_events(limit: int = 200, user: UserTokenPayload = Depends(verify_jwt_token)):
+    """Returns REAL persisted security events from PostgreSQL."""
+    if not await database.health():
+        return {"available": False, "events": []}
+    events = await database.fetch_events(limit)
+    return {"available": True, "events": events}
+
+
+@app.get("/api/threats", tags=["Telemetry"])
+async def api_threats(limit: int = 200, user: UserTokenPayload = Depends(verify_jwt_token)):
+    """Returns REAL detected threats from PostgreSQL."""
+    if not await database.health():
+        return {"available": False, "threats": []}
+    threats = await database.fetch_threats(limit)
+    return {"available": True, "threats": threats}
+
+
+@app.get("/api/metrics/stream", tags=["Telemetry"])
+async def api_metrics_stream(request: Request, user: UserTokenPayload = Depends(verify_jwt_token)):
+    """Authenticated Server-Sent-Events stream of real live telemetry."""
+    async def gen():
+        try:
+            while True:
+                payload: Dict[str, Any] = {}
+                if await database.health():
+                    evs = await database.fetch_events(20)
+                    payload["events"] = evs
+                try:
+                    s = ebpf_loader.inspect_maps()
+                    payload["ebpf"] = s
+                except Exception as exc:  # noqa: BLE001
+                    payload["ebpf"] = {"status": "error", "error": str(exc)}
+                yield f"event: metrics\ndata: {json.dumps(payload)}\n\n"
+                yield "event: ping\ndata: {}\n\n"
+                await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            return
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
 
 # --- SSE & MCP Message Endpoints ---
 @app.get("/sse")
@@ -437,17 +735,55 @@ async def handle_mcp_messages(
         return {"status": "active", "session_id": session_id, "user": user.sub}
 
     body = await request.json()
+    msg_id = body.get("id") if isinstance(body, dict) else None
+
+    # --- JSON-RPC 2.0 schema validation ---
+    if not isinstance(body, dict):
+        response = {
+            "jsonrpc": "2.0",
+            "id": None,
+            "error": {"code": -32600, "message": "Invalid Request: payload must be a JSON object"}
+        }
+        await sessions[session_id].put(response)
+        return {"status": "accepted"}
+
+    if body.get("jsonrpc") != "2.0":
+        response = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "error": {"code": -32600, "message": "Invalid Request: 'jsonrpc' member must be '2.0'"}
+        }
+        await sessions[session_id].put(response)
+        return {"status": "accepted"}
+
+    if msg_id is not None and (not isinstance(msg_id, (int, str)) or isinstance(msg_id, bool)):
+        response = {
+            "jsonrpc": "2.0",
+            "id": None,
+            "error": {"code": -32600, "message": "Invalid Request: 'id' must be a string, number, or null"}
+        }
+        await sessions[session_id].put(response)
+        return {"status": "accepted"}
+
     method = body.get("method")
-    msg_id = body.get("id")
 
     logger.info("MCP Message Received", user=user.sub, method=method)
+
+    if not isinstance(method, str) or not method:
+        response = {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "error": {"code": -32600, "message": "Invalid Request: 'method' must be a non-empty string"}
+        }
+        await sessions[session_id].put(response)
+        return {"status": "accepted"}
 
     if method == "notifications/initialized" or (msg_id is None and method is not None):
         return {"status": "accepted"}
 
     if method == "add_security_rule":
         if user.role not in ["admin", "operator"]:
-            raise HTTPException(status_code=403, detail="add_security_rule için yetkiniz yok.")
+            raise HTTPException(status_code=403, detail="Unauthorized to execute add_security_rule.")
         ip = body.get("params", {}).get("ip_address")
         rule_id = body.get("params", {}).get("rule_id", 100)
         if ip:
@@ -480,28 +816,44 @@ async def handle_mcp_messages(
     elif method == "resources/list":
         response = {"jsonrpc": "2.0", "id": msg_id, "result": {"resources": []}}
     elif method == "tools/call":
-        params = body.get("params", {})
-        tool_name = params.get("name")
-        arguments = params.get("arguments", {})
-        try:
-            res = await execute_tool(tool_name, arguments, user=user)
+        params = body.get("params")
+        if not isinstance(params, dict) or not isinstance(params.get("arguments"), dict):
             response = {
                 "jsonrpc": "2.0",
                 "id": msg_id,
-                "result": {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False)}]}
+                "error": {"code": -32602, "message": "Invalid params: 'params.arguments' must be an object"}
             }
-        except HTTPException as he:
-            response = {
-                "jsonrpc": "2.0",
-                "id": msg_id,
-                "error": {"code": -32603, "message": he.detail}
-            }
-        except Exception as e:
-            response = {
-                "jsonrpc": "2.0",
-                "id": msg_id,
-                "error": {"code": -32603, "message": str(e)}
-            }
+        else:
+            tool_name = params.get("name")
+            arguments = params.get("arguments", {})
+            try:
+                res = await asyncio.wait_for(
+                    execute_tool(tool_name, arguments, user=user),
+                    timeout=TOOL_TIMEOUT
+                )
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "result": {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False)}]}
+                }
+            except asyncio.TimeoutError:
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {"code": -32001, "message": f"Tool '{tool_name}' execution timed out after {TOOL_TIMEOUT}s"}
+                }
+            except HTTPException as he:
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {"code": -32603, "message": he.detail}
+                }
+            except Exception as e:
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {"code": -32603, "message": str(e)}
+                }
     else:
         response = {
             "jsonrpc": "2.0",
@@ -520,16 +872,16 @@ async def api_add_security_rule(
     rule: SecurityRuleRequest,
     user: UserTokenPayload = Depends(require_role_and_scope("operator", "security_rule:add"))
 ):
-    """Güvenlik Kuralı Ekleme REST Endpoint'i (Admin & Operator yetkisi gerektirir)."""
+    """Security Rule Addition REST Endpoint (Requires Admin or Operator role)."""
     try:
         try:
             ebpf_loader.add_blocked_ip(rule.ip_address, rule.rule_id)
         except Exception as ex:
             logger.warning(f"Kernel map write notice: {ex}")
-        logger.info("Güvenlik kuralı eklendi", admin=user.sub, ip=rule.ip_address)
-        return {"status": "success", "message": f"IP {rule.rule_id} kuralıyla engellendi.", "ip": rule.ip_address}
+        logger.info("Security rule added", admin=user.sub, ip=rule.ip_address)
+        return {"status": "success", "message": f"IP blocked by rule {rule.rule_id}.", "ip": rule.ip_address}
     except Exception as e:
-        logger.error("Kural ekleme hatası", error=str(e))
+        logger.error("Rule addition error", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

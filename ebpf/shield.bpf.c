@@ -22,7 +22,7 @@ struct security_event_t {
     __u64 timestamp_ns;
 };
 
-// 1. Map: IP Engelleme Listesi (LRU Hash Map for Auto Eviction)
+// 1. Map: IP Blocklist (LRU Hash Map for Auto Eviction)
 struct {
     __uint(type, BPF_MAP_TYPE_LRU_HASH);
     __uint(max_entries, 10000);
@@ -30,13 +30,13 @@ struct {
     __type(value, struct blocked_entry_t);
 } blocked_ips SEC(".maps");
 
-// 2. Map: Canlı Güvenlik İhlal Olayları (RingBuffer)
+// 2. Map: Live Security Violation Events (RingBuffer)
 struct {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
     __uint(max_entries, 256 * 1024); // 256 KB
 } events_ringbuf SEC(".maps");
 
-// 3. Map: Paket İstatistikleri Sayaçları
+// 3. Map: Packet Statistics Counters
 struct {
     __uint(type, BPF_MAP_TYPE_ARRAY);
     __uint(max_entries, 2);
@@ -95,12 +95,12 @@ int xdp_shield_filter(struct xdp_md *ctx) {
         }
     }
 
-    // IP Kontrolü
+    // IP Block Check
     struct blocked_entry_t *entry = bpf_map_lookup_elem(&blocked_ips, &src_ip);
     if (entry) {
         increment_stat(drop_idx);
 
-        // RingBuffer Olay Bildirimi
+        // RingBuffer Event Notification
         struct security_event_t *evt = bpf_ringbuf_reserve(&events_ringbuf, sizeof(*evt), 0);
         if (evt) {
             evt->src_ip = src_ip;

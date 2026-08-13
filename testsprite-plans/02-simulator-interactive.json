@@ -5,7 +5,7 @@
   "planSteps": [
     {
       "type": "action",
-      "description": "Click the button labeled 'Tahrip Edici SQL Simüle Et' inside the simulator control panel"
+      "description": "Click the button labeled 'Block Destructive SQL' inside the simulator control panel"
     },
     {
       "type": "assertion",
@@ -13,7 +13,7 @@
     },
     {
       "type": "action",
-      "description": "Click the button labeled 'Güvenli SQL Simüle Et'"
+      "description": "Click the button labeled 'Allow Safe SQL'"
     },
     {
       "type": "assertion",
