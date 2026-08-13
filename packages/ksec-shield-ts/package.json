@@ -1,0 +1,41 @@
+{
+  "name": "@ksec/shield",
+  "version": "1.0.0",
+  "description": "Kernel-level Zero-Trust Security SDK for AI Agents and LLMs via Agent-eBPF",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./langchain": {
+      "types": "./dist/interceptors/langchain.d.ts",
+      "import": "./dist/interceptors/langchain.mjs",
+      "require": "./dist/interceptors/langchain.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.js"
+  },
+  "keywords": [
+    "ebpf",
+    "security",
+    "ai-agent",
+    "llm-security",
+    "zero-trust",
+    "langchain",
+    "ksec"
+  ],
+  "author": "Sysauto <dev@sysauto.org>",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
