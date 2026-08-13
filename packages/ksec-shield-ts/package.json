@@ -1,5 +1,5 @@
 {
-  "name": "@ksec/shield",
+  "name": "@ourobx/shield",
   "version": "1.0.0",
   "description": "Kernel-level Zero-Trust Security SDK for AI Agents and LLMs via Agent-eBPF",
   "main": "dist/index.js",
@@ -8,18 +8,42 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js",
+      "require": "./dist/auto.js"
     },
     "./langchain": {
       "types": "./dist/interceptors/langchain.d.ts",
-      "import": "./dist/interceptors/langchain.mjs",
+      "import": "./dist/interceptors/langchain.js",
       "require": "./dist/interceptors/langchain.js"
+    },
+    "./providers": {
+      "types": "./dist/interceptors/providers.d.ts",
+      "import": "./dist/interceptors/providers.js",
+      "require": "./dist/interceptors/providers.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ourobx/agent-ebpf.git",
+    "directory": "packages/ksec-shield-ts"
+  },
+  "homepage": "https://ksec.space",
   "scripts": {
     "build": "tsc",
-    "test": "node --test dist/tests/*.js"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "ebpf",
@@ -28,6 +52,10 @@
     "llm-security",
     "zero-trust",
     "langchain",
+    "crewai",
+    "claude",
+    "gemini",
+    "deepseek",
     "ksec"
   ],
   "author": "Sysauto <dev@sysauto.org>",

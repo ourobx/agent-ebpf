@@ -1,9 +1,9 @@
-# @ksec/shield
+# @ourobx/shield
 
 **Zero-Trust Kernel-Level Security SDK for AI Agents and LLMs**  
 Powered by **Agent-eBPF** & [`ksec.space`](https://ksec.space).
 
-[![npm version](https://img.shields.io/npm/v/@ksec/shield.svg)](https://www.npmjs.com/package/@ksec/shield)
+[![npm version](https://img.shields.io/npm/v/@ourobx/shield.svg)](https://www.npmjs.com/package/@ourobx/shield)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 
 ---
@@ -11,11 +11,11 @@ Powered by **Agent-eBPF** & [`ksec.space`](https://ksec.space).
 ## ⚡ Quick Start (1 Line Integration)
 
 ```bash
-npm install @ksec/shield
+npm install @ourobx/shield
 ```
 
 ```typescript
-import { KsecShield } from '@ksec/shield';
+import { KsecShield } from '@ourobx/shield';
 
 // 1. Initialize Shield connected to ksec.space Gateway
 const shield = new KsecShield({

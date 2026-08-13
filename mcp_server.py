@@ -163,6 +163,61 @@ async def serve_logo():
         return FileResponse("ourobx_logo.png", media_type="image/png")
     raise HTTPException(status_code=404, detail="ourobx_logo.png not found")
 
+@app.get("/install.sh", include_in_schema=False)
+async def serve_install_sh():
+    script = """#!/usr/bin/env bash
+# Agent-eBPF 1-Click Zero-Config Installer (ksec.space)
+set -e
+echo "⚡ Installing Agent-eBPF Zero-Trust Shield (@ksec/shield)..."
+
+# Check if running inside Agent-eBPF repo or from remote
+if [ -d "packages/ksec-shield-py" ]; then
+  echo "📦 Installing ksec-shield from local workspace..."
+  pip install -e packages/ksec-shield-py || true
+elif command -v pip3 >/dev/null 2>&1 || command -v pip >/dev/null 2>&1; then
+  echo "📦 Installing ksec-shield for Python AI Agents..."
+  pip install --upgrade ksec-shield || true
+fi
+
+if [ -d "packages/ksec-shield-ts" ]; then
+  echo "📦 Installing @ourobx/shield from local workspace..."
+  npm install ./packages/ksec-shield-ts || true
+elif command -v npm >/dev/null 2>&1; then
+  echo "📦 Installing @ourobx/shield for Node.js / TypeScript AI Agents..."
+  npm install @ourobx/shield || true
+fi
+
+echo "✅ Agent-eBPF Shield is ready!"
+echo "👉 Simply add 'import ksec_shield.auto' (Python) or 'import \"@ourobx/shield/auto\"' (Node.js) to your agent project!"
+"""
+    return Response(content=script, media_type="text/x-shellscript")
+
+@app.get("/install.ps1", include_in_schema=False)
+async def serve_install_ps1():
+    script = """# Agent-eBPF 1-Click Zero-Config Installer for Windows (ksec.space)
+Write-Host "⚡ Installing Agent-eBPF Zero-Trust Shield (@ourobx/shield)..." -ForegroundColor Cyan
+
+if (Test-Path "packages\\ksec-shield-py") {
+    Write-Host "📦 Installing ksec-shield from local workspace..." -ForegroundColor Yellow
+    pip install -e packages\\ksec-shield-py
+} elseif (Get-Command pip -ErrorAction SilentlyContinue) {
+    Write-Host "📦 Installing ksec-shield for Python AI Agents..." -ForegroundColor Yellow
+    pip install --upgrade ksec-shield
+}
+
+if (Test-Path "packages\\ksec-shield-ts") {
+    Write-Host "📦 Installing @ourobx/shield from local workspace..." -ForegroundColor Yellow
+    npm install .\\packages\\ksec-shield-ts
+} elseif (Get-Command npm -ErrorAction SilentlyContinue) {
+    Write-Host "📦 Installing @ourobx/shield for Node.js / TypeScript AI Agents..." -ForegroundColor Yellow
+    npm install @ourobx/shield
+}
+
+Write-Host "✅ Agent-eBPF Shield is ready!" -ForegroundColor Green
+Write-Host "👉 Simply add 'import ksec_shield.auto' (Python) or 'import ""@ourobx/shield/auto""' (Node.js) to your agent project!" -ForegroundColor White
+"""
+    return Response(content=script, media_type="text/plain")
+
 
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Gauge
