@@ -1,9 +1,10 @@
 {
   "name": "@ourobx/shield",
-  "version": "1.1.0",
+  "version": "1.1.1",
+  "type": "module",
   "description": "Kernel-level Zero-Trust Security SDK for AI Agents and LLMs via Agent-eBPF",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "ksec-shield": "./bin/ksec-shield.js"

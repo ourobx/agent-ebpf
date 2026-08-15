@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.KsecLangChainCallback = void 0;
 /**
  * LangChain Tracer / Callback Handler for Agent-eBPF protection.
  * Automatically wraps tool starts, LLM calls, and external requests.
  */
-class KsecLangChainCallback {
+export class KsecLangChainCallback {
     shield;
     constructor(shield) {
         this.shield = shield;
@@ -28,5 +25,4 @@ class KsecLangChainCallback {
         });
     }
 }
-exports.KsecLangChainCallback = KsecLangChainCallback;
 //# sourceMappingURL=langchain.js.map

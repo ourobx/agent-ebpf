@@ -1,12 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LocalUdsClient = exports.UdsTransportClient = void 0;
-const node_net_1 = __importDefault(require("node:net"));
-const node_events_1 = require("node:events");
-class UdsTransportClient extends node_events_1.EventEmitter {
+import net from 'node:net';
+import { EventEmitter } from 'node:events';
+export class UdsTransportClient extends EventEmitter {
     socketPath;
     timeoutMs;
     failMode;
@@ -25,7 +19,7 @@ class UdsTransportClient extends node_events_1.EventEmitter {
     async evaluate(payload) {
         return new Promise((resolve) => {
             let isResolved = false;
-            const client = new node_net_1.default.Socket();
+            const client = new net.Socket();
             const finish = (result) => {
                 if (!isResolved) {
                     isResolved = true;
@@ -99,6 +93,6 @@ class UdsTransportClient extends node_events_1.EventEmitter {
         return this.failMode;
     }
 }
-exports.UdsTransportClient = UdsTransportClient;
-exports.LocalUdsClient = UdsTransportClient;
+// Alias for backward compatibility
+export { UdsTransportClient as LocalUdsClient };
 //# sourceMappingURL=uds-client.js.map

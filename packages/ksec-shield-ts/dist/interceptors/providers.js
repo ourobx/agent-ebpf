@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Universal Multi-Provider LLM & Agent Framework Adapters for TypeScript/Node.js.
  *
@@ -10,9 +9,7 @@
  * - LlamaIndexTS (llamaindex)
  * - LangChain.js (langchain / @langchain/core)
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UniversalProviderAdapter = exports.PROVIDER_ENDPOINTS = void 0;
-exports.PROVIDER_ENDPOINTS = {
+export const PROVIDER_ENDPOINTS = {
     anthropic: 'api.anthropic.com',
     gemini: 'generativelanguage.googleapis.com',
     openai: 'api.openai.com',
@@ -23,7 +20,7 @@ exports.PROVIDER_ENDPOINTS = {
     together: 'api.together.xyz',
     openrouter: 'openrouter.ai',
 };
-class UniversalProviderAdapter {
+export class UniversalProviderAdapter {
     shield;
     constructor(shield) {
         this.shield = shield;
@@ -32,7 +29,7 @@ class UniversalProviderAdapter {
      * Protects any LLM Client (Anthropic, Gemini, OpenAI, DeepSeek, Ollama, etc.)
      */
     protectClient(client, provider = 'custom', customEndpoint) {
-        const targetHost = customEndpoint || exports.PROVIDER_ENDPOINTS[provider] || 'llm-provider';
+        const targetHost = customEndpoint || PROVIDER_ENDPOINTS[provider] || 'llm-provider';
         // 1. Anthropic SDK
         const anyClient = client;
         if (anyClient?.messages?.create && typeof anyClient.messages.create === 'function') {
@@ -75,5 +72,4 @@ class UniversalProviderAdapter {
         return client;
     }
 }
-exports.UniversalProviderAdapter = UniversalProviderAdapter;
 //# sourceMappingURL=providers.js.map

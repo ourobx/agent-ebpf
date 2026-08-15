@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShieldOTelExporter = void 0;
-class ShieldOTelExporter {
+export class ShieldOTelExporter {
     tracer = null;
     isAvailable = false;
     enabled;
@@ -97,5 +94,4 @@ class ShieldOTelExporter {
         return this.isAvailable && this.enabled;
     }
 }
-exports.ShieldOTelExporter = ShieldOTelExporter;
 //# sourceMappingURL=otel.js.map

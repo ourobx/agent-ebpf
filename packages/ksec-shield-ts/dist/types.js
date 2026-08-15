@@ -1,6 +1,5 @@
-"use strict";
 /**
  * Type definitions for @ourobx/shield SDK.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+export {};
 //# sourceMappingURL=types.js.map

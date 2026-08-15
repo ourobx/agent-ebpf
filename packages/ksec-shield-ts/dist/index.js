@@ -1,37 +1,20 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.KsecShield = void 0;
-const circuit_breaker_js_1 = require("./circuit-breaker.js");
-const client_js_1 = require("./client.js");
-const in_memory_matcher_js_1 = require("./engine/in-memory-matcher.js");
-const uds_client_js_1 = require("./transport/uds-client.js");
-const vercel_ai_js_1 = require("./interceptors/vercel-ai.js");
-const otel_js_1 = require("./telemetry/otel.js");
-__exportStar(require("./types.js"), exports);
-__exportStar(require("./circuit-breaker.js"), exports);
-__exportStar(require("./client.js"), exports);
-__exportStar(require("./engine/in-memory-matcher.js"), exports);
-__exportStar(require("./transport/uds-client.js"), exports);
-__exportStar(require("./presets/index.js"), exports);
-__exportStar(require("./telemetry/index.js"), exports);
-__exportStar(require("./interceptors/langchain.js"), exports);
-__exportStar(require("./interceptors/providers.js"), exports);
-__exportStar(require("./interceptors/vercel-ai.js"), exports);
-class KsecShield {
+import { PolicyCache, KsecSecurityViolationError } from './circuit-breaker.js';
+import { KsecClient } from './client.js';
+import { FastPathEngine } from './engine/in-memory-matcher.js';
+import { UdsTransportClient } from './transport/uds-client.js';
+import { VercelAIInterceptor } from './interceptors/vercel-ai.js';
+import { ShieldOTelExporter } from './telemetry/otel.js';
+export * from './types.js';
+export * from './circuit-breaker.js';
+export * from './client.js';
+export * from './engine/in-memory-matcher.js';
+export * from './transport/uds-client.js';
+export * from './presets/index.js';
+export * from './telemetry/index.js';
+export * from './interceptors/langchain.js';
+export * from './interceptors/providers.js';
+export * from './interceptors/vercel-ai.js';
+export class KsecShield {
     config;
     cache;
     client;
@@ -58,19 +41,19 @@ class KsecShield {
             enableOTel: config.enableOTel ?? true,
             debug: config.debug ?? false,
         };
-        this.cache = new circuit_breaker_js_1.PolicyCache();
-        this.client = new client_js_1.KsecClient(this.config);
-        this.fastPath = new in_memory_matcher_js_1.FastPathEngine();
-        this.udsClient = new uds_client_js_1.UdsTransportClient({
+        this.cache = new PolicyCache();
+        this.client = new KsecClient(this.config);
+        this.fastPath = new FastPathEngine();
+        this.udsClient = new UdsTransportClient({
             socketPath: this.config.udsSocketPath,
             timeoutMs: this.config.udsTimeoutMs,
             failMode: this.config.fallbackPolicy,
         });
-        this.otel = new otel_js_1.ShieldOTelExporter({ enabled: this.config.enableOTel });
+        this.otel = new ShieldOTelExporter({ enabled: this.config.enableOTel });
         this.udsClient.on('transport_error', (err) => {
             this.emitCustomEvent('transport_error', { error: err });
         });
-        this.vercelAI = new vercel_ai_js_1.VercelAIInterceptor(this);
+        this.vercelAI = new VercelAIInterceptor(this);
         // Initial background policy fetch & recurring timers
         this.initTimers();
     }
@@ -169,7 +152,7 @@ class KsecShield {
                 ...threatEvent,
                 rule: fastEval.rule,
             });
-            throw new circuit_breaker_js_1.KsecSecurityViolationError(`Execution blocked by Agent-eBPF fast-path: ${options.actionType} on '${options.target}' (${reason})`, options.actionType, options.target, fastEval.rule?.id);
+            throw new KsecSecurityViolationError(`Execution blocked by Agent-eBPF fast-path: ${options.actionType} on '${options.target}' (${reason})`, options.actionType, options.target, fastEval.rule?.id);
         }
         // 2. Policy Cache Evaluation
         const evaluation = this.cache.evaluate(options.actionType, options.target);
@@ -202,7 +185,7 @@ class KsecShield {
                 ...threatEvent,
                 rule: evaluation.rule,
             });
-            throw new circuit_breaker_js_1.KsecSecurityViolationError(`Execution blocked by Agent-eBPF kernel shield: ${options.actionType} on '${options.target}'`, options.actionType, options.target, evaluation.rule?.id);
+            throw new KsecSecurityViolationError(`Execution blocked by Agent-eBPF kernel shield: ${options.actionType} on '${options.target}'`, options.actionType, options.target, evaluation.rule?.id);
         }
         // 3. Local Kernel UDS Daemon Verification (if enabled)
         if (this.config.enableKernelUds) {
@@ -241,7 +224,7 @@ class KsecShield {
                 this.emitCustomEvent('threat_blocked', {
                     ...threatEvent,
                 });
-                throw new circuit_breaker_js_1.KsecSecurityViolationError(`Execution blocked by Agent-eBPF kernel daemon: ${options.actionType} on '${options.target}' (${reason})`, options.actionType, options.target, udsRes.ruleId);
+                throw new KsecSecurityViolationError(`Execution blocked by Agent-eBPF kernel daemon: ${options.actionType} on '${options.target}' (${reason})`, options.actionType, options.target, udsRes.ruleId);
             }
         }
         try {
@@ -361,5 +344,4 @@ class KsecShield {
         this.flushTelemetry().catch(() => { });
     }
 }
-exports.KsecShield = KsecShield;
 //# sourceMappingURL=index.js.map

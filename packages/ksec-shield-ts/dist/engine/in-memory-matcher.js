@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.FastPathEngine = void 0;
 /**
  * Fast-Path In-Memory Evaluation Engine.
  * Evaluates actions in < 0.02ms using optimized pattern matching.
  */
-class FastPathEngine {
+export class FastPathEngine {
     rules = [];
     constructor(initialRules = []) {
         this.rules = [...initialRules];
@@ -71,5 +68,4 @@ class FastPathEngine {
         };
     }
 }
-exports.FastPathEngine = FastPathEngine;
 //# sourceMappingURL=in-memory-matcher.js.map

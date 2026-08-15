@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.KsecClient = void 0;
-class KsecClient {
+export class KsecClient {
     gatewayUrl;
     apiKey;
     debug;
@@ -66,5 +63,4 @@ class KsecClient {
         }
     }
 }
-exports.KsecClient = KsecClient;
 //# sourceMappingURL=client.js.map

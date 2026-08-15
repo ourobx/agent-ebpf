@@ -1,11 +1,8 @@
-"use strict";
 /**
  * Vercel AI SDK (`ai`) Interceptor for Agent-eBPF Kernel Shield.
  * Provides zero-latency tool interception and execution guardrails.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VercelAIInterceptor = void 0;
-class VercelAIInterceptor {
+export class VercelAIInterceptor {
     shield;
     constructor(shield) {
         this.shield = shield;
@@ -54,5 +51,4 @@ class VercelAIInterceptor {
         };
     }
 }
-exports.VercelAIInterceptor = VercelAIInterceptor;
 //# sourceMappingURL=vercel-ai.js.map

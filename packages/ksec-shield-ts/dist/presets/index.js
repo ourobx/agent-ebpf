@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShieldPresets = void 0;
-class ShieldPresets {
+export class ShieldPresets {
     /**
      * Yalnızca okuma izinli mod: Dosya modifikasyonu, tehlikeli kabuk komutları ve silme işlemlerini engeller.
      */
@@ -66,5 +63,4 @@ class ShieldPresets {
         },
     ];
 }
-exports.ShieldPresets = ShieldPresets;
 //# sourceMappingURL=index.js.map

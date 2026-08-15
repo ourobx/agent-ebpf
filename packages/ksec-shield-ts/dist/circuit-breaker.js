@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PolicyCache = exports.KsecSecurityViolationError = void 0;
-class KsecSecurityViolationError extends Error {
+export class KsecSecurityViolationError extends Error {
     actionType;
     target;
     ruleId;
@@ -14,8 +11,7 @@ class KsecSecurityViolationError extends Error {
         Object.setPrototypeOf(this, KsecSecurityViolationError.prototype);
     }
 }
-exports.KsecSecurityViolationError = KsecSecurityViolationError;
-class PolicyCache {
+export class PolicyCache {
     cache = new Map();
     failureCount = 0;
     lastFailureTime = 0;
@@ -70,5 +66,4 @@ class PolicyCache {
         this.cache.clear();
     }
 }
-exports.PolicyCache = PolicyCache;
 //# sourceMappingURL=circuit-breaker.js.map
