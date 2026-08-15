@@ -4,39 +4,74 @@ import {
   ShieldTelemetryEvent, 
   ShieldEventType, 
   ShieldEventListener,
-  PolicyRule
+  PolicyRule,
+  FailMode,
+  ThreatBlockedEvent
 } from './types.js';
 import { PolicyCache, KsecSecurityViolationError } from './circuit-breaker.js';
 import { KsecClient } from './client.js';
+import { FastPathEngine, ShieldRule } from './engine/in-memory-matcher.js';
+import { UdsTransportClient } from './transport/uds-client.js';
+import { VercelAIInterceptor } from './interceptors/vercel-ai.js';
+import { ShieldPresets } from './presets/index.js';
+import { ShieldOTelExporter } from './telemetry/otel.js';
 
 export * from './types.js';
 export * from './circuit-breaker.js';
 export * from './client.js';
+export * from './engine/in-memory-matcher.js';
+export * from './transport/uds-client.js';
+export * from './presets/index.js';
+export * from './telemetry/index.js';
 export * from './interceptors/langchain.js';
 export * from './interceptors/providers.js';
+export * from './interceptors/vercel-ai.js';
 
 export class KsecShield {
   private config: Required<KsecShieldConfig>;
   private cache: PolicyCache;
   private client: KsecClient;
+  public readonly fastPath: FastPathEngine;
+  public readonly udsClient: UdsTransportClient;
+  public readonly vercelAI: VercelAIInterceptor;
+  public readonly otel: ShieldOTelExporter;
+
   private telemetryQueue: ShieldTelemetryEvent[] = [];
   private syncTimer?: ReturnType<typeof setInterval>;
   private telemetryTimer?: ReturnType<typeof setInterval>;
   private listeners = new Map<ShieldEventType, Set<ShieldEventListener>>();
 
   constructor(config: KsecShieldConfig = {}) {
+    const fallbackPolicy: FailMode = config.fallbackPolicy || 'fail-open';
     this.config = {
       gatewayUrl: config.gatewayUrl || 'https://ksec.space',
       apiKey: config.apiKey || '',
       agentId: config.agentId || `agent-${Math.random().toString(36).substring(2, 9)}`,
-      fallbackPolicy: config.fallbackPolicy || 'fail-open',
-      syncIntervalMs: config.syncIntervalMs || 30000,
-      telemetryBatchIntervalMs: config.telemetryBatchIntervalMs || 5000,
+      fallbackPolicy,
+      syncIntervalMs: config.syncIntervalMs ?? 30000,
+      telemetryBatchIntervalMs: config.telemetryBatchIntervalMs ?? 5000,
+      udsSocketPath: config.udsSocketPath || (process.platform === 'win32' ? '\\\\.\\pipe\\agent-ebpf' : '/var/run/agent-ebpf.sock'),
+      udsTimeoutMs: config.udsTimeoutMs ?? 50,
+      enableKernelUds: config.enableKernelUds ?? false,
+      enableOTel: config.enableOTel ?? true,
       debug: config.debug ?? false,
     };
 
     this.cache = new PolicyCache();
     this.client = new KsecClient(this.config);
+    this.fastPath = new FastPathEngine();
+    this.udsClient = new UdsTransportClient({
+      socketPath: this.config.udsSocketPath,
+      timeoutMs: this.config.udsTimeoutMs,
+      failMode: this.config.fallbackPolicy,
+    });
+    this.otel = new ShieldOTelExporter({ enabled: this.config.enableOTel });
+
+    this.udsClient.on('transport_error', (err) => {
+      this.emitCustomEvent('transport_error', { error: err });
+    });
+
+    this.vercelAI = new VercelAIInterceptor(this);
 
     // Initial background policy fetch & recurring timers
     this.initTimers();
@@ -76,6 +111,15 @@ export class KsecShield {
   }
 
   /**
+   * Applies a predefined security preset (e.g. ShieldPresets.StrictReadOnly)
+   */
+  public applyPreset(rules: ShieldRule[]): void {
+    for (const rule of rules) {
+      this.fastPath.addRule(rule);
+    }
+  }
+
+  /**
    * Manually load policy rules into local cache
    */
   public addPolicyRule(rule: PolicyRule): void {
@@ -83,29 +127,102 @@ export class KsecShield {
   }
 
   /**
-   * Guards a function execution with zero-latency local policy evaluation and background telemetry.
+   * Manually add a fast-path pattern rule
+   */
+  public addFastRule(rule: ShieldRule): void {
+    this.fastPath.addRule(rule);
+  }
+
+  /**
+   * Guards a function execution with hybrid multi-layered policy evaluation,
+   * OpenTelemetry semantic tracing and background telemetry.
+   * 
+   * Hierarchy:
+   * 1. In-Memory Fast-Path (<0.02ms)
+   * 2. Policy Cache Evaluation (synced remote rules)
+   * 3. Local Kernel UDS Daemon (<0.1ms) (if enabled)
    */
   public async guard<T>(fn: () => Promise<T> | T, options: GuardOptions): Promise<T> {
     const startTime = Date.now();
-    const evaluation = this.cache.evaluate(options.actionType, options.target);
+    const span = this.otel.startGuardSpan(options.actionType, options.target);
 
-    if (evaluation.decision === 'BLOCK') {
+    // 1. In-Memory Fast-Path Check (< 0.02ms)
+    const fastEval = this.fastPath.evaluate(options.actionType, options.target);
+    if (!fastEval.allowed) {
       const durationMs = Date.now() - startTime;
+      const reason = fastEval.reason || 'Blocked by Agent-eBPF fast-path rule';
+      const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+      const threatEvent: ThreatBlockedEvent = {
+        id: threatId,
+        actionType: options.actionType,
+        target: options.target,
+        reason,
+        timestamp: new Date().toISOString(),
+        metadata: options.metadata,
+        ruleId: fastEval.rule?.id,
+      };
+
       this.recordTelemetry({
-        id: `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: threatId,
         agentId: this.config.agentId,
         actionType: options.actionType,
         target: options.target,
         decision: 'BLOCK',
         durationMs,
-        timestamp: new Date().toISOString(),
+        timestamp: threatEvent.timestamp,
         metadata: options.metadata,
-        reason: evaluation.rule?.reason || 'Blocked by active Agent-eBPF policy',
+        reason,
       });
 
+      this.otel.recordThreatBlocked(threatEvent, span);
+
       this.emitCustomEvent('threat_blocked', {
+        ...threatEvent,
+        rule: fastEval.rule,
+      });
+
+      throw new KsecSecurityViolationError(
+        `Execution blocked by Agent-eBPF fast-path: ${options.actionType} on '${options.target}' (${reason})`,
+        options.actionType,
+        options.target,
+        fastEval.rule?.id
+      );
+    }
+
+    // 2. Policy Cache Evaluation
+    const evaluation = this.cache.evaluate(options.actionType, options.target);
+    if (evaluation.decision === 'BLOCK') {
+      const durationMs = Date.now() - startTime;
+      const reason = evaluation.rule?.reason || 'Blocked by active Agent-eBPF policy';
+      const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+      const threatEvent: ThreatBlockedEvent = {
+        id: threatId,
         actionType: options.actionType,
         target: options.target,
+        reason,
+        timestamp: new Date().toISOString(),
+        metadata: options.metadata,
+        ruleId: evaluation.rule?.id,
+      };
+
+      this.recordTelemetry({
+        id: threatId,
+        agentId: this.config.agentId,
+        actionType: options.actionType,
+        target: options.target,
+        decision: 'BLOCK',
+        durationMs,
+        timestamp: threatEvent.timestamp,
+        metadata: options.metadata,
+        reason,
+      });
+
+      this.otel.recordThreatBlocked(threatEvent, span);
+
+      this.emitCustomEvent('threat_blocked', {
+        ...threatEvent,
         rule: evaluation.rule,
       });
 
@@ -115,6 +232,58 @@ export class KsecShield {
         options.target,
         evaluation.rule?.id
       );
+    }
+
+    // 3. Local Kernel UDS Daemon Verification (if enabled)
+    if (this.config.enableKernelUds) {
+      const udsRes = await this.udsClient.evaluate({
+        actionType: options.actionType,
+        target: options.target,
+        metadata: options.metadata,
+      });
+
+      if (!udsRes.allowed) {
+        const durationMs = Date.now() - startTime;
+        const reason = udsRes.reason || 'Blocked by Agent-eBPF kernel daemon via UDS';
+        const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+        const threatEvent: ThreatBlockedEvent = {
+          id: threatId,
+          actionType: options.actionType,
+          target: options.target,
+          reason,
+          timestamp: new Date().toISOString(),
+          metadata: options.metadata,
+          kernelTraceId: udsRes.kernelTraceId,
+          ruleId: udsRes.ruleId,
+        };
+
+        this.recordTelemetry({
+          id: threatId,
+          agentId: this.config.agentId,
+          actionType: options.actionType,
+          target: options.target,
+          decision: 'BLOCK',
+          durationMs,
+          timestamp: threatEvent.timestamp,
+          metadata: options.metadata,
+          reason,
+          kernelTraceId: udsRes.kernelTraceId,
+        });
+
+        this.otel.recordThreatBlocked(threatEvent, span);
+
+        this.emitCustomEvent('threat_blocked', {
+          ...threatEvent,
+        });
+
+        throw new KsecSecurityViolationError(
+          `Execution blocked by Agent-eBPF kernel daemon: ${options.actionType} on '${options.target}' (${reason})`,
+          options.actionType,
+          options.target,
+          udsRes.ruleId
+        );
+      }
     }
 
     try {
@@ -130,6 +299,8 @@ export class KsecShield {
         timestamp: new Date().toISOString(),
         metadata: options.metadata,
       });
+
+      this.otel.recordAllowed(span, this.config.enableKernelUds ? 'uds' : 'fast-path');
       return result;
     } catch (error) {
       const durationMs = Date.now() - startTime;
@@ -143,6 +314,8 @@ export class KsecShield {
         timestamp: new Date().toISOString(),
         metadata: { ...options.metadata, error: String(error) },
       });
+
+      this.otel.recordAllowed(span, 'fast-path');
       throw error;
     }
   }

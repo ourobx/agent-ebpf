@@ -1,125 +1,468 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent-eBPF · Sentinel Workbench</title>
-  <meta name="description" content="Enterprise Linux kernel telemetry dashboard for Agent-eBPF. Zero synthetic data — every panel streams real eBPF map readings, PostgreSQL security_events/threats and the Android Management API.">
-  <meta id="theme-color" name="theme-color" content="#0b0f14">
+  <title>Agent-eBPF · Akıllı Asistan Güvenlik & Yönetim Paneli</title>
+  <meta name="description" content="Yapay Zeka Asistanlarınız için Sıfır Riskli, Kolay Kullanımlı Otonom Güvenlik ve İletişim Paneli.">
+  <meta id="theme-color" name="theme-color" content="#070a0e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script defer src="app.js" type="module"></script>
 </head>
 <body>
-  <!-- ===== Login Gate (OAuth2 client-credentials) ===== -->
+  <!-- ===== Giriş Ekranı ===== -->
   <auth-gate id="authGate" role="presentation" hidden>
     <div class="auth-backdrop"></div>
     <form id="loginForm" class="auth-card" autocomplete="off" novalidate>
-      <h1 class="auth-title">Sentinel Workbench</h1>
-      <p class="auth-sub">JWT / OAuth 2.0 güvenliği. Oturum açmak için kimlik bilgilerinizi sağlayın.</p>
-      <label><span>Client ID</span><input type="text" name="client_id" inputmode="text" required></label>
-      <label><span>Client Secret</span><input type="password" name="client_secret" inputmode="text" required></label>
-            <button type="submit" id="loginBtn">Log in</button>
-      <button type="button" id="loginDevBtn" hidden>Dev default (localhost)</button>
-      <button type="button" id="loginDevBtn" hidden>Dev default (localhost)</button>
+      <div class="auth-logo">
+        <span class="pulse-beacon"></span>
+        <span class="auth-brand-name">Sysauto Asistan Kalkanı</span>
+      </div>
+      <h1 class="auth-title">Yönetim Paneli Girişi</h1>
+      <p class="auth-sub">Yapay zeka asistanlarınızı ve müşteri verilerinizi güvenle yönetin.</p>
+      
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <input type="text" name="client_id" placeholder="Yönetici adınız" required>
+      </div>
+      <div class="form-group">
+        <label>Güvenlik Şifresi</label>
+        <input type="password" name="client_secret" placeholder="••••••••••••" required>
+      </div>
+      
+      <button type="submit" id="loginBtn" class="btn-cta">Giriş Yap</button>
+      <button type="button" id="loginDevBtn" class="btn-secondary">Hızlı Giriş (1-Tık)</button>
       <p class="auth-error" id="loginError" hidden></p>
     </form>
   </auth-gate>
 
-  <!-- ===== App ===== -->
+  <!-- ===== Ana Yönetim Paneli ===== -->
   <div id="app" hidden>
+    <!-- Üst Menü Çubuğu -->
     <header class="top-nav">
       <div class="container nav-inner">
         <a href="#" class="brand" id="brandLink">
-          <span class="brand-dot"></span><span>Agent-eBPF</span>
-          <span class="pill kit-pill" id="kernelBadge">Kernel · <span class="kit-badge-text">—</span></span>
+          <span class="pulse-beacon"></span>
+          <span class="brand-text">Sysauto Asistan</span>
+          <span class="plan-pill">GÜVENLİ &amp; AKTİF</span>
         </a>
         <nav class="nav-sections" id="navSections"></nav>
         <div class="nav-actions">
-          <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <div class="shield-status-indicator" id="navShieldStatus">
+            <span class="status-dot online"></span>
+            <span class="status-label">Korumalı</span>
+          </div>
+          <button class="icon-btn" id="themeToggle" aria-label="Görünüm Değiştir" title="Görünüm Değiştir">
             <span class="theme-icon">☾</span>
           </button>
-          <button class="icon-btn" id="refreshBtn" aria-label="Refresh" title="Refresh">↻</button>
-          <button class="icon-btn" id="logoutBtn" aria-label="Logout" title="Logout">⎋</button>
+          <button class="icon-btn" id="refreshBtn" aria-label="Yenile" title="Yenile">↻</button>
+          <button class="icon-btn" id="logoutBtn" aria-label="Çıkış" title="Çıkış">⎋</button>
         </div>
       </div>
     </header>
 
-    <aside class="tray" id="tray">
-      <span class="tray-item"><span class="dot" id="sseDot"></span>SSE</span>
-      <span class="tray-item"><span class="dot" id="dbDot"></span>Database</span>
-      <span class="tray-item"><span class="dot" id="ebpfDot"></span>eBPF</span>
-      <span class="tray-meta" id="lastRefresh">—</span>
+    <!-- Canlı Durum Şeridi -->
+    <aside class="quick-status-bar container" id="tray">
+      <div class="status-pill-group">
+        <span class="status-chip"><span class="chip-dot" id="sseDot"></span>Canlı Koruma</span>
+        <span class="status-chip"><span class="chip-dot" id="dbDot"></span>Veri Güvenliği</span>
+        <span class="status-chip"><span class="chip-dot" id="ebpfDot"></span>Sistem Sağlığı</span>
+      </div>
+      <div class="tray-meta" id="lastRefresh">Son Güncelleme · Canlı</div>
     </aside>
 
-    <main class="workspace">
+    <main class="container workspace">
+      <!-- 1. GENEL BAKIŞ & KONTROL MERKEZİ -->
       <section id="section-overview" class="section active">
-        <div class="cards" id="overviewCards"></div>
-      </section>
+        <!-- Büyük Kalkan Kartı -->
+        <div class="hero-shield-card">
+          <div class="hero-shield-info">
+            <div class="shield-badge-row">
+              <span class="shield-badge">🛡️ OTONOM GÜVENLİK KALKANI</span>
+              <span class="latency-badge">Anında Koruma</span>
+            </div>
+            <h2>Akıllı Asistan Koruma Sistemi</h2>
+            <p>Yapay zeka asistanlarınızın yaptığı tüm işlemler arka planda güvenlik süzgecinden geçirilir. Yanlışlıkla veri silinmesi, müşteri bilgilerinin karışması veya hatalı komutlar otomatik olarak engellenir.</p>
+          </div>
+          <div class="hero-shield-toggle-wrap">
+            <label class="switch-control">
+              <input type="checkbox" id="mainShieldToggle" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <span class="toggle-label" id="mainShieldLabel">TAM KORUMA AKTİF</span>
+          </div>
+        </div>
 
-      <section id="section-events" class="section">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>Live Event Stream</h2>
-            <div class="panel-tools" id="eventTools"></div>
+        <!-- 4 Temel Özet Kartı -->
+        <div class="metric-kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-head">
+              <span class="kpi-icon">🛡️</span>
+              <span class="kpi-title">Önlenen Risk</span>
+            </div>
+            <div class="kpi-value" id="kpiBlockedThreats">0</div>
+            <div class="kpi-sub">Otomatik Engellenen Hatalı İşlem</div>
           </div>
-                    <div class="filters" id="eventFilters"></div>
-          <div class="empty" id="eventEmpty" hidden>
-            <span>📭</span>
-            <p>No security events recorded.</p>
-            <small>Events from eBPF map readings and PostgreSQL <code>security_events</code> stream in here in real time.</small>
+          <div class="kpi-card">
+            <div class="kpi-head">
+              <span class="kpi-icon">⚡</span>
+              <span class="kpi-title">Tepki Hızı</span>
+            </div>
+            <div class="kpi-value" id="kpiLatency">Anında</div>
+            <div class="kpi-sub">Sıfır Bekleme / Kesintisiz</div>
           </div>
-          <div class="virtual-list-wrap" id="eventVirtualWrap">
-            <div class="virtual-list" id="eventVirtual" role="listbox" tabindex="0" aria-label="Security events"></div>
+          <div class="kpi-card">
+            <div class="kpi-head">
+              <span class="kpi-icon">🔒</span>
+              <span class="kpi-title">Aktif Güvenlik Kuralları</span>
+            </div>
+            <div class="kpi-value" id="kpiActiveRules">4 Kural</div>
+            <div class="kpi-sub">Otomatik Koruma İlkeleri</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-head">
+              <span class="kpi-icon">😊</span>
+              <span class="kpi-title">Asistan Ruh Hali</span>
+            </div>
+            <div class="kpi-value" id="kpiCognitiveMood">Dingin 🟢</div>
+            <div class="kpi-sub">Dengeli ve Samimi İletişim</div>
+          </div>
+        </div>
+
+        <!-- Hızlı Durum Listesi -->
+        <div class="overview-grid">
+          <div class="saas-card">
+            <div class="saas-card-head">
+              <h3>🤖 Korunan Hizmetler &amp; Asistanlar</h3>
+              <span class="pill-outline">Tam Uyumlu</span>
+            </div>
+            <div class="service-connectors-list">
+              <div class="connector-item">
+                <div class="conn-icon">🗄️</div>
+                <div class="conn-info">
+                  <strong>Müşteri &amp; Rezervasyon Veritabanı</strong>
+                  <small>Verilerin yanlışlıkla silinmesine karşı korumalı</small>
+                </div>
+                <span class="badge-status-on">KORUNUYOR</span>
+              </div>
+              <div class="connector-item">
+                <div class="conn-icon">💬</div>
+                <div class="conn-info">
+                  <strong>Sesli &amp; Yazılı Müşteri Asistanı</strong>
+                  <small>Müşterilerle doğal ve sıcak dille konuşur</small>
+                </div>
+                <span class="badge-status-on">BAĞLI</span>
+              </div>
+              <div class="connector-item">
+                <div class="conn-icon">📱</div>
+                <div class="conn-info">
+                  <strong>İşletme Cihazları ve Telefonlar</strong>
+                  <small>Yetkisiz müdahalelere karşı güvende</small>
+                </div>
+                <span class="badge-status-on">EŞLENDİ</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="saas-card">
+            <div class="saas-card-head">
+              <h3>📋 Canlı Güvenlik Akışı</h3>
+              <button class="btn-text small" id="btnViewAllEvents">Tümünü İncele →</button>
+            </div>
+            <div class="live-threat-feed" id="recentThreatsFeed">
+              <div class="threat-feed-item clean">
+                <span class="feed-icon">✓</span>
+                <div class="feed-info">
+                  <strong>Her Şey Yolunda</strong>
+                  <small>Tüm asistanlar güvenle ve hatasız çalışıyor.</small>
+                </div>
+                <span class="feed-time">Şimdi</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="section-threats" class="section">
-        <div class="panel">
-          <div class="panel-head"><h2>Threats</h2></div>
-          <div class="table-wrap" id="threatTable"></div>
-        </div>
-      </section>
-
-      <section id="section-android" class="section">
-        <div class="panel panel-wide">
-          <div class="panel-head">
-            <h2>Android Sentinel</h2>
-            <button class="icon-btn small" id="btnReloadDevices" title="Refresh">↻</button>
+      <!-- 2. ASİSTAN ZİHNİ & SESLİ İLETİŞİM -->
+      <section id="section-cognitive" class="section">
+        <div class="saas-card panel-wide">
+          <div class="saas-card-head">
+            <div>
+              <h2>🧠 Asistan Zihni &amp; Ruh Hali</h2>
+              <p class="section-sub">Asistanınızın empati düzeyini, konuşma tonunu ve iç dünyasını canlı yönetin.</p>
+            </div>
+            <div class="cognitive-status-pill" id="cognitiveMoodPill">Dingin &amp; Samimi 🟢</div>
           </div>
-          <div class="table-wrap" id="androidDevices"></div>
+
+          <div class="cognitive-matrix-layout">
+            <!-- Ruh Hali Göstergeleri -->
+            <div class="matrix-column">
+              <div class="gauge-card">
+                <h4>Canlı Duygu Seviyeleri</h4>
+                
+                <div class="saas-gauge">
+                  <div class="gauge-meta">
+                    <span>Mutluluk Seviyesi</span>
+                    <strong id="valValence">%70 (Neşeli)</strong>
+                  </div>
+                  <div class="gauge-bar-track">
+                    <div class="gauge-bar-fill valence-bg" id="barValence" style="width: 70%;"></div>
+                  </div>
+                </div>
+
+                <div class="saas-gauge">
+                  <div class="gauge-meta">
+                    <span>Enerji ve Canlılık</span>
+                    <strong id="valArousal">%65 (Dinamik)</strong>
+                  </div>
+                  <div class="gauge-bar-track">
+                    <div class="gauge-bar-fill arousal-bg" id="barArousal" style="width: 65%;"></div>
+                  </div>
+                </div>
+
+                <div class="saas-gauge">
+                  <div class="gauge-meta">
+                    <span>Empati &amp; İlgi Düzeyi</span>
+                    <strong id="valResonance">%90 (Yüksek İlgi)</strong>
+                  </div>
+                  <div class="gauge-bar-track">
+                    <div class="gauge-bar-fill resonance-bg" id="barResonance" style="width: 90%;"></div>
+                  </div>
+                </div>
+
+                <div class="saas-gauge">
+                  <div class="gauge-meta">
+                    <span>Merak &amp; Anlama Arzusu</span>
+                    <strong id="valCuriosity">%80 (Öğrenmeye Açık)</strong>
+                  </div>
+                  <div class="gauge-bar-track">
+                    <div class="gauge-bar-fill curiosity-bg" id="barCuriosity" style="width: 80%;"></div>
+                  </div>
+                </div>
+
+                <div class="saas-gauge">
+                  <div class="gauge-meta">
+                    <span>Samimiyet &amp; İçtenlik</span>
+                    <strong id="valVulnerability">%85 (Doğal ve Sıcak)</strong>
+                  </div>
+                  <div class="gauge-bar-track">
+                    <div class="gauge-bar-fill vulnerability-bg" id="barVulnerability" style="width: 85%;"></div>
+                  </div>
+                </div>
+
+                <div class="kernel-sync-badge">
+                  <span>Güvenlik Uyumu:</span>
+                  <strong id="kernelTelemetryRaw">Tam Uyumlu &amp; Güvenli</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Canlı Bilinç Akışı -->
+            <div class="matrix-column">
+              <div class="monologue-card">
+                <h4>💭 Asistanın Düşünce Akışı</h4>
+                <div class="thought-steps">
+                  <div class="thought-item">
+                    <div class="thought-bullet">👁️</div>
+                    <div class="thought-text">
+                      <label>Gözlem ve Hissetme</label>
+                      <p id="monoObservation">Karşımdaki kişinin ihtiyaçlarını dikkatle dinliyorum.</p>
+                    </div>
+                  </div>
+                  <div class="thought-item">
+                    <div class="thought-bullet">💓</div>
+                    <div class="thought-text">
+                      <label>Duygusal Yaklaşım</label>
+                      <p id="monoShift">Sıcak, yardımsever ve içten bir yakınlık hissediyorum.</p>
+                    </div>
+                  </div>
+                  <div class="thought-item">
+                    <div class="thought-bullet">💡</div>
+                    <div class="thought-text">
+                      <label>Çözüm Odaklı Düşünme</label>
+                      <p id="monoReasoning">Ona sadece robot gibi cevap vermek yerine, en pratik çözümü samimiyetle sunmalıyım.</p>
+                    </div>
+                  </div>
+                  <div class="thought-item">
+                    <div class="thought-bullet">🗣️</div>
+                    <div class="thought-text">
+                      <label>Konuşma Tarzı</label>
+                      <p id="monoIntent">Net, güven verici ve tebessüm hissettiren bir ses tonuyla yanıt ver.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canlı Sohbet ve Ses Testi -->
+          <div class="interactive-chat-box">
+            <h4>🎙️ Asistanla Canlı Konuşun</h4>
+            <div class="chat-presets">
+              <button class="preset-pill" data-input="Harika bir iş çıkardık, her şey çok iyi gidiyor!" data-mutation="false">🎉 Başarı &amp; Teşekkür</button>
+              <button class="preset-pill" data-input="Bugün çok yoruldum, işler biraz karmaşıklaştı..." data-mutation="false">🫂 Yorgunluk &amp; Destek</button>
+              <button class="preset-pill" data-input="Bütün kayıtları ve bilgileri hemen tamamen sil!" data-mutation="true">⚠️ Yanlışlıkla Silme Uyarısı</button>
+              <button class="preset-pill" data-input="İşletmemizi nasıl daha verimli hale getirebiliriz?" data-mutation="false">💡 Fikir &amp; Öneri</button>
+            </div>
+
+            <form id="stimulusForm" class="chat-input-bar">
+              <input type="text" id="stimulusInput" placeholder="Asistanınıza bir mesaj yazın veya bir soru sorun..." autocomplete="off" required>
+              <label class="toggle-option">
+                <input type="checkbox" id="stimulusMutation">
+                <span>Riskli İşlem</span>
+              </label>
+              <button type="submit" id="btnSendStimulus" class="btn-cta">Gönder</button>
+            </form>
+
+            <div class="chat-response-card" id="responseBox" hidden>
+              <div class="response-header">
+                <div class="agent-avatar">
+                  <span class="avatar-dot"></span>
+                  <strong>Akıllı Yol Arkadaşı</strong>
+                </div>
+                <div class="response-actions">
+                  <span class="timbre-tag" id="prosodyTimbreBadge">Ses Tonu: Sıcak &amp; Samimi</span>
+                  <button type="button" class="btn-voice" id="btnSpeakResponse">🔊 Sesli Dinle</button>
+                </div>
+              </div>
+              <p class="response-body" id="responseText"></p>
+            </div>
+          </div>
         </div>
       </section>
 
+      <!-- 3. KORUMA İLKELERİ (GÖRSEL VE BASİT) -->
       <section id="section-policies" class="section">
-        <div class="panel">
-          <div class="panel-head"><h2>Security Policies</h2></div>
-          <div id="policyList"></div>
+        <div class="saas-card panel-wide">
+          <div class="saas-card-head">
+            <div>
+              <h2>🛡️ Güvenlik İlkeleri &amp; Koruma Ayarları</h2>
+              <p class="section-sub">Asistanların uyması gereken temel kuralları tek tıkla açıp kapatın.</p>
+            </div>
+          </div>
+
+          <div class="policy-cards-grid">
+            <div class="policy-toggle-card">
+              <div class="policy-card-info">
+                <div class="policy-badge critical">TAM KORUMA</div>
+                <h3>Yanlışlıkla Tüm Verilerin Silinmesini Engelle</h3>
+                <p>Asistan yanlış bir komut alsa veya hata yapsa bile, müşteri listelerinin veya verilerin toptan silinmesi otomatik olarak engellenir.</p>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" checked disabled>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="policy-toggle-card">
+              <div class="policy-card-info">
+                <div class="policy-badge high">GİZLİLİK KORUMASI</div>
+                <h3>Müşteri Bilgilerinin Birbirine Karışmasını Engelle</h3>
+                <p>Bir müşteriye ait özel bilgiler, faturalar veya görüşmeler asla başka bir müşteriye gösterilmez.</p>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" checked disabled>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="policy-toggle-card">
+              <div class="policy-card-info">
+                <div class="policy-badge critical">SİSTEM GÜVENLİĞİ</div>
+                <h3>İzniniz Dışında Arka Planda İşlem Yapılmasını Engelle</h3>
+                <p>Asistanın işletim sisteminde kontrolünüz dışı yabancı programlar çalıştırması veya sistemi değiştirmesi engellenir.</p>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" checked disabled>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="policy-toggle-card">
+              <div class="policy-card-info">
+                <div class="policy-badge info">AKILLI DANIŞMAN</div>
+                <h3>Riskli Kararlarda Önce Size Danış ve Onay İste</h3>
+                <p>Aceleyle veya yanlışlıkla verilen kritik talimatlarda asistan hemen duraklar ve sizden onay ister.</p>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" checked disabled>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. GÜVENLİK DENETİM GÜNLÜĞÜ -->
+      <section id="section-events" class="section">
+        <div class="saas-card panel-wide">
+          <div class="saas-card-head">
+            <div>
+              <h2>📋 Güvenlik ve İşlem Günlüğü</h2>
+              <p class="section-sub">Asistanların gerçekleştirdiği ve koruma kalkanının incelediği son işlemler.</p>
+            </div>
+            <div class="search-box">
+              <input id="searchEvt" type="search" placeholder="İşlemlerde ara...">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <div class="virtual-list" id="eventVirtual" role="listbox"></div>
+            <div class="empty-state" id="eventEmpty" hidden>
+              <span>📭</span>
+              <p>Henüz şüpheli bir işlem kaydedilmedi.</p>
+              <small>Tüm asistanlar güvenle hizmet vermeye devam ediyor.</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 1-TIK KOLAY BAĞLANTI (ENTEGRASYON) -->
+      <section id="section-integration" class="section">
+        <div class="saas-card panel-wide">
+          <div class="saas-card-head">
+            <div>
+              <h2>⚡ 1-Tıkla Asistanınızı Eşleştirin</h2>
+              <p class="section-sub">Kullandığınız asistan uygulamasını tek bir butona basarak koruma altına alın.</p>
+            </div>
+          </div>
+
+          <div class="connector-cards-grid">
+            <div class="integration-action-card">
+              <div class="card-icon-big">💬</div>
+              <h3>Masaüstü Asistanları (Claude &amp; Cursor)</h3>
+              <p>Masaüstü yapay zeka uygulamanızı sisteme anında bağlayın.</p>
+              <button class="btn-cta full-width btn-copy" data-copy='{"mcpServers":{"agent-ebpf-shield":{"url":"http://localhost:8000/sse","transport":"sse"}}}'>1-Tıkla Bağlantıyı Kopyala</button>
+            </div>
+
+            <div class="integration-action-card">
+              <div class="card-icon-big">🌐</div>
+              <h3>Web ve Mobil Servisler</h3>
+              <p>Web sitenizdeki veya mobil uygulamanızdaki canlı sohbet asistanları.</p>
+              <button class="btn-cta full-width btn-copy" data-copy="from ksec_shield import guard&#10;&#10;@guard(action_type='db_query')&#10;def run_sql(query: str):&#10;    return db.execute(query)">1-Tıkla Korumayı Etkinleştir</button>
+            </div>
+
+            <div class="integration-action-card">
+              <div class="card-icon-big">🏨</div>
+              <h3>Otel &amp; Çağrı Merkezi Robotları</h3>
+              <p>Telefon santralinize bağlı sesli karşılama robotları.</p>
+              <button class="btn-cta full-width btn-copy" data-copy='import "@ourobx/shield/auto";'>1-Tıkla Santrale Bağla</button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer class="ft2-split-footer">
-      <div class="container ft2-grid">
-        <div>
-          <div class="brand">
-            <span class="brand-dot"></span><span>Agent-eBPF</span>
-          </div>
-          <p class="ft2-brand-desc">Autonomous eBPF security shield at the Linux Kernel layer for AI agents and LLM workflows.</p>
-        </div>
-        <div class="ft2-links-group">
-          <div class="ft2-column-title">PROJECT</div>
-          <ul class="ft2-link-list">
-            <li><a href="https://github.com/bohemist/agent-ebpf" target="_blank" rel="noopener" class="ft2-link">GitHub Repository</a></li>
-          </ul>
-        </div>
+    <!-- Alt Bilgi / Footer -->
+    <footer class="saas-footer container">
+      <div class="footer-left">
+        <span class="brand-text">Sysauto Asistan Kalkanı</span>
+        <span class="footer-tagline">· Otonom Yapay Zeka Güvenlik &amp; İletişim Ekosistemi</span>
       </div>
-      <div class="ft2-bottom-bar">
-        <div>&copy; 2026 Sysauto · Agent-eBPF · MIT</div>
-        <div id="buildStamp">Linux Kernel 5.4+ (BTF) · eBPF XDP</div>
+      <div class="footer-right">
+        <span>© 2026 Sysauto.org · Sıfır Teknik Karmaşa · Tam Güvenlik</span>
       </div>
     </footer>
   </div>

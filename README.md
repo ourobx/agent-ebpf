@@ -4,8 +4,6 @@
 
 Operating under **Zero-Trust** principles, this architecture intercepts destructive database queries, illegal network packets, and unauthorized system calls (such as unconstrained `DELETE`/`UPDATE` operations without `WHERE` clauses) directly inside the Linux kernel (XDP/Ring-Buffer) with zero latency impact.
 
----
-
 ## 🚀 Quick Start (1-Click Launch)
 
 Launch the **Agent-eBPF** system and **Visual Web Dashboard** instantly without manual setup or configuration:
@@ -103,6 +101,12 @@ python cli.py unload --iface eth0
 
 ---
 
+## 📚 Developer Guide & Technical Specs
+
+For in-depth kernel architecture details, zero-overhead execution specs, declarative rule schemas, and production deployment patterns, refer to the [Developer Guide](DEVELOPER_GUIDE.md).
+
+---
+
 ## 🔬 Automated Testing
 
 Run the full pytest suite to verify MCP endpoints, JWT authentication, and eBPF loader contracts:
@@ -116,3 +120,4 @@ python -m pytest -v
 ## 📜 License
 
 Distributed under the **MIT License**. Created by Sysauto & Agent-eBPF Core Engineering.
+

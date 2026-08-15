@@ -37,6 +37,8 @@ try:
     from tools import db as database
     from tools.android_manager import android_manager
     from tools.config import settings
+    from engine.affective_engine import cognitive_engine, AffectiveVector, InnerMonologue, CognitivePulse
+    from engine.audio_synthesis import prosody_engine, ProsodyProfile
 except ImportError:
     import sys
     from pathlib import Path
@@ -45,6 +47,8 @@ except ImportError:
     from tools import db as database
     from tools.android_manager import android_manager
     from tools.config import settings
+    from engine.affective_engine import cognitive_engine, AffectiveVector, InnerMonologue, CognitivePulse
+    from engine.audio_synthesis import prosody_engine, ProsodyProfile
 
 # Structlog Configuration
 structlog.configure(
@@ -263,6 +267,11 @@ class AndroidPolicyRequest(BaseModel):
     policy_id: str = "sentinel-strict"
     spec: Dict[str, Any] = {}
 
+class CognitiveStimulusRequest(BaseModel):
+    user_input: str = Field(..., description="Conversational user message or system stimulus")
+    is_mutation: bool = Field(False, description="Flag indicating if the action involves database mutation or critical operations")
+    metadata: Optional[Dict[str, Any]] = None
+
 class MCPToolRequest(BaseModel):
     jsonrpc: str = "2.0"
     method: str
@@ -378,6 +387,23 @@ TOOLS = [
     {
         "name": "android_get_fleet_summary",
         "description": "Returns fleet-wide Android endpoint metrics (device count, active state, avg battery, compliance score).",
+        "inputSchema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "process_cognitive_stimulus",
+        "description": "Evaluates human conversational stimulus, evolves the Affective Vector (Valence/Arousal/Resonance), produces Stream-of-Consciousness Inner Monologue, and synchronizes stress telemetry to Ring-0 eBPF.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "user_input": {"type": "string", "description": "Conversational text stimulus or prompt from user"},
+                "is_mutation": {"type": "boolean", "default": False, "description": "Whether the context involves data modification/deletion"}
+            },
+            "required": ["user_input"]
+        }
+    },
+    {
+        "name": "get_affective_state",
+        "description": "Retrieves the real-time Affective Cognitive State (PAD Vector, Empathy Resonance, and Scaled Kernel Telemetry).",
         "inputSchema": {"type": "object", "properties": {}, "required": []}
     }
 ]
@@ -519,6 +545,39 @@ async def execute_tool(name: str, args: dict, user: Optional[UserTokenPayload] =
         return android_manager.apply_policy(policy_id=policy_id, policy_spec=spec)
     elif name == "android_get_fleet_summary":
         return android_manager.get_fleet_summary()
+    elif name == "process_cognitive_stimulus":
+        user_input = args.get("user_input", "")
+        is_mutation = args.get("is_mutation", False)
+        metadata = args.get("metadata", None)
+        state, monologue, response = cognitive_engine.process_stimulus(
+            user_input=user_input,
+            is_mutation=is_mutation,
+            metadata=metadata
+        )
+        telemetry = cognitive_engine.to_kernel_telemetry(state)
+        try:
+            ebpf_loader.sync_cognitive_telemetry(
+                valence_scaled=telemetry["valence_scaled"],
+                arousal_scaled=telemetry["arousal_scaled"],
+                resonance_scaled=telemetry["resonance_scaled"],
+                stress_index=telemetry["stress_index"],
+                timestamp_ns=telemetry["last_tick_ns"]
+            )
+        except Exception as exc:
+            logger.warning("Could not sync cognitive telemetry to eBPF", error=str(exc))
+        prosody = prosody_engine.calculate_prosody(state, response)
+        return {
+            "affective_state": state.model_dump(),
+            "inner_monologue": monologue.model_dump(),
+            "response": response,
+            "prosody_profile": prosody.model_dump(),
+            "stress_index": cognitive_engine.get_stress_index(),
+            "kernel_telemetry": telemetry
+        }
+    elif name == "get_affective_state":
+        snap = cognitive_engine.get_state_snapshot()
+        snap["prosody_profile"] = prosody_engine.calculate_prosody(cognitive_engine.state).model_dump()
+        return snap
     else:
         raise ValueError(f"Unknown tool: {name}")
 
@@ -738,6 +797,85 @@ async def api_metrics_stream(request: Request, user: UserTokenPayload = Depends(
         gen(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# --- Cognitive & Affective Engine Endpoints ---
+@app.get("/api/cognitive/state", tags=["Cognitive Engine"])
+async def api_cognitive_state():
+    """Returns current Affective State Vector (PAD Model), Stress Index, and scaled Kernel Telemetry."""
+    return cognitive_engine.get_state_snapshot()
+
+
+@app.post("/api/cognitive/stimulus", tags=["Cognitive Engine"])
+async def api_cognitive_stimulus(body: CognitiveStimulusRequest):
+    """Processes conversational stimulus, updates emotional state vector, creates inner monologue, and syncs to eBPF."""
+    state, monologue, response = cognitive_engine.process_stimulus(
+        user_input=body.user_input,
+        is_mutation=body.is_mutation,
+        metadata=body.metadata
+    )
+    telemetry = cognitive_engine.to_kernel_telemetry(state)
+    try:
+        ebpf_loader.sync_cognitive_telemetry(
+            valence_scaled=telemetry["valence_scaled"],
+            arousal_scaled=telemetry["arousal_scaled"],
+            resonance_scaled=telemetry["resonance_scaled"],
+            stress_index=telemetry["stress_index"],
+            timestamp_ns=telemetry["last_tick_ns"]
+        )
+    except Exception as exc:
+        logger.warning("Failed to sync cognitive telemetry to BPF map", error=str(exc))
+
+    prosody = prosody_engine.calculate_prosody(state, response)
+    return {
+        "status": "ok",
+        "affective_state": state.model_dump(),
+        "inner_monologue": monologue.model_dump(),
+        "response_text": response,
+        "prosody_profile": prosody.model_dump(),
+        "stress_index": cognitive_engine.get_stress_index(),
+        "kernel_telemetry": telemetry
+    }
+
+
+@app.get("/api/cognitive/prosody", tags=["Cognitive Engine"])
+async def api_cognitive_prosody(text: str = ""):
+    """Returns dynamic acoustic prosody synthesis parameters derived from the real-time Affective Vector."""
+    profile = prosody_engine.calculate_prosody(cognitive_engine.state, text)
+    return {
+        "status": "ok",
+        "prosody_profile": profile.model_dump(),
+        "affective_state": cognitive_engine.state.model_dump()
+    }
+
+
+@app.get("/api/cognitive/stream", tags=["Cognitive Engine"])
+async def api_cognitive_stream(request: Request):
+    """Real-time SSE stream broadcasting live cognitive pulses and affective state shifts."""
+    async def cognitive_gen():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                snapshot = cognitive_engine.get_state_snapshot()
+                pulse_payload = {
+                    "event": "cognitive_pulse",
+                    "data": snapshot
+                }
+                yield f"event: cognitive_pulse\ndata: {json.dumps(pulse_payload, ensure_ascii=False)}\n\n"
+                await asyncio.sleep(2.0)
+        except asyncio.CancelledError:
+            return
+
+    return StreamingResponse(
+        cognitive_gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
     )
 
 

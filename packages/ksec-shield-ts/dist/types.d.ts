@@ -1,6 +1,7 @@
 /**
- * Type definitions for @ksec/shield SDK.
+ * Type definitions for @ourobx/shield SDK.
  */
+export type FailMode = 'fail-open' | 'fail-closed';
 export interface KsecShieldConfig {
     /** Gateway base URL (defaults to 'https://ksec.space') */
     gatewayUrl?: string;
@@ -9,15 +10,23 @@ export interface KsecShieldConfig {
     /** Agent Identifier (e.g. 'agent-support-01') */
     agentId?: string;
     /** Circuit breaker fallback policy: 'fail-open' (allow on network error) or 'fail-closed' (block on error) */
-    fallbackPolicy?: 'fail-open' | 'fail-closed';
+    fallbackPolicy?: FailMode;
     /** Policy sync interval in milliseconds (default: 30000ms / 30s) */
     syncIntervalMs?: number;
     /** Batch telemetry interval in milliseconds (default: 5000ms / 5s) */
     telemetryBatchIntervalMs?: number;
+    /** Custom Unix Domain Socket or Named Pipe path for local eBPF daemon */
+    udsSocketPath?: string;
+    /** Timeout for UDS daemon requests in milliseconds (default: 50ms) */
+    udsTimeoutMs?: number;
+    /** Enable local kernel UDS verification in hybrid guard pipeline (default: false) */
+    enableKernelUds?: boolean;
+    /** Enable OpenTelemetry exporter */
+    enableOTel?: boolean;
     /** Enable debug logging */
     debug?: boolean;
 }
-export type ActionType = 'network_egress' | 'tool_execution' | 'file_system' | 'syscall' | 'memory_access';
+export type ActionType = 'network_egress' | 'network_request' | 'tool_execution' | 'file_system' | 'syscall' | 'system_call' | 'memory_access';
 export interface GuardOptions {
     /** The action type being guarded */
     actionType: ActionType;
@@ -46,7 +55,18 @@ export interface ShieldTelemetryEvent {
     timestamp: string;
     metadata?: Record<string, unknown>;
     reason?: string;
+    kernelTraceId?: string;
 }
-export type ShieldEventType = 'threat_blocked' | 'policy_synced' | 'telemetry_flushed' | 'error';
+export interface ThreatBlockedEvent {
+    id: string;
+    actionType: ActionType | string;
+    target: string;
+    reason: string;
+    timestamp: string;
+    kernelTraceId?: string;
+    metadata?: Record<string, unknown>;
+    ruleId?: string;
+}
+export type ShieldEventType = 'threat_blocked' | 'policy_synced' | 'telemetry_flushed' | 'transport_error' | 'error';
 export type ShieldEventListener = (event: Record<string, unknown>) => void;
 //# sourceMappingURL=types.d.ts.map

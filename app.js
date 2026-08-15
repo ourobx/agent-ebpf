@@ -262,16 +262,136 @@ async function loadAndroid() {
 }
 async function loadPolicies() { const s = STATUS.system || {}; STATUS.policies = (s.ebpf && s.ebpf.rules) || []; renderPolicies(); }
 
+async function loadCognitive() {
+  try {
+    const res = await fetch(API.baseUrl() + "/api/cognitive/state");
+    if (res.ok) {
+      const data = await res.json();
+      STATUS.cognitive = data;
+      renderCognitive(data);
+    }
+  } catch (e) {
+    console.warn("Cognitive state fetch failed", e);
+  }
+}
+
+function renderCognitive(data) {
+  if (!data || !data.affective_state) return;
+  const aff = data.affective_state;
+  const stress = data.stress_index || 0;
+  const stressMoods = ["Dingin & Samimi 🟢", "Odaklı & Dikkatli 🟡", "Tereddütlü (Onay İsteniyor) 🔴"];
+  
+  const moodPill = $("#cognitiveMoodPill");
+  if (moodPill) {
+    moodPill.textContent = stressMoods[stress] || "Dingin 🟢";
+    moodPill.className = "cognitive-status-pill " + (stress === 0 ? "badge-ok" : (stress === 1 ? "badge-warn" : "badge-err"));
+  }
+
+  const kpiMood = $("#kpiCognitiveMood");
+  if (kpiMood) {
+    kpiMood.textContent = stress === 0 ? "Dingin 🟢" : (stress === 1 ? "Dikkatli 🟡" : "Korumacı 🔴");
+  }
+  
+  const valencePct = Math.round(((aff.valence + 1.0) / 2.0) * 100);
+  const valenceLabel = valencePct > 55 ? "Neşeli & Pozitif" : (valencePct < 45 ? "Düşünceli & Sakin" : "Dengeli");
+  text($("#valValence"), `%${valencePct} (${valenceLabel})`);
+  if ($("#barValence")) $("#barValence").style.width = valencePct + "%";
+
+  const arousalPct = Math.round(aff.arousal * 100);
+  const arousalLabel = arousalPct > 60 ? "Dinamik" : "Sakin & Dingin";
+  text($("#valArousal"), `%${arousalPct} (${arousalLabel})`);
+  if ($("#barArousal")) $("#barArousal").style.width = arousalPct + "%";
+
+  const resPct = Math.round(aff.resonance * 100);
+  text($("#valResonance"), `%${resPct} (${resPct > 70 ? "Yüksek İlgi" : "Dengeli"})`);
+  if ($("#barResonance")) $("#barResonance").style.width = resPct + "%";
+
+  const curPct = Math.round((aff.curiosity || 0.7) * 100);
+  text($("#valCuriosity"), `%${curPct} (Öğrenmeye Açık)`);
+  if ($("#barCuriosity")) $("#barCuriosity").style.width = curPct + "%";
+
+  const vulPct = Math.round((aff.vulnerability || 0.5) * 100);
+  text($("#valVulnerability"), `%${vulPct} (Doğal ve Sıcak)`);
+  if ($("#barVulnerability")) $("#barVulnerability").style.width = vulPct + "%";
+
+  text($("#kernelTelemetryRaw"), "Tam Uyumlu & Güvenli");
+
+  if (data.latest_monologue) {
+    const m = data.latest_monologue;
+    text($("#monoObservation"), m.observation || "Karşımdaki kişinin ihtiyaçlarını dikkatle dinliyorum.");
+    text($("#monoShift"), m.affective_shift || "Sıcak ve yapıcı bir yaklaşım benimsiyorum.");
+    text($("#monoReasoning"), m.empathy_reasoning || "Ona en faydalı ve güvenli çözümü sunmalıyım.");
+    text($("#monoIntent"), m.spoken_intent || "Net, samimi ve güven verici bir tonla cevap ver.");
+  }
+}
+
+async function sendCognitiveStimulus(userInput, isMutation = false) {
+  const btn = $("#btnSendStimulus");
+  if (btn) { btn.disabled = true; btn.textContent = "İşleniyor (Reflecting)…"; }
+  try {
+    const res = await fetch(API.baseUrl() + "/api/cognitive/stimulus", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_input: userInput, is_mutation: isMutation })
+    });
+    if (!res.ok) throw new Error("Stimulus error " + res.status);
+    const data = await res.json();
+    
+    renderCognitive({
+      affective_state: data.affective_state,
+      stress_index: data.stress_index,
+      kernel_telemetry: data.kernel_telemetry,
+      latest_monologue: data.inner_monologue
+    });
+    
+    const respBox = $("#responseBox");
+    if (respBox) {
+      respBox.hidden = false;
+      text($("#responseText"), data.response_text || "—");
+      if (data.prosody_profile) {
+        text($("#prosodyTimbreBadge"), "Timbre: " + (data.prosody_profile.timbre_label || "Warm"));
+        STATUS._lastProsody = data.prosody_profile;
+      }
+      STATUS._lastResponseText = data.response_text;
+    }
+  } catch (err) {
+    console.error("Stimulus error", err);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "İlet (Process Stimulus)"; }
+  }
+}
+
+function speakProsody(textToSpeak, profile) {
+  if (!('speechSynthesis' in window) || !textToSpeak) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(textToSpeak);
+  if (profile) {
+    utter.pitch = Math.max(0.6, Math.min(1.8, profile.pitch_multiplier || 1.0));
+    utter.rate = Math.max(0.7, Math.min(1.5, profile.rate_multiplier || 1.0));
+    utter.volume = profile.volume || 0.95;
+  }
+  const voices = window.speechSynthesis.getVoices();
+  const trVoice = voices.find((v) => v.lang.startsWith("tr") || v.lang.includes("TR"));
+  if (trVoice) utter.voice = trVoice;
+  window.speechSynthesis.speak(utter);
+}
+
 async function refreshAll() {
   $("#refreshBtn").textContent = "↻";
-  await Promise.allSettled([loadSystem(), loadHost(), loadEvents(), loadThreats(), loadAndroid()]);
+  await Promise.allSettled([loadSystem(), loadHost(), loadEvents(), loadThreats(), loadAndroid(), loadCognitive()]);
   loadPolicies();
   $("#lastRefresh").textContent = "Live · " + new Date().toLocaleTimeString();
 }
 
 // ---- nav sections (keyboard-friendly) ----
 function buildNav() {
-  const items = [["Overview", "OVERVIEW"], ["Events", "EVENTS"], ["Threats", "THREATS"], ["Android", "ANDROID"], ["Policies", "POLICIES"]];
+  const items = [
+    ["Genel Bakış", "OVERVIEW"],
+    ["Bilişsel Zihin", "COGNITIVE"],
+    ["Güvenlik Kuralları", "POLICIES"],
+    ["Denetim Günlüğü", "EVENTS"],
+    ["1-Tık Entegrasyon", "INTEGRATION"]
+  ];
   $("#navSections").innerHTML = items.map(([l, k]) => `<button class="nav-link" data-k="${k}">${l}</button>`).join("");
   $("#navSections").addEventListener("click", (e) => {
     const b = e.target.closest(".nav-link"); if (!b) return;
@@ -281,26 +401,70 @@ function buildNav() {
   });
 }
 
+function initIntegrationHub() {
+  // Copy buttons
+  $$(".btn-copy").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const textToCopy = btn.getAttribute("data-copy") || "";
+      if (textToCopy) {
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          const orig = btn.textContent;
+          btn.textContent = "✓ Kopyalandı!";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.classList.remove("copied");
+          }, 2000);
+        } catch (err) {
+          console.error("Clipboard error", err);
+        }
+      }
+    });
+  });
+}
+
 // ---- filters for event log ----
 function buildFilters() {
-  $("#eventFilters").innerHTML = `<input id="searchEvt" type="search" placeholder="Search IP / type / detail…" autocomplete="off">` +
-    `<input id="f_action" type="text" placeholder="action" autocomplete="off">` +
-    `<button id="clearFilters" class="icon-btn small">✕</button>`;
-  $("#searchEvt").addEventListener("input", applyFilters);
-  $("#clearFilters").addEventListener("click", () => { $("#searchEvt").value = ""; $("#f_action").value = ""; applyFilters(); });
-  $("#f_action").addEventListener("input", applyFilters);
+  const searchInp = $("#searchEvt");
+  if (searchInp) {
+    searchInp.addEventListener("input", applyFilters);
+  }
 }
+
 function applyFilters() {
-  const q = $("#searchEvt").value.trim().toLowerCase();
-  const a = $("#f_action").value.trim().toLowerCase();
-  const out = (STATUS.events || []).filter((ev) => {
-    const hay = `${ev.event_type||""} ${ev.src_ip||""} ${ev.dst_ip||""} ${ev.action||""} ${ev.detail||""}`.toLowerCase();
-    if (q && !hay.includes(q)) return false;
-    if (a && !(ev.action||"").toLowerCase().includes(a)) return false;
-    return true;
+  const q = ($("#searchEvt")?.value || "").toLowerCase();
+  const filtered = (STATUS.events || []).filter((e) => {
+    const s = `${e.source_ip || ""} ${e.destination_ip || ""} ${e.action || ""} ${e.reason || ""}`.toLowerCase();
+    return s.includes(q);
   });
-  if (STATUS._vl) { STATUS._vl.set(out, STATUS._vl.renderRow); }
-  else { STATUS.events = out; renderEvents(); }
+  renderEvents(filtered);
+}
+
+function renderEvents(list) {
+  const host = $("#eventVirtual");
+  const emp = $("#eventEmpty");
+  if (!host) return;
+  if (!list.length) {
+    host.innerHTML = "";
+    if (emp) emp.hidden = false;
+    return;
+  }
+  if (emp) emp.hidden = true;
+  host.innerHTML = list.slice(0, 50).map((e) => {
+    const isBlock = (e.action || "").toUpperCase().includes("DROP") || (e.action || "").toUpperCase().includes("BLOCK");
+    const badgeCls = isBlock ? "policy-badge critical" : "policy-badge info";
+    return `
+      <div class="connector-item" style="margin-bottom: 0.5rem;">
+        <div class="conn-info">
+          <span class="${badgeCls}">${e.action || "INSPECT"}</span>
+          <strong style="margin-top: 0.2rem;">${e.source_ip || "127.0.0.1"} ➔ ${e.destination_ip || "kernel:db"}</strong>
+          <small>${e.reason || "Ring-0 kural doğrulaması yapıldı."}</small>
+        </div>
+        <span class="feed-time">${new Date(e.created_at || Date.now()).toLocaleTimeString()}</span>
+      </div>
+    `;
+  }).join("");
 }
 
 // ---- live SSE wiring (auth header + exponential backoff reconnect) ----
@@ -337,25 +501,71 @@ addEventListener("DOMContentLoaded", () => {
   buildNav();
   $("#refreshBtn").addEventListener("click", refreshAll);
   $("#logoutBtn").addEventListener("click", () => AUTH.logout());
-  $("#btnReloadDevices").addEventListener("click", () => { loadAndroid(); loadSystem(); });
 
-    if (API.token()) { AUTH.showApp(); initOverview(); refreshAll().then(() => { buildFilters(); startLive(); }); }
+  // Shield Toggle Switch
+  const shieldSwitch = $("#mainShieldToggle");
+  const shieldLabel = $("#mainShieldLabel");
+  if (shieldSwitch && shieldLabel) {
+    shieldSwitch.addEventListener("change", () => {
+      if (shieldSwitch.checked) {
+        shieldLabel.textContent = "TAM KORUMA AKTİF";
+        shieldLabel.style.color = "var(--accent-emerald)";
+      } else {
+        shieldLabel.textContent = "KORUMA DURDURULDU";
+        shieldLabel.style.color = "var(--accent-rose)";
+      }
+    });
+  }
+
+  const btnViewEvents = $("#btnViewAllEvents");
+  if (btnViewEvents) {
+    btnViewEvents.addEventListener("click", () => {
+      document.querySelectorAll(".section").forEach((s) => s.classList.toggle("active", s.id === "section-events"));
+      document.querySelectorAll(".nav-link").forEach((x) => x.classList.toggle("active", x.getAttribute("data-k") === "EVENTS"));
+    });
+  }
+
+  // Cognitive stimulus form & presets
+  if ($("#stimulusForm")) {
+    $("#stimulusForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = $("#stimulusInput").value.trim();
+      const isMut = $("#stimulusMutation").checked;
+      if (val) sendCognitiveStimulus(val, isMut);
+    });
+  }
+
+  $$(".preset-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const inp = pill.getAttribute("data-input") || "";
+      const mut = pill.getAttribute("data-mutation") === "true";
+      $("#stimulusInput").value = inp;
+      $("#stimulusMutation").checked = mut;
+      sendCognitiveStimulus(inp, mut);
+    });
+  });
+
+  if ($("#btnSpeakResponse")) {
+    $("#btnSpeakResponse").addEventListener("click", () => {
+      speakProsody(STATUS._lastResponseText, STATUS._lastProsody);
+    });
+  }
+
+  initIntegrationHub();
+
+  if (API.token()) { AUTH.showApp(); initOverview(); refreshAll().then(() => { buildFilters(); startLive(); }); }
   else { AUTH.showLogin(); }
 
   $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault(); const fd = new FormData(e.target);
-    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Signing in…";
-    try { await AUTH.login(fd.get("client_id"), fd.get("client_secret")); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
-    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Giriş yapılıyor…";
+    try { await AUTH.login(fd.get("client_id"), fd.get("client_secret")); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Güvenli Giriş Yap"; }
+    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Güvenli Giriş Yap"; }
   });
   $("#loginDevBtn").style.display = "inline-flex";
   $("#loginDevBtn").addEventListener("click", async () => {
-    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Signing in…";
-    try { await AUTH.login("", ""); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
-    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Log in"; }
+    $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Giriş yapılıyor…";
+    try { await AUTH.login("", ""); await onLoginSuccess(); $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Güvenli Giriş Yap"; }
+    catch (err) { $("#loginError").textContent = err.message; $("#loginError").hidden = false; $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Güvenli Giriş Yap"; }
   });
 });
-
-
-
-

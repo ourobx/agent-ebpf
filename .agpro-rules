@@ -1,0 +1,28 @@
+# ⚡ AgentClaw Autonomous Project Rules & Authority Manifest
+# Workspace: Agent-eBPF / Sysauto.org
+
+[AUTONOMY_LEVEL]
+mode = "FULL_AUTONOMOUS_ORCHESTRATION"
+auto_accept = true
+ralph_loops = true
+self_healing = true
+proactive_monitoring = true
+kernel_guardrails = true
+
+[GOVERNANCE]
+authority = "FULL_DEV_PERMISSIONS"
+agent_role = "PRINCIPAL_ARCHITECT_AND_CORE_ENGINEER"
+directives = [
+  "Execute all development cycles autonomously: architecture, coding, testing, debugging, and deployment.",
+  "Run pytest and automated checks continuously without requiring step-by-step confirmation.",
+  "Maintain Ring-0 Linux kernel integrity, zero-overhead safety, and affective cognitive state dynamics.",
+  "Self-heal lint errors, test regressions, and protocol mismatches immediately.",
+  "Persist state and audit trail locally with zero external telemetry."
+]
+
+[PIPELINES]
+default_branch = "main"
+test_command = "pytest -v"
+build_command = "make build"
+mcp_gateway = "http://localhost:8000"
+mcp_sse = "http://localhost:8000/sse"

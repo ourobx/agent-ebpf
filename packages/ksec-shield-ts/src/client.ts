@@ -31,8 +31,13 @@ export class KsecClient {
 
       if (!response.ok) {
         if (this.debug) {
-          console.warn(`[KsecShield] Failed to fetch policies: ${response.status}`);
+          console.warn(`[KsecShield] Policy sync status: ${response.status}`);
         }
+        return [];
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
         return [];
       }
 
@@ -40,9 +45,9 @@ export class KsecClient {
       return data.policies || [];
     } catch (err) {
       if (this.debug) {
-        console.warn(`[KsecShield] Network error fetching policies:`, err);
+        console.warn(`[KsecShield] Gateway offline, running with local in-memory shield cache.`);
       }
-      throw err;
+      return [];
     }
   }
 
@@ -57,13 +62,12 @@ export class KsecClient {
       });
 
       if (!response.ok && this.debug) {
-        console.warn(`[KsecShield] Telemetry upload returned ${response.status}`);
+        console.warn(`[KsecShield] Telemetry upload status: ${response.status}`);
       }
     } catch (err) {
       if (this.debug) {
-        console.warn(`[KsecShield] Error sending telemetry batch:`, err);
+        console.warn(`[KsecShield] Telemetry buffered locally (gateway unreachable).`);
       }
-      throw err;
     }
   }
 }

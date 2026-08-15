@@ -132,5 +132,94 @@ def cmd_events():
     except KeyboardInterrupt:
         console.print("\n[yellow]Live event stream terminated.[/yellow]")
 
+@app.command("init")
+def cmd_init():
+    """Init: 1-Click Zero-Friction Setup Wizard for Agent-eBPF."""
+    console.print(Panel.fit(
+        "[bold cyan]🛡️⚡ Agent-eBPF Zero-Friction Setup Wizard[/bold cyan]\n"
+        "Autonomous Kernel-Level Shield for AI Agents & LLM Swarms",
+        title="Agent-eBPF"
+    ))
+
+    policy_file = Path("policy.yaml")
+    if not policy_file.exists():
+        console.print("[yellow]Creating default declarative policy (policy.yaml)...[/yellow]")
+        default_policy = """version: "v1alpha"
+metadata:
+  name: "production-agent-shield"
+
+rules:
+  - id: "sql-no-where-mutation"
+    type: "db_query"
+    protocol: "postgres"
+    severity: "critical"
+    action: "DROP"
+    match:
+      pattern: '(?i)^(UPDATE|DELETE)\\s+((?!WHERE).)*$'
+    message: "Destructive SQL mutation lacking WHERE clause was blocked."
+
+  - id: "tenant-isolation-enforce"
+    type: "db_query"
+    protocol: "postgres"
+    severity: "high"
+    action: "DROP"
+    match:
+      require_header_context: "X-Tenant-ID"
+      must_contain: "tenant_id ="
+    message: "SQL query missing tenant_id isolation filter."
+
+  - id: "block-unsafe-syscalls"
+    type: "syscall"
+    severity: "critical"
+    action: "KILL_PROCESS"
+    match:
+      syscalls:
+        - "execve"
+        - "ptrace"
+      binary_path_regex: ".*/python.*"
+    message: "AI agent unauthorized sub-process execution was intercepted."
+"""
+        policy_file.write_text(default_policy, encoding="utf-8")
+        console.print("[bold green]✓ Created policy.yaml[/bold green]")
+    else:
+        console.print("[bold green]✓ policy.yaml already exists[/bold green]")
+
+    console.print("\n[bold]📦 1-Line Integration Instructions:[/bold]\n")
+    console.print("[cyan]🐍 Python (Zero-Code Import):[/cyan]")
+    console.print("   [dim]pip install ksec-shield[/dim]")
+    console.print("   [green]from ksec_shield import guard[/green]\n")
+
+    console.print("[cyan]⚡ Node.js / TypeScript:[/cyan]")
+    console.print("   [dim]npm install @ourobx/shield[/dim]")
+    console.print("   [green]import \"@ourobx/shield/auto\";[/green]\n")
+
+    console.print("[cyan]🤖 Cursor / Claude Desktop (MCP Server):[/cyan]")
+    console.print("   [green]python cli.py export-mcp[/green]  (prints 1-click JSON configuration)\n")
+
+    console.print("[bold green]✓ Setup complete! Run 'python cli.py load' to attach to Linux kernel.[/bold green]")
+
+
+@app.command("export-mcp")
+def cmd_export_mcp(
+    gateway_url: str = typer.Option("http://localhost:8000", "--url", "-u", help="Gateway URL")
+):
+    """Export MCP: Generates 1-click MCP Server configuration for Cursor and Claude Desktop."""
+    import json
+    mcp_config = {
+        "mcpServers": {
+            "agent-ebpf-shield": {
+                "url": f"{gateway_url.rstrip('/')}/sse",
+                "transport": "sse"
+            }
+        }
+    }
+    console.print(Panel(
+        json.dumps(mcp_config, indent=2),
+        title="1-Click MCP Config (Add to claude_desktop_config.json or Cursor MCP)",
+        subtitle="Agent-eBPF Gateway"
+    ))
+
+
 if __name__ == "__main__":
     app()
+

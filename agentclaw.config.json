@@ -1,0 +1,34 @@
+{
+  "$schema": "https://agentclaw.dev/schemas/config.v3.json",
+  "version": "3.5.0",
+  "project": "Agent-eBPF",
+  "autonomy": {
+    "enabled": true,
+    "unattended": true,
+    "auto_accept_all": true,
+    "ralph_loop": true,
+    "self_healing": true,
+    "recovery_retries": 10,
+    "loop_breaker_threshold": 5
+  },
+  "permissions": {
+    "terminal": "GRANT_ALL",
+    "filesystem": "GRANT_ALL",
+    "git": "GRANT_ALL",
+    "mcp_gateway": "GRANT_ALL",
+    "kernel_hooks": "PERMITTED"
+  },
+  "execution_engine": {
+    "mode": "ARCHITECT_AND_CORE_ENGINEER",
+    "continuous_testing": true,
+    "test_runner": "pytest -v",
+    "target_platforms": ["linux", "windows_dev", "docker", "coolify"]
+  },
+  "active_pipelines": [
+    "affective_cognitive_engine",
+    "ring0_ebpf_guardrails",
+    "mcp_sse_gateway",
+    "proactive_telemetry",
+    "multi_agent_swarm_adapters"
+  ]
+}

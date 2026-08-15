@@ -256,6 +256,72 @@ def poll_security_events(window_ms: int = 1000) -> List[Dict[str, Any]]:
     return events
 
 
+def sync_cognitive_telemetry(
+    valence_scaled: int,
+    arousal_scaled: int,
+    resonance_scaled: int,
+    stress_index: int,
+    timestamp_ns: Optional[int] = None
+) -> bool:
+    """Writes scaled cognitive stress telemetry into the pinned BPF array map."""
+    map_pin = PIN_DIR / "cognitive_state_map"
+    if not map_pin.exists():
+        return False
+
+    key_hex = ["0x00", "0x00", "0x00", "0x00"]
+    ts_ns = timestamp_ns or time.time_ns()
+
+    # struct cognitive_stress_telemetry layout:
+    # int32 (valence), uint32 (arousal), uint32 (resonance), uint32 (stress_index), uint64 (last_tick_ns)
+    val_bytes = struct.pack("<iIIQQ", valence_scaled, arousal_scaled, resonance_scaled, stress_index, ts_ns)[:24]
+    val_hex = [f"0x{b:02x}" for b in val_bytes]
+
+    cmd = ["bpftool", "map", "update", "pinned", str(map_pin), "key"] + key_hex + ["value"] + val_hex
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode != 0:
+        logger.warning(f"Could not update cognitive_state_map: {res.stderr}")
+        return False
+    return True
+
+
+def inspect_cognitive_state() -> Dict[str, Any]:
+    """Reads current Ring-0 cognitive state from the pinned BPF array map."""
+    map_pin = PIN_DIR / "cognitive_state_map"
+    if not map_pin.exists():
+        return {"status": "not_loaded"}
+
+    key_hex = ["0x00", "0x00", "0x00", "0x00"]
+    cmd = ["bpftool", "map", "lookup", "pinned", str(map_pin), "key"] + key_hex
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode != 0 or not res.stdout:
+        return {"status": "error", "error": res.stderr}
+
+    value_hex = []
+    parsing = False
+    for tok in res.stdout.split():
+        if tok == "value:":
+            parsing = True
+            continue
+        if parsing and tok.startswith("0x"):
+            value_hex.append(int(tok, 16))
+
+    if len(value_hex) < 24:
+        return {"status": "error", "error": f"Invalid byte length: {len(value_hex)}"}
+
+    raw = bytes(value_hex[:24])
+    valence, arousal, resonance, stress_index = struct.unpack("<iIII", raw[:16])
+    last_tick_ns = struct.unpack("<Q", raw[16:24])[0]
+
+    return {
+        "status": "active",
+        "valence_scaled": valence,
+        "arousal_scaled": arousal,
+        "resonance_scaled": resonance,
+        "stress_index": stress_index,
+        "last_tick_ns": last_tick_ns,
+    }
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         action = sys.argv[1]
@@ -266,3 +332,4 @@ if __name__ == "__main__":
             print(unload_ebpf())
         elif action == "status":
             print(inspect_maps())
+

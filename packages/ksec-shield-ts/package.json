@@ -5,6 +5,9 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "bin": {
+    "ksec-shield": "./bin/ksec-shield.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,6 +18,31 @@
       "types": "./dist/auto.d.ts",
       "import": "./dist/auto.js",
       "require": "./dist/auto.js"
+    },
+    "./ai": {
+      "types": "./dist/interceptors/vercel-ai.d.ts",
+      "import": "./dist/interceptors/vercel-ai.js",
+      "require": "./dist/interceptors/vercel-ai.js"
+    },
+    "./engine": {
+      "types": "./dist/engine/in-memory-matcher.d.ts",
+      "import": "./dist/engine/in-memory-matcher.js",
+      "require": "./dist/engine/in-memory-matcher.js"
+    },
+    "./transport": {
+      "types": "./dist/transport/uds-client.d.ts",
+      "import": "./dist/transport/uds-client.js",
+      "require": "./dist/transport/uds-client.js"
+    },
+    "./presets": {
+      "types": "./dist/presets/index.d.ts",
+      "import": "./dist/presets/index.js",
+      "require": "./dist/presets/index.js"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry/index.d.ts",
+      "import": "./dist/telemetry/index.js",
+      "require": "./dist/telemetry/index.js"
     },
     "./langchain": {
       "types": "./dist/interceptors/langchain.d.ts",
@@ -29,6 +57,7 @@
   },
   "files": [
     "dist",
+    "bin",
     "README.md",
     "LICENSE"
   ],
@@ -43,7 +72,20 @@
   "homepage": "https://ksec.space",
   "scripts": {
     "build": "tsc",
+    "test": "npx --yes tsx --test tests/*.test.ts",
     "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "ai": "^3.0.0 || ^4.0.0",
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    },
+    "@opentelemetry/api": {
+      "optional": true
+    }
   },
   "keywords": [
     "ebpf",
@@ -51,6 +93,14 @@
     "ai-agent",
     "llm-security",
     "zero-trust",
+    "cli",
+    "vercel-ai",
+    "ai-sdk",
+    "presets",
+    "ipc",
+    "uds",
+    "opentelemetry",
+    "otel",
     "langchain",
     "crewai",
     "claude",
@@ -64,6 +114,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "typescript": "^5.4.0"
   }
 }
