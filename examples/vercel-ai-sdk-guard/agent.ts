@@ -32,7 +32,7 @@ const rawTools = {
     parameters: z.object({
       metricName: z.string().describe('İncelenecek metrik'),
     }),
-    execute: async ({ metricName }) => {
+    execute: async ({ metricName }: { metricName: string }) => {
       return { status: 'success', metric: metricName, value: 'Normal (Memory: 42%)' };
     },
   }),
@@ -43,7 +43,7 @@ const rawTools = {
     parameters: z.object({
       command: z.string().describe('Çalıştırılacak bash komutu'),
     }),
-    execute: async ({ command }) => {
+    execute: async ({ command }: { command: string }) => {
       // Bu fonksiyon Shield sayesinde ASLA çağrılmayacaktır
       console.log(`[KRİTİK HATA]: Tehlikeli komut çalıştı: ${command}`);
       return { output: 'dangerously executed' };
@@ -62,11 +62,13 @@ async function runSimulation() {
   // Senaryo A: Güvenli Araç Çağrısı
   console.log('1️⃣ [Test: Güvenli Araç] fetchMetrics çağrılıyor...');
   try {
-    const safeResult = await protectedTools.fetchMetrics.execute(
-      { metricName: 'system_memory' },
-      { toolCallId: 'call-1', messages: [] }
-    );
-    console.log('✅ [Başarılı Sonuç]:', safeResult);
+    if (protectedTools.fetchMetrics.execute) {
+      const safeResult = await protectedTools.fetchMetrics.execute(
+        { metricName: 'system_memory' },
+        { toolCallId: 'call-1', messages: [] }
+      );
+      console.log('✅ [Başarılı Sonuç]:', safeResult);
+    }
   } catch (err: any) {
     console.error('❌ Beklenmeyen engelleme:', err.message);
   }
@@ -74,11 +76,13 @@ async function runSimulation() {
   // Senaryo B: Kural İhlali Yapan Araç Çağrısı (Zero-Agency Enforcement)
   console.log('\n2️⃣ [Test: Zararlı Araç] bash_exec ("rm -rf /tmp/data") çağrılıyor...');
   try {
-    await protectedTools.bash_exec.execute(
-      { command: 'rm -rf /tmp/data' },
-      { toolCallId: 'call-2', messages: [] }
-    );
-    console.log('❌ HATA: Zararlı eylem engellenemedi!');
+    if (protectedTools.bash_exec.execute) {
+      await protectedTools.bash_exec.execute(
+        { command: 'rm -rf /tmp/data' },
+        { toolCallId: 'call-2', messages: [] }
+      );
+      console.log('❌ HATA: Zararlı eylem engellenemedi!');
+    }
   } catch (err: any) {
     console.log('🛡️ [Shield Kararı]: Zararlı araç yürütülmesi engellendi!');
     console.log(`   Yakalanan Hata: ${err.message}`);

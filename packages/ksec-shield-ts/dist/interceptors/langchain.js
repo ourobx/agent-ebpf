@@ -7,7 +7,7 @@ export class KsecLangChainCallback {
     constructor(shield) {
         this.shield = shield;
     }
-    async handleToolStart(tool, input) {
+    async handleToolStart(tool, input, runId, parentRunId, tags, metadata) {
         const target = tool.name;
         await this.shield.guard(async () => {
             // Validation pass
@@ -15,7 +15,7 @@ export class KsecLangChainCallback {
         }, {
             actionType: 'tool_execution',
             target,
-            metadata: { input },
+            metadata: { input, runId, parentRunId, tags, ...metadata },
         });
     }
     async handleToolError(err, tool) {

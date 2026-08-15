@@ -11,7 +11,7 @@ export interface LangChainToolCall {
 export declare class KsecLangChainCallback {
     private shield;
     constructor(shield: KsecShield);
-    handleToolStart(tool: LangChainToolCall, input: string): Promise<void>;
+    handleToolStart(tool: LangChainToolCall, input: string, runId?: string, parentRunId?: string, tags?: string[], metadata?: Record<string, unknown>): Promise<void>;
     handleToolError(err: Error, tool: LangChainToolCall): Promise<void>;
 }
 //# sourceMappingURL=langchain.d.ts.map

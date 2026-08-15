@@ -17,7 +17,14 @@ export class KsecLangChainCallback {
     this.shield = shield;
   }
 
-  public async handleToolStart(tool: LangChainToolCall, input: string): Promise<void> {
+  public async handleToolStart(
+    tool: LangChainToolCall, 
+    input: string, 
+    runId?: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     const target = tool.name;
     await this.shield.guard(
       async () => {
@@ -27,7 +34,7 @@ export class KsecLangChainCallback {
       {
         actionType: 'tool_execution',
         target,
-        metadata: { input },
+        metadata: { input, runId, parentRunId, tags, ...metadata },
       }
     );
   }

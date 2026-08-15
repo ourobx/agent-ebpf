@@ -6,7 +6,7 @@
 
 ## 1. Multi-Tiered Decision Hierarchy
 
-```
+```text
 Action / Tool Execution
   ├── 1. In-Memory Fast-Path (<0.02ms) ───[Block Eşleşti]───► 🚨 ANINDA ENGELLE
   ├── 2. Synced Policy Cache (In-Memory) ──[Block Eşleşti]───► 🚨 ANINDA ENGELLE

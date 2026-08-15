@@ -22,7 +22,7 @@ shield.on('threat_blocked', (evt) => {
 async function simulateMultiAgentFlow() {
   console.log('=== 🛡️ LangGraph / LangChain Multi-Agent Security Demo ===\n');
 
-  // Step 1: LLM generates a tool call
+  // Step 1: LLM Supervisor decides to call search tool
   console.log('1️⃣ LLM Supervisor decides to call search tool...');
   await callbackHandler.handleToolStart(
     { name: 'search_database' },

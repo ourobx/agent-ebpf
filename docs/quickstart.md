@@ -10,7 +10,8 @@ Get up and running with `@ourobx/shield` in less than 2 minutes.
 npm install @ourobx/shield
 ```
 
-*(Optional: If using Vercel AI SDK or OpenTelemetry, install peer dependencies as needed)*
+Optional: If using Vercel AI SDK or OpenTelemetry, install peer dependencies as needed:
+
 ```bash
 npm install ai @opentelemetry/api
 ```
