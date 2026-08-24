@@ -17,6 +17,9 @@ import { ShieldPresets } from './presets/index.js';
 import { ShieldOTelExporter } from './telemetry/otel.js';
 
 export * from './types.js';
+export * from './errors.js';
+export * from './core.js';
+export * from './middleware.js';
 export * from './circuit-breaker.js';
 export * from './client.js';
 export * from './engine/in-memory-matcher.js';
@@ -234,55 +237,124 @@ export class KsecShield {
       );
     }
 
-    // 3. Local Kernel UDS Daemon Verification (if enabled)
-    if (this.config.enableKernelUds) {
+    // 3. Local Kernel UDS Daemon Verification & Remote Gateway Fallback
+    const tryUds = this.config.enableKernelUds || Boolean(this.config.udsSocketPath);
+    let udsHandled = false;
+
+    if (tryUds) {
       const udsRes = await this.udsClient.evaluate({
         actionType: options.actionType,
         target: options.target,
         metadata: options.metadata,
       });
 
-      if (!udsRes.allowed) {
-        const durationMs = Date.now() - startTime;
-        const reason = udsRes.reason || 'Blocked by Agent-eBPF kernel daemon via UDS';
-        const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      if (!udsRes.isTransportError) {
+        udsHandled = true;
+        if (!udsRes.allowed) {
+          const durationMs = Date.now() - startTime;
+          const reason = udsRes.reason || 'Blocked by Agent-eBPF kernel daemon via UDS';
+          const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-        const threatEvent: ThreatBlockedEvent = {
-          id: threatId,
+          const threatEvent: ThreatBlockedEvent = {
+            id: threatId,
+            actionType: options.actionType,
+            target: options.target,
+            reason,
+            timestamp: new Date().toISOString(),
+            metadata: options.metadata,
+            kernelTraceId: udsRes.kernelTraceId,
+            ruleId: udsRes.ruleId,
+          };
+
+          this.recordTelemetry({
+            id: threatId,
+            agentId: this.config.agentId,
+            actionType: options.actionType,
+            target: options.target,
+            decision: 'BLOCK',
+            durationMs,
+            timestamp: threatEvent.timestamp,
+            metadata: options.metadata,
+            reason,
+            kernelTraceId: udsRes.kernelTraceId,
+          });
+
+          this.otel.recordThreatBlocked(threatEvent, span);
+
+          this.emitCustomEvent('threat_blocked', {
+            ...threatEvent,
+          });
+
+          throw new KsecSecurityViolationError(
+            `Execution blocked by Agent-eBPF kernel daemon: ${options.actionType} on '${options.target}' (${reason})`,
+            options.actionType,
+            options.target,
+            udsRes.ruleId
+          );
+        }
+      }
+    }
+
+    // 4. Remote Gateway Evaluation (when UDS was not handled or failed with transport error)
+    if (!udsHandled && this.config.gatewayUrl) {
+      try {
+        const remoteRes = await this.client.evaluatePolicy({
           actionType: options.actionType,
           target: options.target,
-          reason,
-          timestamp: new Date().toISOString(),
           metadata: options.metadata,
-          kernelTraceId: udsRes.kernelTraceId,
-          ruleId: udsRes.ruleId,
-        };
-
-        this.recordTelemetry({
-          id: threatId,
-          agentId: this.config.agentId,
-          actionType: options.actionType,
-          target: options.target,
-          decision: 'BLOCK',
-          durationMs,
-          timestamp: threatEvent.timestamp,
-          metadata: options.metadata,
-          reason,
-          kernelTraceId: udsRes.kernelTraceId,
         });
 
-        this.otel.recordThreatBlocked(threatEvent, span);
+        if (!remoteRes.allowed || remoteRes.decision === 'BLOCK') {
+          const durationMs = Date.now() - startTime;
+          const reason = remoteRes.reason || 'Blocked by remote Gateway policy';
+          const threatId = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-        this.emitCustomEvent('threat_blocked', {
-          ...threatEvent,
-        });
+          const threatEvent: ThreatBlockedEvent = {
+            id: threatId,
+            actionType: options.actionType,
+            target: options.target,
+            reason,
+            timestamp: new Date().toISOString(),
+            metadata: options.metadata,
+            kernelTraceId: remoteRes.kernelTraceId,
+          };
 
-        throw new KsecSecurityViolationError(
-          `Execution blocked by Agent-eBPF kernel daemon: ${options.actionType} on '${options.target}' (${reason})`,
-          options.actionType,
-          options.target,
-          udsRes.ruleId
-        );
+          this.recordTelemetry({
+            id: threatId,
+            agentId: this.config.agentId,
+            actionType: options.actionType,
+            target: options.target,
+            decision: 'BLOCK',
+            durationMs,
+            timestamp: threatEvent.timestamp,
+            metadata: options.metadata,
+            reason,
+            kernelTraceId: remoteRes.kernelTraceId,
+          });
+
+          this.otel.recordThreatBlocked(threatEvent, span);
+
+          this.emitCustomEvent('threat_blocked', {
+            ...threatEvent,
+          });
+
+          throw new KsecSecurityViolationError(
+            `Execution blocked by Agent-eBPF gateway: ${options.actionType} on '${options.target}' (${reason})`,
+            options.actionType,
+            options.target
+          );
+        }
+      } catch (err: any) {
+        if (err instanceof KsecSecurityViolationError) {
+          throw err;
+        }
+        if (this.config.fallbackPolicy === 'fail-closed') {
+          throw new KsecSecurityViolationError(
+            `Execution blocked by fail-closed policy (gateway evaluation failed: ${err.message})`,
+            options.actionType,
+            options.target
+          );
+        }
       }
     }
 

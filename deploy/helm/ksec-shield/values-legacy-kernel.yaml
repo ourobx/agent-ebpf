@@ -1,0 +1,10 @@
+# KSEC Shield Helm Values for Legacy Kernels (<5.15)
+# WARNING: Use only if running on legacy Linux kernels where CAP_BPF is unavailable.
+
+securityContext:
+  privileged: false
+  capabilities:
+    add:
+      - CAP_SYS_ADMIN
+      - CAP_NET_ADMIN
+      - CAP_SYS_RESOURCE

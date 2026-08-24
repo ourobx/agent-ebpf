@@ -1,31 +1,29 @@
 # 🛡️⚡ Agent-eBPF: AI Sentinel in Kernel Space
 
-**Agent-eBPF** is a sub-microsecond (<35µs) Linux kernel space (Ring 0) security shield and telemetry gateway engineered for autonomous AI agents, LLM services, and containerized application swarms.
+**Agent-eBPF** is a deterministic, kernel-space (Ring-0) security shield and telemetry gateway engineered for autonomous AI agents, LLM services, and containerized application swarms (~8µs average latency, <50µs P99 SLA).
 
-Operating under **Zero-Trust** principles, this architecture intercepts destructive database queries, illegal network packets, and unauthorized system calls (such as unconstrained `DELETE`/`UPDATE` operations without `WHERE` clauses) directly inside the Linux kernel (XDP/Ring-Buffer) with zero latency impact.
+Operating under **Zero-Trust** principles, this architecture intercepts destructive database queries, illegal network packets, and unauthorized system calls (such as unconstrained `DELETE`/`UPDATE` operations without `WHERE` clauses) directly inside the Linux kernel (eBPF LSM/XDP/Ring-Buffer) before network sockets transmit.
+
+---
 
 ## 🚀 Quick Start (1-Click Launch)
 
-Launch the **Agent-eBPF** system and **Visual Web Dashboard** instantly without manual setup or configuration:
+Launch the **Agent-eBPF** system and **Visual Web Dashboard** instantly without manual setup:
 
 ### 💻 Windows
-
 Double-click the launcher script in the project root:
-
 ```cmd
 start.bat
 ```
 
 ### 🐧 Linux / 🍎 macOS
-
-Run the shell script in terminal or file manager:
-
+Run the shell script in terminal:
 ```bash
 chmod +x start.sh
 ./start.sh
 ```
 
-> **💡 Automatic Execution:** The launcher validates dependencies, installs necessary Python packages, initializes the eBPF & MCP Gateway server, and automatically opens **`http://localhost:8000`** in your default web browser.
+> **💡 Automatic Execution:** The launcher validates dependencies, initializes the eBPF & MCP Gateway server, and automatically opens **`http://localhost:8000`** in your default browser.
 
 ---
 
@@ -41,7 +39,7 @@ Manage kernel security operations visually without writing code via the Web UI (
 │  [1. LIVE TELEMETRY]          [2. AST SANDBOX]                         │
 │  • Real-time Kernel Logs      • Test sample SQL query:                 │
 │  • Dropped Packet Stream      • UPDATE users SET role='admin'          │
-│  • Latency (<35µs)            • [⚡ EVALUATE] -> Blocked (DROP)        │
+│  • Latency (~8µs avg)         • [⚡ EVALUATE] -> Blocked (DROP)        │
 │                                                                        │
 │  [3. RULE POLICIES]           [4. MCP SSE CONNECTION]                  │
 │  • policy.yaml Preview        • SSE Endpoint Address:                  │
@@ -55,18 +53,16 @@ Manage kernel security operations visually without writing code via the Web UI (
 
 ---
 
-## 🤖 AI Agent Integration (MCP SSE)
+## 🤖 AI Agent Integration (MCP SSE & FastMCP)
 
 Agent-eBPF provides native support for **Model Context Protocol (MCP)** via Server-Sent Events (SSE).
 
 ### MCP Server Connection
-
 - **SSE Endpoint:** `http://localhost:8000/sse`
 - **Messages Endpoint:** `http://localhost:8000/messages`
 - **OAuth 2.0 Discovery:** `http://localhost:8000/.well-known/oauth-authorization-server`
 
 ### Exposed MCP Tools
-
 - `get_security_status`: Fetches active kernel hooks, inspection latency, and blocked threat metrics.
 - `get_ebpf_status`: Retrieves real-time BPF map packet counters and kernel hook state.
 - `get_active_policies`: Fetches declarative rules loaded from `policy.yaml`.
@@ -75,49 +71,46 @@ Agent-eBPF provides native support for **Model Context Protocol (MCP)** via Serv
 
 ---
 
-## 💻 CLI Command Line Interface
+## ☸️ Production Kubernetes Hardening (Non-Privileged)
 
-Manage Agent-eBPF via the rich command-line tool `cli.py`:
+Deploy Agent-eBPF securely without `privileged: true` by granting strictly bounded Linux capabilities:
 
-```bash
-# Build eBPF C bytecode
-python cli.py build
-
-# Load eBPF program into kernel (eth0)
-python cli.py load --iface eth0
-
-# Inspect kernel status and packet counters
-python cli.py status
-
-# Stream live RingBuffer security violations
-python cli.py events
-
-# Add IP block rule to BPF map
-python cli.py add-rule 192.168.1.105 --rule-id 201
-
-# Unload eBPF program from kernel
-python cli.py unload --iface eth0
+```yaml
+securityContext:
+  privileged: false
+  capabilities:
+    add:
+      - CAP_BPF
+      - CAP_NET_ADMIN
+      - CAP_PERFMON
+      - CAP_SYS_RESOURCE
+      - CAP_SYS_ADMIN
 ```
 
 ---
 
-## 📚 Developer Guide & Technical Specs
+## 🏢 Enterprise SaaS (Private Beta)
 
-For in-depth kernel architecture details, zero-overhead execution specs, declarative rule schemas, and production deployment patterns, refer to the [Developer Guide](DEVELOPER_GUIDE.md).
+For Multi-Tenant Governance, Stripe Metered Billing, ClickHouse Real-time Analytics, and S3 SOC-2 Archival, request access via `pilot@ksec.space` or visit [https://ksec.space](https://ksec.space).
+
+- **1-Click Enterprise Helm:**
+  ```bash
+  helm install ksec-shield ./deploy/helm/ksec-shield --set existingSecret=ksec-vault-secret
+  ```
+- **Proof-of-Hack Demo:** LangChain Prompt Injection (`'; DROP TABLE users; --`) intercepted in **5.8µs** with autonomous PostgreSQL `ROLLBACK;` synthesis and Causal Forensics blast radius calculation (`python demo/proof_of_hack_langchain.py`).
 
 ---
 
-## 🔬 Automated Testing
+## 🔬 Automated Testing & CI/CD
 
-Run the full pytest suite to verify MCP endpoints, JWT authentication, and eBPF loader contracts:
-
+Run the verification suite:
 ```bash
-python -m pytest -v
+python tests/test_ksec_v2.py
+python tests/test_gateway_live_routes.py
 ```
 
 ---
 
 ## 📜 License
 
-Distributed under the **MIT License**. Created by Sysauto & Agent-eBPF Core Engineering.
-
+Distributed under the **MIT License**. Created by Agent-eBPF Core Engineering (`ourobx`).

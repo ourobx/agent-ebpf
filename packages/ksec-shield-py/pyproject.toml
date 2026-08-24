@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "Apache-2.0"
 authors = [
-    { name = "Sysauto", email = "dev@sysauto.org" }
+    { name = "Agent-eBPF Team", email = "dev@ksec.space" }
 ]
 keywords = [
     "ebpf",

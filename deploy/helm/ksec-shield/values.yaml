@@ -1,0 +1,54 @@
+# KSEC Shield Helm Configuration Values (Kernel 5.15+ Hardened)
+
+# Multi-Tenant & Authentication
+tenantId: "default-tenant"
+# Plaintext apiKey (used only if existingSecret is not set, e.g. in dev/local testing)
+apiKey: ""
+# Enterprise Secret Pattern (SealedSecrets / ExternalSecrets / HashiCorp Vault)
+# If existingSecret is provided, KSEC pulls KSEC_API_KEY directly from the K8s Secret.
+existingSecret: ""
+existingSecretKeys:
+  apiKey: "KSEC_API_KEY"
+
+image:
+  repository: ourobx/ksec-agent
+  tag: v2.0
+  pullPolicy: IfNotPresent
+
+gateway:
+  endpoint: "https://ksec.space"
+  slaCeilingUs: 50
+
+# Strict Zero-Trust Linux Capabilities (Zero privileged / Zero CAP_SYS_ADMIN)
+securityContext:
+  privileged: false
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    add:
+      - CAP_BPF
+      - CAP_NET_ADMIN
+      - CAP_PERFMON
+      - CAP_SYS_RESOURCE
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+tolerations:
+  - operator: Exists
+    effect: NoSchedule
+
+nodeSelector: {}
+
+metrics:
+  enabled: true
+  port: 9100
+  serviceMonitor:
+    enabled: false

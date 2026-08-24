@@ -1,19 +1,24 @@
 {
   "name": "@ourobx/shield",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "description": "Kernel-level Zero-Trust Security SDK for AI Agents and LLMs via Agent-eBPF",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "ksec-shield": "./bin/ksec-shield.js"
+    "ksec-shield": "bin/ksec-shield.js"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.js"
     },
     "./auto": {
       "types": "./dist/auto.d.ts",
@@ -62,12 +67,13 @@
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ourobx/agent-ebpf.git",
+    "url": "git+https://github.com/ourobx/agent-ebpf.git",
     "directory": "packages/ksec-shield-ts"
   },
   "homepage": "https://ksec.space",
@@ -109,7 +115,7 @@
     "deepseek",
     "ksec"
   ],
-  "author": "Sysauto <dev@sysauto.org>",
+  "author": "Agent-eBPF Team <dev@ksec.space>",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.0.0"

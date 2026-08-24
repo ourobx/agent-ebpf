@@ -1,0 +1,16 @@
+apiVersion: v2
+name: ksec-shield
+description: KSEC Ring-0 Autonomous AI Defense Engine & eBPF Telemetry Daemon
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - ebpf
+  - ai-security
+  - observability
+  - kubernetes
+  - llm-guardrails
+home: https://ksec.space
+maintainers:
+  - name: KSEC Core Team
+    email: security@ksec.space

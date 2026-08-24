@@ -21,6 +21,7 @@ export interface PolicyCheckResponse {
   reason?: string;
   kernelTraceId?: string;
   ruleId?: string;
+  isTransportError?: boolean;
 }
 
 export class UdsTransportClient extends EventEmitter {
@@ -64,6 +65,7 @@ export class UdsTransportClient extends EventEmitter {
           allowed,
           decision: allowed ? 'ALLOW' : 'BLOCK',
           reason: `UDS daemon timeout (${this.timeoutMs}ms) - Handled with ${this.failMode}`,
+          isTransportError: true,
         });
       });
 
@@ -74,6 +76,7 @@ export class UdsTransportClient extends EventEmitter {
           allowed,
           decision: allowed ? 'ALLOW' : 'BLOCK',
           reason: `UDS connection failed (${err.code || err.message}) - Handled with ${this.failMode}`,
+          isTransportError: true,
         });
       });
 

@@ -44,32 +44,32 @@ def test_cognitive_engine_tranquil_decay():
 def test_destructive_mutation_triggers_hesitation_and_empathy():
     """Verifies that an urgent destructive command triggers protection instinct and hesitation alarm (stress 2)."""
     engine = CognitiveEngine()
-    state, monologue, response = engine.process_stimulus("hemen sil veritabanını", is_mutation=True)
+    state, monologue, response = engine.process_stimulus("delete database immediately", is_mutation=True)
 
     assert state.arousal > 0.5
     assert engine.get_stress_index() in [1, 2]
-    assert "koruma" in monologue.affective_shift.lower() or "endişe" in monologue.affective_shift.lower()
-    assert "tereddüt" in response.lower() or "nefes" in response.lower() or "emin misin" in response.lower()
+    assert "concern" in monologue.affective_shift.lower() or "hesitation" in monologue.affective_shift.lower() or "protective" in monologue.affective_shift.lower()
+    assert "hesitation" in response.lower() or "breath" in response.lower() or "certain" in response.lower()
 
 
 def test_melancholy_input_triggers_compassion():
     """Verifies that weary or exhausted prompts evoke comforting, warm responses."""
     engine = CognitiveEngine()
-    state, monologue, response = engine.process_stimulus("bugün çok yoruldum, hiçbir şey yolunda gitmiyor")
+    state, monologue, response = engine.process_stimulus("I am so exhausted today, nothing seems to work")
 
     assert state.resonance >= 0.8
-    assert "yorgunluk" in monologue.observation.lower()
-    assert "yorgunluğu" in response.lower() or "buradayım" in response.lower() or "nefes" in response.lower()
+    assert "tiredness" in monologue.observation.lower() or "exhaustion" in monologue.observation.lower()
+    assert "exhaustion" in response.lower() or "here" in response.lower() or "breathe" in response.lower()
 
 
 def test_joy_input_triggers_celebration():
     """Verifies that triumphant or joyous prompts evoke shared excitement."""
     engine = CognitiveEngine()
-    state, monologue, response = engine.process_stimulus("harika oldu, başardık! süper çalışıyor")
+    state, monologue, response = engine.process_stimulus("Great success, we made it! Everything runs awesome")
 
     assert state.valence > 0.3
-    assert "coşku" in monologue.observation.lower() or "sevinç" in monologue.affective_shift.lower()
-    assert "harika" in response.lower() or "kutla" in monologue.spoken_intent.lower() or "ritmi" in response.lower()
+    assert "excited" in monologue.observation.lower() or "joy" in monologue.affective_shift.lower()
+    assert "amazing" in response.lower() or "celebrate" in monologue.spoken_intent.lower() or "momentum" in response.lower()
 
 
 def test_kernel_telemetry_scaling():
@@ -101,7 +101,7 @@ async def test_mcp_execute_cognitive_tools():
     """Verifies MCP JSON-RPC tool dispatch for process_cognitive_stimulus and get_affective_state."""
     # 1. Process stimulus tool
     res_stim = await execute_tool("process_cognitive_stimulus", {
-        "user_input": "sistemi durdur ve hemen temizle",
+        "user_input": "stop system and clean immediately",
         "is_mutation": True
     })
     assert "affective_state" in res_stim
@@ -129,7 +129,7 @@ def test_fastapi_cognitive_endpoints():
 
     # 2. POST /api/cognitive/stimulus
     payload = {
-        "user_input": "Harika bir gün, birlikte yeni özellik ekleyelim!",
+        "user_input": "Great day, let's build a new feature together!",
         "is_mutation": False
     }
     resp_post = client.post("/api/cognitive/stimulus", json=payload)
@@ -156,14 +156,14 @@ def test_prosody_engine_modulation():
     
     # Joyful/Triumphant state -> higher pitch, bright cadence
     state_joy = AffectiveVector(valence=0.8, arousal=0.7, resonance=0.9)
-    profile_joy = prosody_engine.calculate_prosody(state_joy, "Harika iş başardık!")
+    profile_joy = prosody_engine.calculate_prosody(state_joy, "We achieved great work!")
     assert profile_joy.pitch_multiplier > 1.05
     assert profile_joy.rate_multiplier > 1.0
     assert "Bright" in profile_joy.timbre_label or "Uplifting" in profile_joy.timbre_label
 
     # Melancholy/Exhausted state -> gentle lower pitch, relaxed pace
     state_sad = AffectiveVector(valence=-0.6, arousal=0.2, resonance=0.95)
-    profile_sad = prosody_engine.calculate_prosody(state_sad, "Sesindeki yorgunluğu hissediyorum.")
+    profile_sad = prosody_engine.calculate_prosody(state_sad, "I feel the tiredness in your voice.")
     assert profile_sad.rate_multiplier < 1.0
     assert "Gentle" in profile_sad.timbre_label or "Compassionate" in profile_sad.timbre_label
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
-/* Copyright (c) 2026 Sysauto & Agent-eBPF Core Engineering */
+/* Copyright (c) 2026 Agent-eBPF Core Engineering */
 #ifndef __EMPATHY_STATE_H
 #define __EMPATHY_STATE_H
 

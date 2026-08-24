@@ -176,4 +176,18 @@ services:
 
 ---
 
-**Summary**: With Agent-eBPF, you can protect your AI agents at the Linux Kernel level with zero code modifications and zero overhead.
+**Summary:** With Agent-eBPF, you can protect your AI agents directly inside the Linux Kernel with zero code changes and near-zero latency overhead.
+
+---
+
+#### ⚡ Gemini Spark MCP Integration ("Add Custom App Link")
+
+Agent-eBPF includes a native asynchronous **Model Context Protocol (MCP)** Gateway over SSE transport (`mcp_server.py`), enabling **Gemini Spark** to inspect, control, and enforce kernel security policies in real time.
+
+##### Available MCP Tools for Gemini Spark
+
+1. 🔍 **`get_security_status`**: Inspect live Linux kernel eBPF probes, latency stats (<35µs), and blocked threat counters.
+2. 📋 **`get_active_policies`**: Retrieve currently active declarative rules (`policy.yaml`).
+3. ➕ **`add_security_rule`**: Dynamically inject new kernel security rules (e.g., blocking unconstrained SQL mutations or unauthorized syscalls) directly via Gemini Spark chat.
+4. 🧪 **`simulate_query_check`**: Pre-validate SQL queries or commands against active kernel eBPF filters prior to execution.
+

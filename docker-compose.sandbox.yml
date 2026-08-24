@@ -1,0 +1,118 @@
+version: '3.8'
+
+# =============================================================================
+# Agent-eBPF Sandbox / Staging Isolated Multi-Agent Testing Environment
+# Designed for Coolify & Self-Hosted Zero-Trust Staging Deployment
+# =============================================================================
+
+services:
+  agent-ebpf-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-ebpf-sandbox-gateway
+    restart: unless-stopped
+    cap_add:
+      - CAP_BPF
+      - CAP_NET_ADMIN
+      - CAP_PERFMON
+      - CAP_SYS_RESOURCE
+      - CAP_SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+      - /sys/kernel/debug:/sys/kernel/debug:rw
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      - ./policy.yaml:/app/policy.yaml:ro
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://sandbox_user:${SANDBOX_POSTGRES_PASSWORD:-SandboxPostgres2026!}@postgres-sandbox:5432/sandbox_ebpf_db
+      - REDIS_URL=redis://:${SANDBOX_REDIS_PASSWORD:-SandboxRedis2026!}@redis-sandbox:6379/0
+      - JWT_SECRET_KEY=${SANDBOX_JWT_SECRET:-sandbox_super_secret_jwt_key_2026_ebpf_shield}
+      - ENVIRONMENT=test
+      - XDP_INTERFACE=${XDP_INTERFACE:-eth0}
+      - CORS_ORIGINS=https://sandbox.ksec.space,https://staging.ksec.space,http://localhost:8000,http://localhost:3000
+      - MCP_TOOL_TIMEOUT=30
+    depends_on:
+      postgres-sandbox:
+        condition: service_healthy
+      redis-sandbox:
+        condition: service_healthy
+    networks:
+      - sandbox-net
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # Sandbox Routing Rule
+      - "traefik.http.routers.agent-ebpf-sandbox.rule=Host(`sandbox.${COOLIFY_FQDN:-ksec.space}`) || Host(`staging.${COOLIFY_FQDN:-ksec.space}`)"
+      - "traefik.http.routers.agent-ebpf-sandbox.entrypoints=https"
+      - "traefik.http.routers.agent-ebpf-sandbox.tls=true"
+      - "traefik.http.routers.agent-ebpf-sandbox.tls.certresolver=letsencrypt"
+      - "traefik.http.services.agent-ebpf-sandbox.loadbalancer.server.port=8000"
+      # Middlewares: Strict CORS, Security Headers, and SSE No-Buffering
+      - "traefik.http.routers.agent-ebpf-sandbox.middlewares=sandbox-cors,sandbox-sse,sandbox-headers"
+      - "traefik.http.middlewares.sandbox-cors.headers.accesscontrolallowmethods=GET,POST,OPTIONS"
+      - "traefik.http.middlewares.sandbox-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.sandbox-cors.headers.accesscontrolalloworiginlist=https://sandbox.ksec.space,https://staging.ksec.space,http://localhost:3000"
+      - "traefik.http.middlewares.sandbox-cors.headers.accesscontrolallowcredentials=true"
+      - "traefik.http.middlewares.sandbox-sse.headers.customresponseheaders.X-Accel-Buffering=no"
+      - "traefik.http.middlewares.sandbox-sse.headers.customresponseheaders.Cache-Control=no-cache"
+      - "traefik.http.middlewares.sandbox-sse.headers.customresponseheaders.Connection=keep-alive"
+      - "traefik.http.middlewares.sandbox-headers.headers.sslredirect=true"
+      - "traefik.http.middlewares.sandbox-headers.headers.stsseconds=31536000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  postgres-sandbox:
+    image: postgres:16-alpine
+    container_name: agent-ebpf-postgres-sandbox
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sandbox_ebpf_db
+      POSTGRES_USER: sandbox_user
+      POSTGRES_PASSWORD: ${SANDBOX_POSTGRES_PASSWORD:-SandboxPostgres2026!}
+    volumes:
+      - sandbox_postgres_data:/var/lib/postgresql/data
+      - ./gateway/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - sandbox-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sandbox_user -d sandbox_ebpf_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis-sandbox:
+    image: redis:7-alpine
+    container_name: agent-ebpf-redis-sandbox
+    restart: unless-stopped
+    command: redis-server --requirepass ${SANDBOX_REDIS_PASSWORD:-SandboxRedis2026!} --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - sandbox_redis_data:/var/lib/redis/data
+    networks:
+      - sandbox-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${SANDBOX_REDIS_PASSWORD:-SandboxRedis2026!}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sandbox_postgres_data:
+  sandbox_redis_data:
+
+networks:
+  sandbox-net:
+    driver: bridge
+  coolify:
+    external: true

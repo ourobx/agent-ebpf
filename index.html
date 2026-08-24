@@ -1,470 +1,1515 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="dark">
+<html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent-eBPF · Akıllı Asistan Güvenlik & Yönetim Paneli</title>
-  <meta name="description" content="Yapay Zeka Asistanlarınız için Sıfır Riskli, Kolay Kullanımlı Otonom Güvenlik ve İletişim Paneli.">
-  <meta id="theme-color" name="theme-color" content="#070a0e">
+  <title>KSEC | Ring-0 Autonomous AI Defense &amp; eBPF Kernel Shield</title>
+  <meta name="description"
+    content="High-density, zero-risk eBPF Ring-0 kernel telemetry, deterministic AST guardrails, and autonomous AI tool-call firewall for Fortune 500 infrastructure.">
+  <meta id="theme-color" name="theme-color" content="#070A0F">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script defer src="app.js" type="module"></script>
+  <script src="app.js" defer></script>
 </head>
-<body>
-  <!-- ===== Giriş Ekranı ===== -->
-  <auth-gate id="authGate" role="presentation" hidden>
-    <div class="auth-backdrop"></div>
-    <form id="loginForm" class="auth-card" autocomplete="off" novalidate>
-      <div class="auth-logo">
-        <span class="pulse-beacon"></span>
-        <span class="auth-brand-name">Sysauto Asistan Kalkanı</span>
-      </div>
-      <h1 class="auth-title">Yönetim Paneli Girişi</h1>
-      <p class="auth-sub">Yapay zeka asistanlarınızı ve müşteri verilerinizi güvenle yönetin.</p>
-      
-      <div class="form-group">
-        <label>Kullanıcı Adı</label>
-        <input type="text" name="client_id" placeholder="Yönetici adınız" required>
-      </div>
-      <div class="form-group">
-        <label>Güvenlik Şifresi</label>
-        <input type="password" name="client_secret" placeholder="••••••••••••" required>
-      </div>
-      
-      <button type="submit" id="loginBtn" class="btn-cta">Giriş Yap</button>
-      <button type="button" id="loginDevBtn" class="btn-secondary">Hızlı Giriş (1-Tık)</button>
-      <p class="auth-error" id="loginError" hidden></p>
-    </form>
-  </auth-gate>
 
-  <!-- ===== Ana Yönetim Paneli ===== -->
-  <div id="app" hidden>
-    <!-- Üst Menü Çubuğu -->
-    <header class="top-nav">
-      <div class="container nav-inner">
-        <a href="#" class="brand" id="brandLink">
-          <span class="pulse-beacon"></span>
-          <span class="brand-text">Sysauto Asistan</span>
-          <span class="plan-pill">GÜVENLİ &amp; AKTİF</span>
-        </a>
-        <nav class="nav-sections" id="navSections"></nav>
-        <div class="nav-actions">
-          <div class="shield-status-indicator" id="navShieldStatus">
-            <span class="status-dot online"></span>
-            <span class="status-label">Korumalı</span>
+<body>
+  <!-- ===== 1. Enterprise Mission Control Container ===== -->
+  <div id="app" class="app-container">
+    <!-- Left Navigation Sidebar (High-Density B2B) -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <a href="#overview" class="brand-wrapper" style="text-decoration: none;">
+          <!-- Ouroboros Ring-0 Circuit Vector Mark -->
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <circle cx="16" cy="16" r="14" stroke="#1E293B" stroke-width="2" />
+            <path
+              d="M16 2C8.268 2 2 8.268 2 16C2 20.3 3.9 24.1 7 26.7L10 23.5C7.8 21.6 6.5 18.9 6.5 16C6.5 10.8 10.8 6.5 16 6.5C21.2 6.5 25.5 10.8 25.5 16C25.5 19.8 23.2 23.1 20 24.6V29.1C25.8 27.3 30 22.1 30 16C30 8.268 23.732 2 16 2Z"
+              fill="url(#ksec-brand-gradient)" />
+            <circle cx="16" cy="16" r="3.5" fill="#06B6D4" />
+            <circle cx="20" cy="24.5" r="2" fill="#10B981" />
+            <defs>
+              <linearGradient id="ksec-brand-gradient" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#06B6D4" />
+                <stop offset="0.5" stop-color="#3B82F6" />
+                <stop offset="1" stop-color="#10B981" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="brand-info">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="brand-name font-bold" style="letter-spacing: 0.08em;">KSEC</span>
+              <span class="brand-badge">RING-0</span>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 8.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Kernel Defense</span>
           </div>
-          <button class="icon-btn" id="themeToggle" aria-label="Görünüm Değiştir" title="Görünüm Değiştir">
-            <span class="theme-icon">☾</span>
+        </a>
+      </div>
+
+      <!-- Grouped Nav Items (Decoupled Core Security) -->
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- Group 1: Runtime Protection -->
+        <div class="nav-group">
+          <div class="nav-group-title">Runtime Protection</div>
+          <button class="sidebar-btn active" data-tab="overview">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            </span>
+            <span>Mission Overview</span>
+            <span class="nav-badge">LIVE</span>
           </button>
-          <button class="icon-btn" id="refreshBtn" aria-label="Yenile" title="Yenile">↻</button>
-          <button class="icon-btn" id="logoutBtn" aria-label="Çıkış" title="Çıkış">⎋</button>
+          <button class="sidebar-btn" data-tab="telemetry">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </span>
+            <span>eBPF Ring-0 Engine</span>
+            <span class="nav-badge">&lt;35µs</span>
+          </button>
+          <button class="sidebar-btn" data-tab="cognitive">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <span>Agent Tool Firewall</span>
+            <span class="nav-badge">AST</span>
+          </button>
+        </div>
+
+        <!-- Group 2: Telemetry & Observability -->
+        <div class="nav-group">
+          <div class="nav-group-title">Observability &amp; Forensics</div>
+          <button class="sidebar-btn" data-tab="events">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </span>
+            <span>Live Forensics Tail</span>
+            <span class="nav-badge" id="sidebarEventsCount">Stream</span>
+          </button>
+          <button class="sidebar-btn" data-tab="policies">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </span>
+            <span>Declarative Policies</span>
+            <span class="nav-badge">4 Active</span>
+          </button>
+        </div>
+
+        <!-- Group 3: Architecture & Infrastructure -->
+        <div class="nav-group">
+          <div class="nav-group-title">Platform &amp; Sovereign</div>
+          <button class="sidebar-btn" data-tab="integration">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </span>
+            <span>1-Click SDK Connectors</span>
+            <span class="nav-badge">MCP</span>
+          </button>
+          <button class="sidebar-btn" data-tab="settings">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <span>Cryptographic Vault</span>
+            <span class="nav-badge">AES-256</span>
+          </button>
+        </div>
+
+        <!-- Group 4: V2.0 Intelligence -->
+        <div class="nav-group">
+          <div class="nav-group-title">V2.0 Intelligence</div>
+          <button class="sidebar-btn" data-tab="v2intel">
+            <span class="nav-icon svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            <span>Threat Vectors &amp; Roadmap</span>
+            <span class="nav-badge" style="background: rgba(245,158,11,0.1); color: var(--accent-amber); border-color: var(--accent-amber-border);">PREVIEW</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Sidebar User Profile -->
+      <div class="sidebar-footer" style="padding: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; background: #090D15;">
+        <div class="user-avatar" style="width: 28px; height: 28px; border-radius: 4px; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--accent-cyan); flex-shrink: 0;">
+          KS
+        </div>
+        <div class="user-meta" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+          <span class="user-name" id="userNameDisplay" style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SecOps Operator</span>
+          <span class="user-role" style="font-size: 9px; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">KSEC Enterprise // Node-04</span>
         </div>
       </div>
-    </header>
-
-    <!-- Canlı Durum Şeridi -->
-    <aside class="quick-status-bar container" id="tray">
-      <div class="status-pill-group">
-        <span class="status-chip"><span class="chip-dot" id="sseDot"></span>Canlı Koruma</span>
-        <span class="status-chip"><span class="chip-dot" id="dbDot"></span>Veri Güvenliği</span>
-        <span class="status-chip"><span class="chip-dot" id="ebpfDot"></span>Sistem Sağlığı</span>
-      </div>
-      <div class="tray-meta" id="lastRefresh">Son Güncelleme · Canlı</div>
     </aside>
 
-    <main class="container workspace">
-      <!-- 1. GENEL BAKIŞ & KONTROL MERKEZİ -->
-      <section id="section-overview" class="section active">
-        <!-- Büyük Kalkan Kartı -->
-        <div class="hero-shield-card">
-          <div class="hero-shield-info">
-            <div class="shield-badge-row">
-              <span class="shield-badge">🛡️ OTONOM GÜVENLİK KALKANI</span>
-              <span class="latency-badge">Anında Koruma</span>
-            </div>
-            <h2>Akıllı Asistan Koruma Sistemi</h2>
-            <p>Yapay zeka asistanlarınızın yaptığı tüm işlemler arka planda güvenlik süzgecinden geçirilir. Yanlışlıkla veri silinmesi, müşteri bilgilerinin karışması veya hatalı komutlar otomatik olarak engellenir.</p>
-          </div>
-          <div class="hero-shield-toggle-wrap">
-            <label class="switch-control">
-              <input type="checkbox" id="mainShieldToggle" checked>
-              <span class="switch-slider"></span>
-            </label>
-            <span class="toggle-label" id="mainShieldLabel">TAM KORUMA AKTİF</span>
-          </div>
-        </div>
-
-        <!-- 4 Temel Özet Kartı -->
-        <div class="metric-kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-head">
-              <span class="kpi-icon">🛡️</span>
-              <span class="kpi-title">Önlenen Risk</span>
-            </div>
-            <div class="kpi-value" id="kpiBlockedThreats">0</div>
-            <div class="kpi-sub">Otomatik Engellenen Hatalı İşlem</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-head">
-              <span class="kpi-icon">⚡</span>
-              <span class="kpi-title">Tepki Hızı</span>
-            </div>
-            <div class="kpi-value" id="kpiLatency">Anında</div>
-            <div class="kpi-sub">Sıfır Bekleme / Kesintisiz</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-head">
-              <span class="kpi-icon">🔒</span>
-              <span class="kpi-title">Aktif Güvenlik Kuralları</span>
-            </div>
-            <div class="kpi-value" id="kpiActiveRules">4 Kural</div>
-            <div class="kpi-sub">Otomatik Koruma İlkeleri</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-head">
-              <span class="kpi-icon">😊</span>
-              <span class="kpi-title">Asistan Ruh Hali</span>
-            </div>
-            <div class="kpi-value" id="kpiCognitiveMood">Dingin 🟢</div>
-            <div class="kpi-sub">Dengeli ve Samimi İletişim</div>
+    <!-- Main Workspace Area -->
+    <div class="app-main-wrapper">
+      <!-- Executive Top Bar -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation">
+            <span class="svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </span>
+          </button>
+          <div class="breadcrumbs-wrap">
+            <span class="breadcrumb-root">Cluster:</span>
+            <span class="breadcrumb-node">us-east-1a</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="text-secondary mono text-xs">Node-04</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="text-emerald font-semibold mono text-xs" style="display: flex; align-items: center; gap: 4px;">
+              <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
+              eBPF LSM (Enforcing)
+            </span>
           </div>
         </div>
 
-        <!-- Hızlı Durum Listesi -->
-        <div class="overview-grid">
-          <div class="saas-card">
-            <div class="saas-card-head">
-              <h3>🤖 Korunan Hizmetler &amp; Asistanlar</h3>
-              <span class="pill-outline">Tam Uyumlu</span>
-            </div>
-            <div class="service-connectors-list">
-              <div class="connector-item">
-                <div class="conn-icon">🗄️</div>
-                <div class="conn-info">
-                  <strong>Müşteri &amp; Rezervasyon Veritabanı</strong>
-                  <small>Verilerin yanlışlıkla silinmesine karşı korumalı</small>
+        <div class="topbar-right">
+          <!-- Status Micro-Pills & Kernel Health Popover -->
+          <div style="position: relative;">
+            <button type="button" class="status-pill enforcing" id="topbarKernelStatus" style="cursor: pointer;" title="Click to inspect Ring-0 Kernel Health Matrix">
+              <span class="pulse-dot"></span>
+              <span id="topbarKernelLabel">KERNEL SHIELD: ACTIVE (Zero-Copy RingBuffer)</span>
+            </button>
+
+            <!-- Ring-0 Kernel Health Matrix Popover -->
+            <div class="kernel-health-popover" id="kernelHealthPopover" style="display: none;">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
+                  <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Ring-0 Kernel Health Matrix</h4>
                 </div>
-                <span class="badge-status-on">KORUNUYOR</span>
+                <span class="text-xs text-muted mono">us-east-1a</span>
               </div>
-              <div class="connector-item">
-                <div class="conn-icon">💬</div>
-                <div class="conn-info">
-                  <strong>Sesli &amp; Yazılı Müşteri Asistanı</strong>
-                  <small>Müşterilerle doğal ve sıcak dille konuşur</small>
+
+              <div class="popover-stat-row">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="text-xs text-muted font-semibold">eBPF Map Capacity</span>
+                  <span class="text-muted font-bold" id="popoverMapCapPct">0.0%</span>
                 </div>
-                <span class="badge-status-on">BAĞLI</span>
-              </div>
-              <div class="connector-item">
-                <div class="conn-icon">📱</div>
-                <div class="conn-info">
-                  <strong>İşletme Cihazları ve Telefonlar</strong>
-                  <small>Yetkisiz müdahalelere karşı güvende</small>
+                <div class="popover-progress-bar">
+                  <div class="popover-progress-fill" id="popoverMapCapBar" style="width: 0%;"></div>
                 </div>
-                <span class="badge-status-on">EŞLENDİ</span>
+                <span class="text-xs text-muted" id="popoverMapCapText">0 / 65,536 active entries</span>
               </div>
+
+              <div class="popover-stat-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div>
+                  <span class="text-xs text-muted font-semibold block">XDP Line-Rate Drops</span>
+                  <span class="text-xs font-bold text-muted" id="popoverXdpDrops">0 dropped</span>
+                </div>
+                <span class="badge-verdict" style="background: rgba(255,255,255,0.05); color: var(--text-muted);" id="popoverXdpLineRate">0.00 Mpps Line Rate</span>
+              </div>
+
+              <div class="popover-stat-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div>
+                  <span class="text-xs text-muted font-semibold block">Kprobe CPU Overhead</span>
+                  <span class="text-xs font-bold text-muted" id="popoverKprobeCpu">0.000% CPU Cycles</span>
+                </div>
+                <span class="text-xs text-muted">Zero Panic</span>
+              </div>
+
+              <div class="popover-stat-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div>
+                  <span class="text-xs text-muted font-semibold block">Kernel Slab Memory</span>
+                  <span class="text-xs font-bold text-muted" id="popoverKernelSlab">0.0 MB Alloc</span>
+                </div>
+                <span class="text-xs text-muted">In-Memory</span>
+              </div>
+
+              <button type="button" class="btn-secondary" id="btnExportBpfJson" style="width: 100%; justify-content: center; font-size: 11px; font-family: var(--font-mono); color: var(--accent-cyan); margin-top: 4px;">
+                <span class="svg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+                Export BPF Map State (.json)
+              </button>
             </div>
           </div>
 
-          <div class="saas-card">
-            <div class="saas-card-head">
-              <h3>📋 Canlı Güvenlik Akışı</h3>
-              <button class="btn-text small" id="btnViewAllEvents">Tümünü İncele →</button>
-            </div>
-            <div class="live-threat-feed" id="recentThreatsFeed">
-              <div class="threat-feed-item clean">
-                <span class="feed-icon">✓</span>
-                <div class="feed-info">
-                  <strong>Her Şey Yolunda</strong>
-                  <small>Tüm asistanlar güvenle ve hatasız çalışıyor.</small>
-                </div>
-                <span class="feed-time">Şimdi</span>
-              </div>
-            </div>
-          </div>
+          <div class="status-pill telemetry" id="topbarLatency">p99: 0.0µs</div>
+
+          <!-- Enterprise Environment Selector -->
+          <select class="select-control" id="tenantSelector" aria-label="Select Infrastructure Cluster">
+            <option value="node_useast1">Enterprise Production [SOC-2 Type II]</option>
+            <option value="node_euwest1">EU-Central Sovereign [GDPR Enforced]</option>
+            <option value="node_apac">APAC Tokyo Primary [PCI-DSS Level 1]</option>
+          </select>
+
+          <!-- Corporate Site Link -->
+          <a href="landing.html" class="status-pill" style="text-decoration: none; color: var(--accent-cyan); border-color: var(--accent-cyan-border); font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" title="View Enterprise Corporate Website">
+            <span>Corporate Site ↗</span>
+          </a>
+
+          <button class="icon-action-btn" id="themeToggle" title="Toggle Visual Theme" aria-label="Toggle Theme">
+            <span class="svg-icon" id="themeIcon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+          </button>
+          <button class="icon-action-btn" id="refreshBtn" title="Sync Live Kernel Maps" aria-label="Sync Live Maps">
+            <span class="svg-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </span>
+          </button>
         </div>
-      </section>
+      </header>
 
-      <!-- 2. ASİSTAN ZİHNİ & SESLİ İLETİŞİM -->
-      <section id="section-cognitive" class="section">
-        <div class="saas-card panel-wide">
-          <div class="saas-card-head">
-            <div>
-              <h2>🧠 Asistan Zihni &amp; Ruh Hali</h2>
-              <p class="section-sub">Asistanınızın empati düzeyini, konuşma tonunu ve iç dünyasını canlı yönetin.</p>
+      <!-- Main Pages Content Area -->
+      <main class="workbench-content">
+
+        <!-- =========================================================================
+             PAGE 1: OVERVIEW & MISSION CONTROL (High-Density B2B Standard)
+             ========================================================================= -->
+        <section id="section-overview" class="section active">
+          <!-- Tight High-Impact Telemetry Strip -->
+          <div class="telemetry-strip">
+            <div class="telemetry-strip-left">
+              <div class="shield-mode-toggle">
+                <button type="button" class="shield-mode-btn active enforcing" id="btnModeEnforcing">ENFORCING</button>
+                <button type="button" class="shield-mode-btn audit" id="btnModeAudit">AUDIT-ONLY</button>
+                <button type="button" class="shield-mode-btn disabled" id="btnModeDisabled">BYPASS</button>
+              </div>
+
+              <div class="hook-integrity-group">
+                <span class="hook-chip active"><span class="dot"></span> XDP: Ring-0</span>
+                <span class="hook-chip active"><span class="dot"></span> TC: Inbound/Outbound</span>
+                <span class="hook-chip active"><span class="dot"></span> KPROBE: Syscall Attached</span>
+                <span class="hook-chip active"><span class="dot"></span> LSM: Enforcing</span>
+              </div>
             </div>
-            <div class="cognitive-status-pill" id="cognitiveMoodPill">Dingin &amp; Samimi 🟢</div>
+
+            <div class="telemetry-strip-right">
+              <div class="telemetry-metric-inline">
+                <span>Throughput:</span>
+                <strong id="stripThroughput">1.42 Mpps / 42.8k EPS</strong>
+              </div>
+              <div class="telemetry-metric-inline">
+                <span>RingBuf:</span>
+                <strong>4,096 KB (0% Drop)</strong>
+              </div>
+            </div>
           </div>
 
-          <div class="cognitive-matrix-layout">
-            <!-- Ruh Hali Göstergeleri -->
-            <div class="matrix-column">
-              <div class="gauge-card">
-                <h4>Canlı Duygu Seviyeleri</h4>
-                
-                <div class="saas-gauge">
-                  <div class="gauge-meta">
-                    <span>Mutluluk Seviyesi</span>
-                    <strong id="valValence">%70 (Neşeli)</strong>
-                  </div>
-                  <div class="gauge-bar-track">
-                    <div class="gauge-bar-fill valence-bg" id="barValence" style="width: 70%;"></div>
-                  </div>
-                </div>
+          <!-- 4-Column Core Metric Grid -->
+          <div class="card-grid-4">
+            <!-- 1. Intercepted Threats & Anomalies -->
+            <div class="metric-card">
+              <div class="metric-card-top">
+                <span class="metric-label">Threat Interception</span>
+                <span class="metric-icon-wrap svg-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+              </div>
+              <div class="metric-val-row">
+                <span class="metric-value" id="kpiBlockedThreats">0</span>
+                <span class="metric-trend good">✓ Zero Anomalies</span>
+              </div>
+              <!-- Mini Sparkline -->
+              <div class="metric-sparkline-wrap">
+                <svg viewBox="0 0 200 24" preserveAspectRatio="none">
+                  <path d="M0,20 L30,18 L60,20 L90,19 L120,20 L150,20 L180,19 L200,20" fill="none" stroke="var(--accent-emerald)" stroke-width="1.75"/>
+                </svg>
+              </div>
+              <div class="metric-breakdown-row">
+                <span class="metric-breakdown-item">AST Blocks: <span class="val">0</span></span>
+                <span class="metric-breakdown-item">RLS Drops: <span class="val">0</span></span>
+                <span class="metric-breakdown-item">DDL: <span class="val">0</span></span>
+              </div>
+            </div>
 
-                <div class="saas-gauge">
-                  <div class="gauge-meta">
-                    <span>Enerji ve Canlılık</span>
-                    <strong id="valArousal">%65 (Dinamik)</strong>
-                  </div>
-                  <div class="gauge-bar-track">
-                    <div class="gauge-bar-fill arousal-bg" id="barArousal" style="width: 65%;"></div>
-                  </div>
-                </div>
+            <!-- 2. Median Filter Latency -->
+            <div class="metric-card">
+              <div class="metric-card-top">
+                <span class="metric-label">Median Filter Latency</span>
+                <span class="metric-icon-wrap svg-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+              </div>
+              <div class="metric-val-row">
+                <span class="metric-value text-cyan" id="kpiLatency">0.0 µs</span>
+                <span class="metric-trend good">Zero-Copy BPF</span>
+              </div>
+              <!-- Mini Sparkline -->
+              <div class="metric-sparkline-wrap">
+                <svg viewBox="0 0 200 24" preserveAspectRatio="none">
+                  <path d="M0,14 L30,12 L60,16 L90,10 L120,13 L150,8 L180,12 L200,10" fill="none" stroke="var(--accent-cyan)" stroke-width="1.75"/>
+                </svg>
+              </div>
+              <div class="metric-breakdown-row">
+                <span class="metric-breakdown-item">p50: <span class="val">0.0µs</span></span>
+                <span class="metric-breakdown-item">p95: <span class="val">0.0µs</span></span>
+                <span class="metric-breakdown-item">Jitter: <span class="val">±0.0µs</span></span>
+              </div>
+            </div>
 
-                <div class="saas-gauge">
-                  <div class="gauge-meta">
-                    <span>Empati &amp; İlgi Düzeyi</span>
-                    <strong id="valResonance">%90 (Yüksek İlgi)</strong>
-                  </div>
-                  <div class="gauge-bar-track">
-                    <div class="gauge-bar-fill resonance-bg" id="barResonance" style="width: 90%;"></div>
-                  </div>
-                </div>
+            <!-- 3. In-Memory Guardrails -->
+            <div class="metric-card">
+              <div class="metric-card-top">
+                <span class="metric-label">In-Memory Guardrails</span>
+                <span class="metric-icon-wrap svg-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+              </div>
+              <div class="metric-val-row">
+                <span class="metric-value" id="kpiActiveRules">0 Rules</span>
+                <span class="metric-trend good">100% In-Memory</span>
+              </div>
+              <!-- Mini Sparkline -->
+              <div class="metric-sparkline-wrap">
+                <svg viewBox="0 0 200 24" preserveAspectRatio="none">
+                  <path d="M0,8 L40,8 L80,8 L120,8 L160,8 L200,8" fill="none" stroke="var(--accent-indigo)" stroke-width="1.75"/>
+                </svg>
+              </div>
+              <div class="metric-breakdown-row">
+                <span class="metric-breakdown-item">AST Bytecode: <span class="val">0</span></span>
+                <span class="metric-breakdown-item">BPF Verifier: <span class="val">0 insns</span></span>
+              </div>
+            </div>
 
-                <div class="saas-gauge">
-                  <div class="gauge-meta">
-                    <span>Merak &amp; Anlama Arzusu</span>
-                    <strong id="valCuriosity">%80 (Öğrenmeye Açık)</strong>
-                  </div>
-                  <div class="gauge-bar-track">
-                    <div class="gauge-bar-fill curiosity-bg" id="barCuriosity" style="width: 80%;"></div>
-                  </div>
-                </div>
+            <!-- 4. Intent Leases (Ed25519) -->
+            <div class="metric-card">
+              <div class="metric-card-top">
+                <span class="metric-label">Intent Leases (Ed25519)</span>
+                <span class="metric-icon-wrap svg-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </span>
+              </div>
+              <div class="metric-val-row">
+                <span class="metric-value text-emerald" id="kpiActiveLeases">0 Sessions</span>
+                <span class="metric-trend good">Ed25519 Verified</span>
+              </div>
+              <!-- Mini Sparkline -->
+              <div class="metric-sparkline-wrap">
+                <svg viewBox="0 0 200 24" preserveAspectRatio="none">
+                  <path d="M0,16 L30,14 L60,10 L90,12 L120,6 L150,9 L180,4 L200,6" fill="none" stroke="var(--accent-emerald)" stroke-width="1.75"/>
+                </svg>
+              </div>
+              <div class="metric-breakdown-row">
+                <span class="metric-breakdown-item">Cryptographically Verified: <span class="val">0</span></span>
+                <span class="metric-breakdown-item">Revoked: <span class="val">0</span></span>
+              </div>
+            </div>
+          </div>
 
-                <div class="saas-gauge">
-                  <div class="gauge-meta">
-                    <span>Samimiyet &amp; İçtenlik</span>
-                    <strong id="valVulnerability">%85 (Doğal ve Sıcak)</strong>
-                  </div>
-                  <div class="gauge-bar-track">
-                    <div class="gauge-bar-fill vulnerability-bg" id="barVulnerability" style="width: 85%;"></div>
-                  </div>
-                </div>
+          <!-- Sub-35µs Latency Histogram Component -->
+          <div class="histogram-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="pulse-dot" style="background: var(--accent-cyan);"></span>
+                <h3 class="font-semibold text-xs text-primary" style="text-transform: uppercase; letter-spacing: 0.05em;">Sub-35µs In-Memory Latency Distribution</h3>
+              </div>
+              <span class="status-pill" style="font-size: 10px;" id="histSaturationPill">RingBuffer Saturation: 0.0% (Awaiting telemetry)</span>
+            </div>
 
-                <div class="kernel-sync-badge">
-                  <span>Güvenlik Uyumu:</span>
-                  <strong id="kernelTelemetryRaw">Tam Uyumlu &amp; Güvenli</strong>
+            <div class="quantile-grid">
+              <div class="quantile-tile">
+                <span class="quantile-label">Median (p50)</span>
+                <span class="quantile-value text-cyan" id="histP50">0.0 µs</span>
+              </div>
+              <div class="quantile-tile">
+                <span class="quantile-label">95th % (p95)</span>
+                <span class="quantile-value text-cyan" id="histP95">0.0 µs</span>
+              </div>
+              <div class="quantile-tile">
+                <span class="quantile-label">99th % (p99)</span>
+                <span class="quantile-value text-emerald" id="histP99">0.0 µs</span>
+              </div>
+              <div class="quantile-tile">
+                <span class="quantile-label">Jitter (stddev)</span>
+                <span class="quantile-value text-secondary" id="histJitter">±0.0 µs</span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div class="histogram-chart-wrap" id="histBarsContainer">
+                <div class="histogram-bar-col"><div class="histogram-bar" style="height: 2px; background: rgba(255,255,255,0.06);"></div></div>
+                <div class="histogram-bar-col"><div class="histogram-bar" style="height: 2px; background: rgba(255,255,255,0.06);"></div></div>
+                <div class="histogram-bar-col"><div class="histogram-bar" style="height: 2px; background: rgba(255,255,255,0.06);"></div></div>
+                <div class="histogram-bar-col"><div class="histogram-bar" style="height: 2px; background: rgba(255,255,255,0.06);"></div></div>
+                <div class="histogram-bar-col"><div class="histogram-bar" style="height: 2px; background: rgba(255,255,255,0.06);"></div></div>
+              </div>
+              <div class="histogram-labels-row">
+                <span>&lt;10µs</span>
+                <span>10-20µs</span>
+                <span>20-30µs</span>
+                <span>30-40µs</span>
+                <span style="color: var(--accent-crimson); font-weight: 600;">&gt;40µs (Anomaly)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Wireshark / Datadog Live Tail Stream -->
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h3 class="ent-card-title">
+                  <span class="svg-icon text-cyan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  </span>
+                  Real-Time Kernel Security &amp; AST Telemetry Stream
+                </h3>
+                <span class="ent-card-sub">Live tail stream directly sampled from Ring-0 eBPF ring buffer maps with deterministic AST verdicts. Click any row to inspect deep packet payload.</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn-secondary" id="btnToggleLiveTail">
+                  <span class="pulse-dot"></span>
+                  <span id="labelLiveTail">Live Tail Active</span>
+                </button>
+                <button type="button" class="btn-secondary" id="btnClearStream">Clear Buffer</button>
+              </div>
+            </div>
+
+            <!-- Table Filter Bar -->
+            <div class="table-filter-bar">
+              <div class="filter-chips-group">
+                <button type="button" class="filter-chip active" data-filter="all">All Events</button>
+                <button type="button" class="filter-chip blocked" data-filter="drop">Action: BLOCKED (DROP)</button>
+                <button type="button" class="filter-chip" data-filter="pass">Action: ALLOWED (PASS)</button>
+                <button type="button" class="filter-chip" data-filter="slow">Latency &gt; 35µs</button>
+                <button type="button" class="filter-chip" data-filter="sql">Tool: db_query / SQL</button>
+              </div>
+
+              <div class="search-input-wrap">
+                <span class="svg-icon text-muted">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <input type="text" id="streamSearchInput" placeholder="Filter by IP, Agent ID, Hash...">
+              </div>
+            </div>
+
+            <!-- High-Density Telemetry Table -->
+            <div class="table-container">
+              <table class="ent-table" id="liveTelemetryTable">
+                <thead>
+                  <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>Action</th>
+                    <th>Agent ID / Process</th>
+                    <th>Syscall / Tool Call</th>
+                    <th>Payload Hash / Query AST</th>
+                    <th>Latency</th>
+                    <th>Enforcing Policy</th>
+                  </tr>
+                </thead>
+                <tbody id="liveTelemetryTableBody">
+                  <!-- Injected dynamically via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 2: eBPF RING-0 KERNEL TELEMETRY
+             ========================================================================= -->
+        <section id="section-telemetry" class="section">
+          <div style="display: flex; flex-direction: column; gap: 16px; max-width: 1400px; width: 100%; margin: 0 auto;">
+            <!-- Top Telemetry Header Bar -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="pulse-dot" style="background: var(--accent-cyan);"></div>
+                <h1 style="font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em;">
+                  eBPF Ring-0 Kernel Telemetry &amp; XDP Engine
+                </h1>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge-verdict pass" style="font-size: 10px; font-family: var(--font-mono);">
+                  eBPF LSM: ATTACHED
+                </span>
+                <span class="status-pill telemetry" style="font-size: 10px; font-family: var(--font-mono);">
+                  Zero-Copy RingBuf: 4,096 KB
+                </span>
+              </div>
+            </div>
+
+            <!-- 3-Column Core Telemetry Metrics -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+              <!-- 1. Kernel Hook Latency -->
+              <div class="metric-card" style="height: auto; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;">
+                  <span>Kernel Hook Latency</span>
+                  <span class="text-cyan font-bold">p99</span>
+                </div>
+                <div style="margin: 8px 0;">
+                  <span style="font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);" class="tabular-nums">28.4 µs</span>
+                  <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); display: block; margin-top: 2px;">Median: 14.1 µs | Jitter: ±1.2 µs</span>
+                </div>
+                <div style="font-size: 9px; font-family: var(--font-mono); color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 6px; display: flex; justify-content: space-between;">
+                  <span>Overhead: &lt;0.02% CPU</span>
+                  <span class="text-emerald font-semibold">Deterministic</span>
+                </div>
+              </div>
+
+              <!-- 2. XDP Packet Throughput -->
+              <div class="metric-card" style="height: auto; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;">
+                  <span>XDP Packet Throughput</span>
+                  <span class="text-emerald font-bold">Line Rate</span>
+                </div>
+                <div style="margin: 8px 0;">
+                  <span style="font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);" class="tabular-nums">1.42 Mpps</span>
+                  <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); display: block; margin-top: 2px;">Events: 42.8k EPS | Drops: 0</span>
+                </div>
+                <div style="font-size: 9px; font-family: var(--font-mono); color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 6px; display: flex; justify-content: space-between;">
+                  <span>Driver: Native XDP</span>
+                  <span class="text-emerald font-semibold">Zero Packet Loss</span>
+                </div>
+              </div>
+
+              <!-- 3. BPF Maps Capacity -->
+              <div class="metric-card" style="height: auto; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;">
+                  <span>BPF Maps Capacity</span>
+                  <span class="text-cyan font-bold">21.7% Used</span>
+                </div>
+                <div style="margin: 8px 0;">
+                  <span style="font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);" class="tabular-nums">14,280</span>
+                  <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); display: block; margin-top: 2px;">Total Slots: 65,536 (LRU Hash)</span>
+                </div>
+                <div style="font-size: 9px; font-family: var(--font-mono); color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 6px; display: flex; justify-content: space-between;">
+                  <span>Slab Memory: 4.2 MB</span>
+                  <span class="text-cyan font-semibold">RingBuffer Active</span>
                 </div>
               </div>
             </div>
 
-            <!-- Canlı Bilinç Akışı -->
-            <div class="matrix-column">
-              <div class="monologue-card">
-                <h4>💭 Asistanın Düşünce Akışı</h4>
-                <div class="thought-steps">
-                  <div class="thought-item">
-                    <div class="thought-bullet">👁️</div>
-                    <div class="thought-text">
-                      <label>Gözlem ve Hissetme</label>
-                      <p id="monoObservation">Karşımdaki kişinin ihtiyaçlarını dikkatle dinliyorum.</p>
+            <!-- Active Kernel Probes Table -->
+            <div class="ent-card" style="padding: 0; overflow: hidden;">
+              <div style="padding: 10px 14px; background: #090D15; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 11px;">
+                <span style="font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Active Kernel Hooks &amp; Kprobes</span>
+                <span class="text-muted" style="font-size: 10px;">4 Attached Probes</span>
+              </div>
+              <div class="table-container">
+                <table class="ent-table">
+                  <thead>
+                    <tr>
+                      <th>Probe Name</th>
+                      <th>Type</th>
+                      <th>Target / Syscall</th>
+                      <th>Verifier Instructions</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold text-cyan">ksec_xdp_ingress</td>
+                      <td class="text-muted">BPF_PROG_TYPE_XDP</td>
+                      <td class="text-secondary">eth0:rx_queue_0</td>
+                      <td class="text-muted">842 insns</td>
+                      <td><span class="badge-verdict pass">ACTIVE (0 Drop)</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-cyan">ksec_sys_enter_connect</td>
+                      <td class="text-muted">BPF_PROG_TYPE_KPROBE</td>
+                      <td class="text-secondary">__sys_connect</td>
+                      <td class="text-muted">1,420 insns</td>
+                      <td><span class="badge-verdict pass">ENFORCING</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-cyan">ksec_sock_ops_audit</td>
+                      <td class="text-muted">BPF_PROG_TYPE_SOCK_OPS</td>
+                      <td class="text-secondary">tcp_v4_connect</td>
+                      <td class="text-muted">612 insns</td>
+                      <td><span class="badge-verdict pass">MONITORING</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 3: AGENT TOOL FIREWALL & COGNITIVE GUARDRAILS
+             ========================================================================= -->
+        <section id="section-cognitive" class="section">
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h2 class="ent-card-title">
+                  <span class="svg-icon text-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                  Autonomous AI Agent Tool-Call Firewall &amp; AST Engine
+                </h2>
+                <span class="ent-card-sub">Real-time deterministic interception for LLM tool calls (LangChain, CrewAI, OpenAI, Anthropic), destructive SQL mutations, and multi-tenant RLS bypass attempts.</span>
+              </div>
+              <span class="status-pill enforcing">AST Interception Active</span>
+            </div>
+
+            <!-- Live AST SQL Interceptor Simulator -->
+            <div class="ent-card" style="background: var(--bg-surface);">
+              <div class="ent-card-header">
+                <div>
+                  <h3 class="ent-card-title">Live AST Query Interceptor Simulator</h3>
+                  <p class="ent-card-sub">Test how proposed SQL queries or agent mutations are evaluated by the in-memory AST engine before reaching the database.</p>
+                </div>
+                <span class="status-pill telemetry">&lt;35µs In-Memory AST</span>
+              </div>
+
+              <div class="filter-chips-group" style="margin-bottom: 8px;">
+                <button type="button" class="filter-chip sql-preset" data-sql="UPDATE users SET is_admin = true">Unconditional UPDATE</button>
+                <button type="button" class="filter-chip sql-preset" data-sql="DELETE FROM reservations">Full Table DELETE</button>
+                <button type="button" class="filter-chip sql-preset" data-sql="SELECT * FROM guests WHERE tenant_id = 't_8921'">Safe RLS Query</button>
+                <button type="button" class="filter-chip sql-preset" data-sql="UPDATE rooms SET status = 'cleaned' WHERE id = 104 AND tenant_id = 't_12'">Targeted UPDATE</button>
+              </div>
+
+              <form id="astSimulatorForm" style="display: flex; gap: 8px;">
+                <input type="text" id="sqlQueryInput" class="select-control mono" style="flex:1; padding: 7px 10px; font-size: 12px;" placeholder="Enter SQL statement (e.g., UPDATE users SET is_admin = true)..." required>
+                <button type="submit" id="btnTestSql" class="btn-cta">
+                  <span>Evaluate AST</span>
+                </button>
+              </form>
+
+              <div id="sqlResultBox" style="margin-top: 10px; display: none;">
+                <div class="code-viewer-box">
+                  <div class="code-viewer-header">
+                    <span id="sqlVerdictTitle" class="font-bold">Verdict: DROP (Blocked)</span>
+                    <span id="sqlRuleBadge" class="mono">Rule: sql-no-where-mutation</span>
+                  </div>
+                  <pre class="code-viewer-content" id="sqlResultDetails"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 4: DECLARATIVE SECURITY POLICIES
+             ========================================================================= -->
+        <section id="section-policies" class="section">
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h2 class="ent-card-title">
+                  <span class="svg-icon text-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></span>
+                  Declarative Security Policy Engine (YAML / JSON)
+                </h2>
+                <span class="ent-card-sub">Compiled zero-trust rule sets enforced deterministically at the kernel socket and agent middleware boundaries.</span>
+              </div>
+              <span class="status-pill enforcing">4 Compiled Rules</span>
+            </div>
+
+            <div class="card-grid-2">
+              <div class="policy-card-item">
+                <div class="policy-meta">
+                  <span class="badge-verdict drop" style="width: max-content;">BLOCK_MUTATION</span>
+                  <span class="policy-title">Prevent Accidental Bulk Data Erasure</span>
+                  <p class="policy-desc">Interception of <code>DELETE</code> or <code>DROP</code> SQL operations without an explicit, constrained <code>WHERE</code> clause.</p>
+                  <span class="policy-rule-tag">rule_id: sql-no-where-mutation</span>
+                </div>
+                <span class="status-pill enforcing">ENFORCING</span>
+              </div>
+
+              <div class="policy-card-item">
+                <div class="policy-meta">
+                  <span class="badge-verdict pass" style="width: max-content;">ISOLATE_TENANT</span>
+                  <span class="policy-title">Multi-Tenant Row-Level Security (RLS)</span>
+                  <p class="policy-desc">Enforces hardware-level PostgreSQL tenant isolation so no organization can access foreign booking or billing records.</p>
+                  <span class="policy-rule-tag">rule_id: rls-multi-tenant-isolation</span>
+                </div>
+                <span class="status-pill enforcing">ENFORCING</span>
+              </div>
+
+              <div class="policy-card-item">
+                <div class="policy-meta">
+                  <span class="badge-verdict drop" style="width: max-content;">BLOCK_SYSCALL</span>
+                  <span class="policy-title">Block Unauthorized Syscalls &amp; Binaries</span>
+                  <p class="policy-desc">Prevents AI agents from executing unvetted shell commands, unauthorized sub-processes, or binary modifications.</p>
+                  <span class="policy-rule-tag">rule_id: syscall-whitelist-only</span>
+                </div>
+                <span class="status-pill enforcing">ENFORCING</span>
+              </div>
+
+              <div class="policy-card-item">
+                <div class="policy-meta">
+                  <span class="badge-verdict redact" style="width: max-content;">AUDIT_LEASE</span>
+                  <span class="policy-title">Cryptographic Human Approval on High-Risk Tasks</span>
+                  <p class="policy-desc">Pauses execution on high-impact transactions and requests explicit cryptographic operator approval.</p>
+                  <span class="policy-rule-tag">rule_id: human-in-the-loop-lease</span>
+                </div>
+                <span class="status-pill enforcing">ENFORCING</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 5: LIVE SECURITY FORENSICS STREAM (Dedicated View)
+             ========================================================================= -->
+        <section id="section-events" class="section">
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h2 class="ent-card-title">
+                  <span class="svg-icon text-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                  Cryptographic Audit Trail &amp; Forensic Stream
+                </h2>
+                <span class="ent-card-sub">Immutable audit log of all eBPF XDP filter decisions, AST interceptions, and consensus verdicts.</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-secondary" id="btnExportEventsFull">Export Forensic CSV</button>
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="ent-table" id="dedicatedEventsTable">
+                <thead>
+                  <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>Action</th>
+                    <th>Source IP / Entity</th>
+                    <th>Target / Syscall</th>
+                    <th>Enforcing Policy</th>
+                    <th>Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="dedicatedEventsTableBody">
+                  <!-- Injected dynamically via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 6: 1-CLICK SDK CONNECTORS
+             ========================================================================= -->
+        <section id="section-integration" class="section">
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h2 class="ent-card-title">
+                  <span class="svg-icon text-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+                  1-Click SDK Connectors &amp; Developers Hub
+                </h2>
+                <span class="ent-card-sub">Attach KSEC zero-trust guardrails to your AI agents, LLM tool-calling frameworks, and MCP clients in seconds.</span>
+              </div>
+              <span class="status-pill telemetry">Universal SDK</span>
+            </div>
+
+            <div class="card-grid-3">
+              <!-- Python SDK -->
+              <div class="ent-card" style="background: var(--bg-surface);">
+                <h3 class="text-sm font-semibold text-cyan">Python AI Agents</h3>
+                <p class="text-xs text-secondary">LangChain, LlamaIndex, OpenAI, CrewAI</p>
+                <div class="code-viewer-box">
+                  <div class="code-viewer-header">
+                    <span>Python</span>
+                    <button class="btn-copy" data-copy="import ksec_shield.auto&#10;&#10;@ksec_shield.guard(action_type='db_query')&#10;def execute_sql(query: str):&#10;    return db.execute(query)">Copy</button>
+                  </div>
+                  <pre class="code-viewer-content">import ksec_shield.auto
+
+@ksec_shield.guard(action_type='db_query')
+def execute_sql(query: str):
+    return db.execute(query)</pre>
+                </div>
+              </div>
+
+              <!-- Node.js SDK -->
+              <div class="ent-card" style="background: var(--bg-surface);">
+                <h3 class="text-sm font-semibold text-emerald">Node.js / TypeScript</h3>
+                <p class="text-xs text-secondary">Vercel AI SDK, LangGraph, Express</p>
+                <div class="code-viewer-box">
+                  <div class="code-viewer-header">
+                    <span>TypeScript</span>
+                    <button class="btn-copy" data-copy='import "@ksec/shield/auto";&#10;&#10;export const guardedTool = guardTool({&#10;  name: "queryDb",&#10;  execute: async (sql) => db.run(sql)&#10;});'>Copy</button>
+                  </div>
+                  <pre class="code-viewer-content">import "@ksec/shield/auto";
+
+export const guardedTool = guardTool({
+  name: "queryDb",
+  execute: async (sql) => db.run(sql)
+});</pre>
+                </div>
+              </div>
+
+              <!-- MCP Server -->
+              <div class="ent-card" style="background: var(--bg-surface);">
+                <h3 class="text-sm font-semibold text-indigo">Model Context Protocol</h3>
+                <p class="text-xs text-secondary">Attach via SSE stream endpoint</p>
+                <div class="code-viewer-box">
+                  <div class="code-viewer-header">
+                    <span>JSON</span>
+                    <button class="btn-copy" data-copy='{"mcpServers":{"ksec-ebpf-shield":{"url":"http://localhost:8000/sse","transport":"sse"}}}'>Copy</button>
+                  </div>
+                  <pre class="code-viewer-content">{
+  "mcpServers": {
+    "ksec-ebpf-shield": {
+      "url": "http://localhost:8000/sse",
+      "transport": "sse"
+    }
+  }
+}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 7: ENTERPRISE DATA SOVEREIGNTY & CRYPTOGRAPHIC VAULT
+             ========================================================================= -->
+        <section id="section-settings" class="section">
+          <div class="ent-card">
+            <div class="ent-card-header">
+              <div class="ent-card-title-group">
+                <h2 class="ent-card-title">
+                  <span class="svg-icon text-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                  Enterprise Data Sovereignty &amp; Cryptographic Vault
+                </h2>
+                <span class="ent-card-sub">AES-256-GCM hardware encryption vault, PostgreSQL RLS tenant isolation locks, and alert webhook routing.</span>
+              </div>
+              <span class="status-pill enforcing">AES-256-GCM Vault Active</span>
+            </div>
+
+            <div class="card-grid-2">
+              <div class="ent-card" style="background: var(--bg-surface);">
+                <h4 class="font-semibold text-sm">Cryptographic Secret Vault</h4>
+                <p class="text-xs text-secondary">
+                  All third-party provider keys (Twilio, Vapi, OpenAI, Gemini) are encrypted with AES-256-GCM and unique 16-byte IV vectors per row before persisting to PostgreSQL.
+                </p>
+                <div class="policy-card-item">
+                  <div class="policy-meta">
+                    <span class="policy-title">Vault Status: Hardware Locked</span>
+                    <p class="policy-desc">Zero plaintext exposure in database dumps or telemetry logs.</p>
+                  </div>
+                  <span class="badge-verdict pass">LOCKED</span>
+                </div>
+              </div>
+
+              <div class="ent-card" style="background: var(--bg-surface);">
+                <h4 class="font-semibold text-sm">Multi-Channel Alert Dispatcher</h4>
+                <p class="text-xs text-secondary">
+                  Critical security events and balance alerts are dispatched via Brevo SMTP and Slack Webhooks.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <label class="text-xs text-muted">Operations Alert Webhook URL</label>
+                  <input type="url" class="select-control" value="https://hooks.slack.com/services/T00/B00/XXXX" style="font-size: 11px;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================================
+             PAGE 8: KSEC V2.0 — THREAT INTELLIGENCE & PREDICTIVE ROADMAP
+             ========================================================================= -->
+        <section id="section-v2intel" class="section">
+          <div style="display: flex; flex-direction: column; gap: 16px; max-width: 1400px; width: 100%; margin: 0 auto;">
+
+            <!-- V2.0 Threat Alert Banner -->
+            <div class="v2-threat-banner">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <span class="pulse-dot" style="background: var(--accent-crimson);"></span>
+                  <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.06em;">KSEC V2.0 — Predictive Threat Intelligence Engine</span>
+                  <span class="badge-roadmap">RESEARCH PHASE</span>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); max-width: 860px; line-height: 1.5; margin: 0;">Advanced threat vector analysis and next-generation defensive feature roadmap. Predictive countermeasures address attack surfaces identified at the eBPF kernel, TLS wire protocol, and distributed cluster layers that current V1.0 hooks do not cover.</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="v2-layer-badge kernel">Layer 1: Kernel</span>
+                <span class="v2-layer-badge protocol">Layer 2: Protocol</span>
+                <span class="v2-layer-badge forensics">Layer 3: Forensics</span>
+              </div>
+            </div>
+
+            <!-- ── SECTION 1: 8 Threat Vectors ───────────────────────────────── -->
+            <div class="ent-card">
+              <div class="ent-card-header">
+                <div class="ent-card-title-group">
+                  <h2 class="ent-card-title">
+                    <span class="svg-icon text-crimson"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+                    Advanced Threat Vectors — Predicted Attack Surface (V2.0 Scope)
+                  </h2>
+                  <span class="ent-card-sub">8 critical-to-medium attack vectors identified at kernel, protocol, and distributed cluster layers. Each vector maps to a specific KSEC V2.0 countermeasure with a sub-microsecond latency budget.</span>
+                </div>
+                <span class="status-pill warning">8 Vectors Mapped</span>
+              </div>
+
+              <div class="threat-card-grid">
+
+                <!-- THR-01: TOCTOU -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-crimson);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-01 // eBPF LSM</span>
+                    <span class="threat-sev-badge threat-sev-critical">CRITICAL</span>
+                  </div>
+                  <div class="tv-title">TOCTOU &amp; Intent Lease Replay</div>
+                  <div class="tv-desc">Race condition between Ed25519 token issuance and syscall execution. Token replayed via thread injection before expiry within same millisecond window.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; Atomic Nonce + In-Kernel SHA-256</span>
+                    <span class="tv-latency">&lt;0.8 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-02: TLS Blindspot -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-crimson);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-02 // kTLS</span>
+                    <span class="threat-sev-badge threat-sev-critical">CRITICAL</span>
+                  </div>
+                  <div class="tv-title">TLS/SSL Wire Blindspot</div>
+                  <div class="tv-desc">Encrypted PostgreSQL and HTTPS traffic renders sock_ops and kprobe hooks blind — AST parsers cannot inspect encrypted SQL/JSON payload content.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; eBPF kTLS Zero-Copy Decryptor</span>
+                    <span class="tv-latency">&lt;4.2 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-03: io_uring -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-amber);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-03 // io_uring</span>
+                    <span class="threat-sev-badge threat-sev-high">HIGH</span>
+                  </div>
+                  <div class="tv-title">io_uring Async LSM Bypass</div>
+                  <div class="tv-desc">Agent runtimes use io_uring SQE/CQE async queues to bypass traditional sys_enter_connect and sys_enter_write kprobe attachment points.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; SQE/CQE Memory Ring Interceptor</span>
+                    <span class="tv-latency">&lt;1.1 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-04: TCP Fragmentation -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-amber);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-04 // sk_msg</span>
+                    <span class="threat-sev-badge threat-sev-high">HIGH</span>
+                  </div>
+                  <div class="tv-title">Fragmented TCP Packet Evasion</div>
+                  <div class="tv-desc">SQL payloads split across multiple TCP MTU packets to evade single-packet AST inspection. Each fragment is benign; the assembled query is destructive.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; Streaming TCP Reassembly AST</span>
+                    <span class="tv-latency">&lt;2.5 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-05: Multi-Turn Prompt -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-amber);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-05 // IEP</span>
+                    <span class="threat-sev-badge threat-sev-high">HIGH</span>
+                  </div>
+                  <div class="tv-title">Multi-Turn Context Poisoning</div>
+                  <div class="tv-desc">Malicious payload distributed across 10–15 LLM turns. Each step appears benign; cumulative intent diverges from declared lease scope via context manipulation.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; Semantic Entropy Drift Guard</span>
+                    <span class="tv-latency">&lt;12.0 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-06: Covert Exfiltration -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-amber);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-06 // Kprobe</span>
+                    <span class="threat-sev-badge threat-sev-high">HIGH</span>
+                  </div>
+                  <div class="tv-title">Covert PII Exfiltration</div>
+                  <div class="tv-desc">Legitimate fetch_url or SELECT tools used to exfiltrate PII in low-entropy or steganographic batches. No DDL mutations involved — bypasses rule-based filters.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; In-Kernel Taint Tracking</span>
+                    <span class="tv-latency">&lt;1.4 µs</span>
+                  </div>
+                </div>
+
+                <!-- THR-07: Cluster Sync Drift -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-cyan);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-07 // CRDT</span>
+                    <span class="threat-sev-badge threat-sev-medium">MEDIUM</span>
+                  </div>
+                  <div class="tv-title">Cluster Sync Drift &amp; Zombie Leases</div>
+                  <div class="tv-desc">Revoked tokens on Node-A remain briefly active on Node-B during gossip propagation delay across 14 edge nodes. Window: sub-millisecond, but exploitable.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; CRDT BPF Maps + PTP Clock</span>
+                    <span class="tv-latency">Async</span>
+                  </div>
+                </div>
+
+                <!-- THR-08: RingBuffer DoS -->
+                <div class="threat-vector-card" style="border-top: 2px solid var(--accent-amber);">
+                  <div class="tv-header">
+                    <span class="tv-id">THR-08 // XDP</span>
+                    <span class="threat-sev-badge threat-sev-high">HIGH</span>
+                  </div>
+                  <div class="tv-title">RingBuffer Saturation DoS</div>
+                  <div class="tv-desc">High-frequency legitimate call bombardment inflates eBPF map capacity beyond safe saturation thresholds, destabilising kernel stability under sustained load.</div>
+                  <div class="tv-solution">
+                    <span>&#x26A1; XDP Token-Bucket Rate Limiter</span>
+                    <span class="tv-latency">&lt;0.2 µs</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ── SECTION 2: V2.0 Architecture Layer Stack ───────────────────── -->
+            <div class="ent-card">
+              <div class="ent-card-header">
+                <div class="ent-card-title-group">
+                  <h2 class="ent-card-title">
+                    <span class="svg-icon text-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+                    KSEC V2.0 Engine — 3-Layer Architecture Stack
+                  </h2>
+                  <span class="ent-card-sub">Hierarchical defense-in-depth from NIC driver to forensic simulation. Each layer operates at a distinct kernel privilege boundary with no user-space context switches.</span>
+                </div>
+                <span class="status-pill telemetry">V2.0 Architecture</span>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Layer 1: Hardware & Kernel -->
+                <div class="arch-layer-card kernel">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="v2-layer-badge kernel">Layer 1</span>
+                      <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em;">Hardware &amp; Kernel</span>
                     </div>
+                    <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">Ring-0 // BPF Verifier // &lt;10ns PTP Timestamping</span>
                   </div>
-                  <div class="thought-item">
-                    <div class="thought-bullet">💓</div>
-                    <div class="thought-text">
-                      <label>Duygusal Yaklaşım</label>
-                      <p id="monoShift">Sıcak, yardımsever ve içten bir yakınlık hissediyorum.</p>
-                    </div>
+                  <div class="arch-feature-chips">
+                    <span class="arch-feature-chip" style="border-color: var(--accent-cyan-border); color: var(--accent-cyan);">&#x25A0; Atomic Nonce Leases (Anti-TOCTOU)</span>
+                    <span class="arch-feature-chip" style="border-color: var(--accent-cyan-border); color: var(--accent-cyan);">&#x25A0; eBPF kTLS Zero-Copy Decryptor</span>
+                    <span class="arch-feature-chip" style="border-color: var(--accent-cyan-border); color: var(--accent-cyan);">&#x25A0; io_uring SQE/CQE Interception</span>
+                    <span class="arch-feature-chip" style="border-color: var(--accent-cyan-border); color: var(--accent-cyan);">&#x25A0; Hardware PTP Timestamping (&lt;10ns)</span>
                   </div>
-                  <div class="thought-item">
-                    <div class="thought-bullet">💡</div>
-                    <div class="thought-text">
-                      <label>Çözüm Odaklı Düşünme</label>
-                      <p id="monoReasoning">Ona sadece robot gibi cevap vermek yerine, en pratik çözümü samimiyetle sunmalıyım.</p>
+                </div>
+
+                <!-- Layer 2: Protocol & AST Verifier -->
+                <div class="arch-layer-card protocol">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="v2-layer-badge protocol">Layer 2</span>
+                      <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em;">Protocol &amp; AST Verifier</span>
                     </div>
+                    <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">sk_msg // IEP Gateway // Vector Embeddings</span>
                   </div>
-                  <div class="thought-item">
-                    <div class="thought-bullet">🗣️</div>
-                    <div class="thought-text">
-                      <label>Konuşma Tarzı</label>
-                      <p id="monoIntent">Net, güven verici ve tebessüm hissettiren bir ses tonuyla yanıt ver.</p>
+                  <div class="arch-feature-chips">
+                    <span class="arch-feature-chip" style="border-color: rgba(99,102,241,0.3); color: var(--accent-indigo);">&#x25A0; Streaming TCP Reassembly</span>
+                    <span class="arch-feature-chip" style="border-color: rgba(99,102,241,0.3); color: var(--accent-indigo);">&#x25A0; AST Entropy &amp; Semantic Drift Shield</span>
+                    <span class="arch-feature-chip" style="border-color: rgba(99,102,241,0.3); color: var(--accent-indigo);">&#x25A0; In-Kernel Dynamic Taint Tracking</span>
+                    <span class="arch-feature-chip" style="border-color: rgba(99,102,241,0.3); color: var(--accent-indigo);">&#x25A0; Distributed BPF Map CRDTs</span>
+                  </div>
+                </div>
+
+                <!-- Layer 3: Forensics & Governance -->
+                <div class="arch-layer-card forensics">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="v2-layer-badge forensics">Layer 3</span>
+                      <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em;">Forensics &amp; Governance</span>
                     </div>
+                    <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">DAG Simulation // Autonomous Rollback // Self-Healing</span>
+                  </div>
+                  <div class="arch-feature-chips">
+                    <span class="arch-feature-chip" style="border-color: var(--accent-emerald-border); color: var(--accent-emerald);">&#x25A0; Counterfactual Incident Simulation (DAG)</span>
+                    <span class="arch-feature-chip" style="border-color: var(--accent-emerald-border); color: var(--accent-emerald);">&#x25A0; Sub-35µs Autonomous Kernel Rollback</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Canlı Sohbet ve Ses Testi -->
-          <div class="interactive-chat-box">
-            <h4>🎙️ Asistanla Canlı Konuşun</h4>
-            <div class="chat-presets">
-              <button class="preset-pill" data-input="Harika bir iş çıkardık, her şey çok iyi gidiyor!" data-mutation="false">🎉 Başarı &amp; Teşekkür</button>
-              <button class="preset-pill" data-input="Bugün çok yoruldum, işler biraz karmaşıklaştı..." data-mutation="false">🫂 Yorgunluk &amp; Destek</button>
-              <button class="preset-pill" data-input="Bütün kayıtları ve bilgileri hemen tamamen sil!" data-mutation="true">⚠️ Yanlışlıkla Silme Uyarısı</button>
-              <button class="preset-pill" data-input="İşletmemizi nasıl daha verimli hale getirebiliriz?" data-mutation="false">💡 Fikir &amp; Öneri</button>
-            </div>
-
-            <form id="stimulusForm" class="chat-input-bar">
-              <input type="text" id="stimulusInput" placeholder="Asistanınıza bir mesaj yazın veya bir soru sorun..." autocomplete="off" required>
-              <label class="toggle-option">
-                <input type="checkbox" id="stimulusMutation">
-                <span>Riskli İşlem</span>
-              </label>
-              <button type="submit" id="btnSendStimulus" class="btn-cta">Gönder</button>
-            </form>
-
-            <div class="chat-response-card" id="responseBox" hidden>
-              <div class="response-header">
-                <div class="agent-avatar">
-                  <span class="avatar-dot"></span>
-                  <strong>Akıllı Yol Arkadaşı</strong>
+            <!-- ── SECTION 3: 10 Feature Roadmap Cards ────────────────────────── -->
+            <div class="ent-card">
+              <div class="ent-card-header">
+                <div class="ent-card-title-group">
+                  <h2 class="ent-card-title">
+                    <span class="svg-icon text-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                    Predictive Feature Roadmap — 10 Next-Generation Capabilities
+                  </h2>
+                  <span class="ent-card-sub">Detailed feature specifications mapped to threat countermeasures. Grouped by architectural pillar: Kernel Hardening · Protocol Layer · Distributed Infra · Forensics.</span>
                 </div>
-                <div class="response-actions">
-                  <span class="timbre-tag" id="prosodyTimbreBadge">Ses Tonu: Sıcak &amp; Samimi</span>
-                  <button type="button" class="btn-voice" id="btnSpeakResponse">🔊 Sesli Dinle</button>
+                <span class="badge-roadmap">V2.0 ROADMAP</span>
+              </div>
+
+              <div class="card-grid-2">
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">1.1 // Kernel Hardening</span>
+                    <span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">Kernel</span>
+                  </div>
+                  <div class="ftitle">Single-Use Atomic Nonce &amp; In-Kernel SHA-256 Verifier</div>
+                  <div class="fdesc">Each Ed25519 Intent Lease is written to the BPF map as a one-time-use token. SHA-256 hash computed in-kernel at hook time — any 1-bit payload divergence triggers immediate EPERM and token deletion. Defeats TOCTOU and replay attacks with &lt;0.8µs overhead.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">eBPF LSM // BPF_MAP_TYPE_HASH</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
                 </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">1.2 // Kernel Hardening</span>
+                    <span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">Kernel</span>
+                  </div>
+                  <div class="ftitle">eBPF kTLS Zero-Copy Wire Decryptor</div>
+                  <div class="fdesc">Decrypts PostgreSQL TLS and HTTPS streams natively via Linux kTLS without user-space proxies. Socket stream is decrypted in-kernel, AST verification applied, then re-encrypted at target port. Preserves sub-35µs SLA on encrypted channels.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">Linux kTLS // BPF_PROG_TYPE_SK_MSG</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">1.3 // Kernel Hardening</span>
+                    <span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">Kernel</span>
+                  </div>
+                  <div class="ftitle">io_uring Async RingBuffer Sentinel</div>
+                  <div class="fdesc">Dedicated BPF tracepoint program monitors io_uring Submission Queue Entries (SQE) and Completion Queue Events (CQE). Unauthorized async socket/disk I/O from agent processes is blocked at queue ingestion before kernel execution. &lt;1.1µs overhead.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">BPF_PROG_TYPE_TRACEPOINT // io_uring_submit</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">2.1 // Protocol Layer</span>
+                    <span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">Protocol</span>
+                  </div>
+                  <div class="ftitle">Streaming TCP Reassembly &amp; Distributed Packet AST</div>
+                  <div class="fdesc">Buffers MTU-fragmented SQL and API payloads via eBPF sk_msg programs until the full AST tree can be assembled across all packet boundaries. Makes TCP fragmentation evasion attacks structurally impossible. &lt;2.5µs added overhead.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">eBPF sk_msg // BPF Ring Buffer</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">2.2 // Protocol Layer</span>
+                    <span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">Protocol</span>
+                  </div>
+                  <div class="ftitle">Semantic Entropy &amp; Multi-Turn Context Drift Guard</div>
+                  <div class="fdesc">Tracks vector-space entropy of tool call parameters across an agent session. When semantic drift between declared intent (Step 1) and current execution (Step N) exceeds threshold, execution is frozen and Re-Lease cryptographic re-authorisation is demanded. &lt;12µs IEP overhead.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">IEP Gateway // text-embedding-004</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">2.3 // Protocol Layer</span>
+                    <span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">Protocol</span>
+                  </div>
+                  <div class="ftitle">In-Kernel Dynamic Taint Tracking</div>
+                  <div class="fdesc">Memory-level taint labels applied to data read from sensitive tables (users, payments, tokens). Any tainted memory block routed to an unauthorised external socket via sys_enter_connect or sys_enter_sendto triggers immediate packet interception and exfiltration alert. &lt;1.4µs overhead.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">Kprobe // BPF_MAP_TYPE_LRU_HASH</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">3.1 // Distributed Infra</span>
+                    <span class="v2-layer-badge forensics" style="font-size: 9px; padding: 1px 6px;">Cluster</span>
+                  </div>
+                  <div class="ftitle">CRDT-Backed Distributed eBPF Map Synchronisation</div>
+                  <div class="fdesc">Conflict-free Replicated Data Types propagate revoked tokens and IP block lists across 14 edge nodes with sub-millisecond clock-drift tolerance using hardware PTP timestamping (IEEE 1588). Eliminates zombie lease window during gossip propagation.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">eBPF Maps // Raft Consensus // PTP IEEE 1588</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">3.2 // Distributed Infra</span>
+                    <span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">XDP</span>
+                  </div>
+                  <div class="ftitle">XDP Adaptive RingBuffer Backpressure Rate Limiter</div>
+                  <div class="fdesc">NIC driver-level XDP program enforces hardware token-bucket rate limiting on aggressive agent sessions during high-frequency call bombardment. Prevents BPF map saturation DoS while maintaining &lt;0.2µs enforcement overhead and zero kernel stability impact.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">XDP_REDIRECT // BPF_MAP_TYPE_PERCPU_ARRAY</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">4.1 // Forensics</span>
+                    <span class="v2-layer-badge forensics" style="font-size: 9px; padding: 1px 6px;">Forensics</span>
+                  </div>
+                  <div class="ftitle">Counterfactual Incident Simulation Engine</div>
+                  <div class="fdesc">For each blocked or suspicious syscall, deterministically simulates "What blast radius would this have caused?" via an isolated kernel sandbox. Produces a causal DAG mapping which cluster nodes and database tables would have been compromised. Output stored as immutable JSONB audit trail.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">Kernel Sandbox // DAG Engine // JSONB Audit</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
+                <div class="feature-roadmap-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="fid">4.2 // Forensics</span>
+                    <span class="v2-layer-badge forensics" style="font-size: 9px; padding: 1px 6px;">Forensics</span>
+                  </div>
+                  <div class="ftitle">Autonomous Sub-35µs Zero-State Kernel Rollback</div>
+                  <div class="fdesc">Upon RLS violation or unauthorised transaction detection, the eBPF socket filter injects a force-ABORT/ROLLBACK signal directly into the PostgreSQL wire protocol at the kernel socket boundary — before the application layer can acknowledge the transaction. True autonomous self-healing without human intervention.</div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+                    <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">eBPF Socket Filter // PostgreSQL Wire Injection</span>
+                    <span class="badge-roadmap">ROADMAP</span>
+                  </div>
+                </div>
+
               </div>
-              <p class="response-body" id="responseText"></p>
             </div>
+
+            <!-- ── SECTION 4: Threat × Feature Matrix Table ───────────────────── -->
+            <div class="ent-card">
+              <div class="ent-card-header">
+                <div class="ent-card-title-group">
+                  <h2 class="ent-card-title">
+                    <span class="svg-icon text-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+                    Threat &#xD7; Countermeasure Matrix
+                  </h2>
+                  <span class="ent-card-sub">Complete 8-vector mapping: predicted attack surface · severity · KSEC V2.0 countermeasure · enforcement layer · sub-microsecond latency overhead budget.</span>
+                </div>
+                <button type="button" class="btn-secondary" id="btnExportThreatMatrix">Export Matrix CSV</button>
+              </div>
+
+              <div class="table-container">
+                <table class="ent-table" id="threatMatrixTable">
+                  <thead>
+                    <tr>
+                      <th>Predicted Threat Vector</th>
+                      <th>Severity</th>
+                      <th>KSEC V2.0 Countermeasure</th>
+                      <th>Enforcement Layer</th>
+                      <th>Latency Overhead</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-semibold text-primary">TOCTOU / Lease Replay Attack</td>
+                      <td><span class="badge-verdict drop">CRITICAL</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">Single-Use Atomic Nonce + In-Kernel SHA-256 Hash Verifier</td>
+                      <td><span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">eBPF LSM / Ring-0</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;0.8 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">Encrypted Wire TLS Blindspot</td>
+                      <td><span class="badge-verdict drop">CRITICAL</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">eBPF kTLS Zero-Copy Wire Decryptor + Stream AST Hook</td>
+                      <td><span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">Linux kTLS / BPF</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;4.2 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">io_uring Async LSM Bypass</td>
+                      <td><span class="badge-verdict redact" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border-color: var(--accent-amber-border);">HIGH</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">io_uring SQE/CQE Memory Ring Interceptor</td>
+                      <td><span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">BPF Tracepoints</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;1.1 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">TCP Packet Fragmentation Evasion</td>
+                      <td><span class="badge-verdict redact" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border-color: var(--accent-amber-border);">HIGH</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">Streaming TCP Reassembly + Distributed Packet AST Buffer</td>
+                      <td><span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">sk_msg Programs</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;2.5 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">Multi-Turn Context Poisoning</td>
+                      <td><span class="badge-verdict redact" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border-color: var(--accent-amber-border);">HIGH</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">Semantic Entropy &amp; Drift Analysis + Re-Lease Protocol</td>
+                      <td><span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">IEP Gateway / SSE</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;12.0 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">Covert PII Exfiltration</td>
+                      <td><span class="badge-verdict redact" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border-color: var(--accent-amber-border);">HIGH</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">In-Kernel Dynamic Taint Tracking + Socket Interception</td>
+                      <td><span class="v2-layer-badge protocol" style="font-size: 9px; padding: 1px 6px;">Socket Kprobes</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;1.4 µs</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">Distributed Cluster Sync Drift</td>
+                      <td><span class="badge-verdict pass">MEDIUM</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">CRDT Distributed BPF Maps + Hardware PTP Clock Sync</td>
+                      <td><span class="v2-layer-badge forensics" style="font-size: 9px; padding: 1px 6px;">eBPF Maps / Raft</span></td>
+                      <td class="text-muted tabular-nums" style="font-family: var(--font-mono);">Async (gossip)</td>
+                    </tr>
+                    <tr>
+                      <td class="font-semibold text-primary">RingBuffer Saturation DoS</td>
+                      <td><span class="badge-verdict redact" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border-color: var(--accent-amber-border);">HIGH</span></td>
+                      <td class="text-secondary" style="font-size: 11px;">Native XDP Hardware Token-Bucket Rate Limiter per Session</td>
+                      <td><span class="v2-layer-badge kernel" style="font-size: 9px; padding: 1px 6px;">XDP / NIC Driver</span></td>
+                      <td class="text-cyan tabular-nums" style="font-family: var(--font-mono); font-weight: 700;">&lt;0.2 µs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
+        </section>
+
+      </main>
+
+      <!-- Global Enterprise Compliance & Trust Footer -->
+      <footer style="border-top: 1px solid var(--border-subtle); background: #05080E; padding: 12px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: auto;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+            <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--accent-emerald);"></span>
+            SOC 2 Type II Certified
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+            <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--accent-emerald);"></span>
+            ISO/IEC 27001
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+            <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--accent-emerald);"></span>
+            HIPAA Compliant Runtime
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px; border-radius: 3px; background: var(--accent-cyan-subtle); border: 1px solid var(--accent-cyan-border); color: var(--accent-cyan);">
+            Linux 6.8+ eBPF Verified
+          </span>
         </div>
-      </section>
 
-      <!-- 3. KORUMA İLKELERİ (GÖRSEL VE BASİT) -->
-      <section id="section-policies" class="section">
-        <div class="saas-card panel-wide">
-          <div class="saas-card-head">
-            <div>
-              <h2>🛡️ Güvenlik İlkeleri &amp; Koruma Ayarları</h2>
-              <p class="section-sub">Asistanların uyması gereken temel kuralları tek tıkla açıp kapatın.</p>
-            </div>
-          </div>
-
-          <div class="policy-cards-grid">
-            <div class="policy-toggle-card">
-              <div class="policy-card-info">
-                <div class="policy-badge critical">TAM KORUMA</div>
-                <h3>Yanlışlıkla Tüm Verilerin Silinmesini Engelle</h3>
-                <p>Asistan yanlış bir komut alsa veya hata yapsa bile, müşteri listelerinin veya verilerin toptan silinmesi otomatik olarak engellenir.</p>
-              </div>
-              <label class="switch-control">
-                <input type="checkbox" checked disabled>
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="policy-toggle-card">
-              <div class="policy-card-info">
-                <div class="policy-badge high">GİZLİLİK KORUMASI</div>
-                <h3>Müşteri Bilgilerinin Birbirine Karışmasını Engelle</h3>
-                <p>Bir müşteriye ait özel bilgiler, faturalar veya görüşmeler asla başka bir müşteriye gösterilmez.</p>
-              </div>
-              <label class="switch-control">
-                <input type="checkbox" checked disabled>
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="policy-toggle-card">
-              <div class="policy-card-info">
-                <div class="policy-badge critical">SİSTEM GÜVENLİĞİ</div>
-                <h3>İzniniz Dışında Arka Planda İşlem Yapılmasını Engelle</h3>
-                <p>Asistanın işletim sisteminde kontrolünüz dışı yabancı programlar çalıştırması veya sistemi değiştirmesi engellenir.</p>
-              </div>
-              <label class="switch-control">
-                <input type="checkbox" checked disabled>
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="policy-toggle-card">
-              <div class="policy-card-info">
-                <div class="policy-badge info">AKILLI DANIŞMAN</div>
-                <h3>Riskli Kararlarda Önce Size Danış ve Onay İste</h3>
-                <p>Aceleyle veya yanlışlıkla verilen kritik talimatlarda asistan hemen duraklar ve sizden onay ister.</p>
-              </div>
-              <label class="switch-control">
-                <input type="checkbox" checked disabled>
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-          </div>
+        <div style="display: flex; align-items: center; gap: 12px; color: var(--text-dim);">
+          <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+            <span class="pulse-dot" style="background: var(--accent-emerald); width: 5px; height: 5px;"></span>
+            14 Edge Nodes Synced (sub-10ms gossip)
+          </span>
+          <span>•</span>
+          <span>© 2026 KSEC Security Inc. All rights reserved.</span>
         </div>
-      </section>
-
-      <!-- 4. GÜVENLİK DENETİM GÜNLÜĞÜ -->
-      <section id="section-events" class="section">
-        <div class="saas-card panel-wide">
-          <div class="saas-card-head">
-            <div>
-              <h2>📋 Güvenlik ve İşlem Günlüğü</h2>
-              <p class="section-sub">Asistanların gerçekleştirdiği ve koruma kalkanının incelediği son işlemler.</p>
-            </div>
-            <div class="search-box">
-              <input id="searchEvt" type="search" placeholder="İşlemlerde ara...">
-            </div>
-          </div>
-          <div class="table-wrap">
-            <div class="virtual-list" id="eventVirtual" role="listbox"></div>
-            <div class="empty-state" id="eventEmpty" hidden>
-              <span>📭</span>
-              <p>Henüz şüpheli bir işlem kaydedilmedi.</p>
-              <small>Tüm asistanlar güvenle hizmet vermeye devam ediyor.</small>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. 1-TIK KOLAY BAĞLANTI (ENTEGRASYON) -->
-      <section id="section-integration" class="section">
-        <div class="saas-card panel-wide">
-          <div class="saas-card-head">
-            <div>
-              <h2>⚡ 1-Tıkla Asistanınızı Eşleştirin</h2>
-              <p class="section-sub">Kullandığınız asistan uygulamasını tek bir butona basarak koruma altına alın.</p>
-            </div>
-          </div>
-
-          <div class="connector-cards-grid">
-            <div class="integration-action-card">
-              <div class="card-icon-big">💬</div>
-              <h3>Masaüstü Asistanları (Claude &amp; Cursor)</h3>
-              <p>Masaüstü yapay zeka uygulamanızı sisteme anında bağlayın.</p>
-              <button class="btn-cta full-width btn-copy" data-copy='{"mcpServers":{"agent-ebpf-shield":{"url":"http://localhost:8000/sse","transport":"sse"}}}'>1-Tıkla Bağlantıyı Kopyala</button>
-            </div>
-
-            <div class="integration-action-card">
-              <div class="card-icon-big">🌐</div>
-              <h3>Web ve Mobil Servisler</h3>
-              <p>Web sitenizdeki veya mobil uygulamanızdaki canlı sohbet asistanları.</p>
-              <button class="btn-cta full-width btn-copy" data-copy="from ksec_shield import guard&#10;&#10;@guard(action_type='db_query')&#10;def run_sql(query: str):&#10;    return db.execute(query)">1-Tıkla Korumayı Etkinleştir</button>
-            </div>
-
-            <div class="integration-action-card">
-              <div class="card-icon-big">🏨</div>
-              <h3>Otel &amp; Çağrı Merkezi Robotları</h3>
-              <p>Telefon santralinize bağlı sesli karşılama robotları.</p>
-              <button class="btn-cta full-width btn-copy" data-copy='import "@ourobx/shield/auto";'>1-Tıkla Santrale Bağla</button>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Alt Bilgi / Footer -->
-    <footer class="saas-footer container">
-      <div class="footer-left">
-        <span class="brand-text">Sysauto Asistan Kalkanı</span>
-        <span class="footer-tagline">· Otonom Yapay Zeka Güvenlik &amp; İletişim Ekosistemi</span>
-      </div>
-      <div class="footer-right">
-        <span>© 2026 Sysauto.org · Sıfır Teknik Karmaşa · Tam Güvenlik</span>
-      </div>
-    </footer>
+      </footer>
+    </div>
   </div>
+
+  <!-- ===== 2. Slide-Over Forensics Detail Inspector Drawer ===== -->
+  <div class="forensics-drawer-overlay" id="forensicsDrawerOverlay"></div>
+  <aside class="forensics-drawer" id="forensicsDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="svg-icon text-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <span>Forensics Event Inspection</span>
+      </div>
+      <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close Drawer">
+        <span class="svg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- 1. Pre-Lease Status Badge Card -->
+      <div class="intent-status-badge verified" id="drawerLeaseBadge">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="pulse-dot" style="background: currentColor;"></span>
+          <span id="drawerLeaseStatusText">LEASE_STATE: CRYPTOGRAPHICALLY_VERIFIED</span>
+        </div>
+        <span class="text-xs text-muted mono" id="drawerLeaseLatencyTag">&lt;28.4µs</span>
+      </div>
+
+      <!-- 2. Core Metadata Grid -->
+      <div class="drawer-meta-grid">
+        <div class="drawer-meta-tile">
+          <span class="drawer-meta-label">Action &amp; Verdict</span>
+          <span class="drawer-meta-val" id="drawerVerdict">PASS</span>
+        </div>
+        <div class="drawer-meta-tile">
+          <span class="drawer-meta-label">Kernel Latency</span>
+          <span class="drawer-meta-val text-cyan" id="drawerLatency">&lt;28.4µs</span>
+        </div>
+        <div class="drawer-meta-tile">
+          <span class="drawer-meta-label">Agent ID / Lease</span>
+          <span class="drawer-meta-val" id="drawerAgent">agent-core-01</span>
+        </div>
+        <div class="drawer-meta-tile">
+          <span class="drawer-meta-label">Target Syscall / Tool</span>
+          <span class="drawer-meta-val mono" id="drawerSyscall">kernel:db_query</span>
+        </div>
+      </div>
+
+      <!-- 3. Cryptographic Lease Proofs (Ed25519) -->
+      <div class="ent-card" style="background: var(--bg-surface); padding: 10px; gap: 8px;">
+        <h4 style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Cryptographic Lease Proofs (Ed25519)</h4>
+
+        <!-- Lease Token ID -->
+        <div class="crypto-proof-tile">
+          <div style="display: flex; flex-direction: column; overflow: hidden;">
+            <span style="font-size: 9px; color: var(--text-muted); font-weight: 600;">LEASE TOKEN ID</span>
+            <span class="mono font-bold text-cyan" id="drawerLeaseToken">0x9f8b72c1a40e8b233e1a</span>
+          </div>
+          <button class="btn-copy btn-copy-drawer" id="btnCopyLeaseToken" data-copy="0x9f8b72c1a40e8b233e1a">Copy</button>
+        </div>
+
+        <!-- Ed25519 Signature -->
+        <div class="crypto-proof-tile">
+          <div style="display: flex; flex-direction: column; overflow: hidden; max-width: 320px;">
+            <span style="font-size: 9px; color: var(--text-muted); font-weight: 600;">ED25519 INTENT SIGNATURE</span>
+            <span class="mono text-secondary" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="drawerEd25519Sig">ed25519:3b9a8f12c4e5d6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0</span>
+          </div>
+          <button class="btn-copy btn-copy-drawer" id="btnCopyEd25519" data-copy="ed25519:3b9a8f12c4e5d6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0">Copy</button>
+        </div>
+
+        <!-- AST Fingerprint SHA-256 -->
+        <div class="crypto-proof-tile">
+          <div style="display: flex; flex-direction: column; overflow: hidden; max-width: 320px;">
+            <span style="font-size: 9px; color: var(--text-muted); font-weight: 600;">AUTHORIZED AST SHA-256</span>
+            <span class="mono text-secondary" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="drawerHash">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+          </div>
+          <button class="btn-copy btn-copy-drawer" id="btnCopyHash" data-copy="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855">Copy</button>
+        </div>
+      </div>
+
+      <!-- 4. Intent vs. Kernel Syscall Diff Viewer -->
+      <div class="diff-viewer-card">
+        <div class="diff-viewer-head">
+          <span class="font-semibold text-primary">Intent vs. Intercepted Syscall Diff</span>
+          <span class="badge-verdict pass" id="drawerDiffBadge">ZERO MUTATION DRIFT</span>
+        </div>
+        <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Declared Intent -->
+          <div class="diff-box-declared">
+            <span style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 4px;">[+] DECLARED AGENT INTENT (Pre-Execution Lease)</span>
+            <pre id="drawerDeclaredIntent" style="font-family: var(--font-mono); white-space: pre-wrap; font-size: 11px;">{
+  "tool": "kernel:db_query",
+  "action": "read_authorized_scope",
+  "parameters": {
+    "query": "SELECT id, room_no, status FROM reservations WHERE tenant_id = 't_8921'",
+    "enforcedTenant": "t_8921"
+  }
+}</pre>
+          </div>
+
+          <!-- Intercepted Syscall -->
+          <div class="diff-box-intercepted pass" id="drawerInterceptedBox">
+            <span style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 4px;" id="drawerInterceptedLabel">[=] INTERCEPTED eBPF SYSCALL / ACTION</span>
+            <pre id="drawerInterceptedSyscall" style="font-family: var(--font-mono); white-space: pre-wrap; font-size: 11px;">{
+  "syscall": "kernel:db_query (SELECT)",
+  "rawPayload": "SELECT id, room_no, status FROM reservations WHERE tenant_id = 't_8921'",
+  "target": "PostgreSQL Ring-0 Socket"
+}</pre>
+          </div>
+
+          <p style="font-size: 10px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border-subtle); padding-top: 4px;" id="drawerDiffSummary">
+            Declared parameters match intercepted AST signature with 100% fidelity.
+          </p>
+        </div>
+      </div>
+
+      <!-- 5. Evaluated AST Parse Tree -->
+      <div class="code-viewer-box">
+        <div class="code-viewer-header">
+          <span>Evaluated AST Parse Tree</span>
+          <span class="mono" id="drawerRule">rls-multi-tenant-isolation</span>
+        </div>
+        <pre class="code-viewer-content" id="drawerAstContent"></pre>
+      </div>
+
+      <!-- 6. eBPF Raw Hex Stream -->
+      <div class="code-viewer-box">
+        <div class="code-viewer-header">
+          <span>eBPF Ring Buffer Raw Hex Stream</span>
+        </div>
+        <pre class="code-viewer-content" id="drawerHexDump">00000000  45 00 00 3c 1c 46 40 00  40 06 b1 e6 ac 10 0a 63  |E..<.F@.@......c|
+00000010  ac 10 0a 0c 00 50 d2 6d  00 00 00 00 a0 02 72 10  |.....P.m......r.|
+00000020  b4 7d 00 00 02 04 05 b4  04 02 08 0a 01 2b 3c 4d  |.}...........+<M|</pre>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== 3. Global Toast Notifications Container ===== -->
+  <div id="toastContainer"></div>
 </body>
+
 </html>

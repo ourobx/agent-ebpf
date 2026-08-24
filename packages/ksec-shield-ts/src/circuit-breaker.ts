@@ -1,19 +1,7 @@
 import { ActionType, PolicyRule } from './types.js';
+import { KsecSecurityViolationError } from './errors.js';
 
-export class KsecSecurityViolationError extends Error {
-  public readonly actionType: ActionType;
-  public readonly target: string;
-  public readonly ruleId?: string;
-
-  constructor(message: string, actionType: ActionType, target: string, ruleId?: string) {
-    super(message);
-    this.name = 'KsecSecurityViolationError';
-    this.actionType = actionType;
-    this.target = target;
-    this.ruleId = ruleId;
-    Object.setPrototypeOf(this, KsecSecurityViolationError.prototype);
-  }
-}
+export { KsecSecurityViolationError };
 
 interface CacheEntry {
   rule: PolicyRule;

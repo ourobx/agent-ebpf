@@ -44,22 +44,22 @@ class ProsodyEngine:
 
         # Timbre identification
         if state.arousal > 0.6 and state.valence < -0.2:
-            timbre = "Alert & Protective (Tereddüt & Koruma)"
+            timbre = "Alert & Protective"
             pitch = max(0.9, pitch)
             rate = 1.05
             pause_ms = 400
         elif state.valence < -0.1 and state.resonance > 0.7:
-            timbre = "Gentle & Compassionate (Şefkatli & Dinlendirici)"
+            timbre = "Gentle & Compassionate"
             pitch = 0.92
             rate = 0.88
             pause_ms = 450
         elif state.valence > 0.4:
-            timbre = "Bright & Uplifting (Coşkulu & Neşeli)"
+            timbre = "Bright & Uplifting"
             pitch = 1.12
             rate = 1.10
             pause_ms = 220
         else:
-            timbre = "Warm & Grounded (Dingin & Samimi)"
+            timbre = "Warm & Grounded"
             pitch = 1.0
             rate = 0.95
             pause_ms = 280

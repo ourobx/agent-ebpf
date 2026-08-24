@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package ksec.runtime.v1;
+
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  SYSCALL = 1;
+  NETWORK_EGRESS = 2;
+  DB_QUERY = 3;
+}
+
+enum EnforcementMode {
+  ENFORCE_LOG_ONLY = 0;
+  ENFORCE_STRICT_BLOCK = 1;
+  ENFORCE_KILL_PROCESS = 2;
+}
+
+message ExecutionLease {
+  string lease_id = 1;              // Unique UUID / Nonce
+  uint64 cgroup_id = 2;             // Target AI agent cgroupv2 ID
+  uint32 ttl_ms = 3;                // Lease TTL in milliseconds (default: 500-1000ms)
+  ActionType action_type = 4;
+  EnforcementMode enforcement_mode = 5;
+  string tenant_id = 6;             // Tenant isolation context
+  
+  // Scoped capability constraints
+  oneof constraint {
+    SyscallConstraint syscall_rule = 7;
+    NetworkConstraint network_rule = 8;
+    DatabaseConstraint db_rule = 9;
+  }
+}
+
+message SyscallConstraint {
+  uint32 allowed_syscall_nr = 1;   // e.g. __NR_execve, __NR_connect
+  string allowed_binary_hash = 2;  // SHA256 binary digest
+  repeated string argv_prefix = 3; // Permitted command arguments prefix
+  uint64 allowed_syscall_mask = 4; // Bitmask of permitted syscalls
+}
+
+message NetworkConstraint {
+  uint32 ipv4_addr = 1;            // Big-endian uint32 IPv4
+  uint16 port = 2;                 // Destination port (host byte order)
+  uint32 protocol = 3;             // IPPROTO_TCP (6) or IPPROTO_UDP (17)
+}
+
+message DatabaseConstraint {
+  uint64 query_fingerprint = 1;    // Normalized SQL AST hash
+  string allowed_table = 2;        // Target SQL table
+  string required_tenant_key = 3;  // Expected tenant column
+  uint32 max_affected_rows = 4;
+}
+
+message LeaseProvisionResponse {
+  bool success = 1;
+  string lease_id = 2;
+  uint64 cgroup_id = 3;
+  uint64 valid_until_ns = 4;
+  string status_message = 5;
+  uint64 map_update_latency_us = 6;
+}
+
+message LeaseRevocationRequest {
+  string lease_id = 1;
+  uint64 cgroup_id = 2;
+}
+
+message LeaseTelemetryEvent {
+  string lease_id = 1;
+  uint64 cgroup_id = 2;
+  uint32 action_type = 3;
+  uint32 verdict = 4;              // 0=PASS, 1=DROP, 2=KILL
+  uint64 timestamp_ns = 5;
+  uint64 latency_us = 6;
+  string reason = 7;
+}

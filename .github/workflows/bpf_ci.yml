@@ -1,0 +1,63 @@
+name: KSEC v2.0 Ring-0 CI & BPF Verifier Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  bpf-verifier-and-core-build:
+    name: eBPF Compile & Kernel Verifier Check
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install LLVM, Clang & Libbpf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libbpf-dev linux-headers-generic gcc-multilib
+
+      - name: Compile eBPF Bytecode Targets
+        run: |
+          mkdir -p build/bpf
+          for src in src/bpf/*.bpf.c; do
+            filename=$(basename "$src" .c)
+            echo "Compiling $src to BPF bytecode build/bpf/${filename}.o ..."
+            clang -g -O2 -target bpf -D__TARGET_ARCH_x86 \
+              -I/usr/include/$(uname -m)-linux-gnu \
+              -Isrc/bpf \
+              -c "$src" -o "build/bpf/${filename}.o"
+          done
+          echo "All eBPF programs compiled cleanly!"
+
+      - name: Verify BPF ELF Objects
+        run: |
+          llvm-objdump -h build/bpf/*.o
+          llvm-readelf -s build/bpf/*.o
+
+  gateway-and-protocol-tests:
+    name: Gateway, IEP v2 & Forensic SLA Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Full KSEC v2.0 Verification Suite
+        run: |
+          python tests/test_ksec_v2.py
+
+      - name: Zero-Branding & Namespace Audit
+        run: |
+          if git grep -i "sysauto" -- "src/*" "tests/*" "docs/*"; then
+            echo "FAILED: Unauthorized namespace detected in production code!"
+            exit 1
+          else
+            echo "PASSED: Zero legacy namespace occurrences."
+          fi

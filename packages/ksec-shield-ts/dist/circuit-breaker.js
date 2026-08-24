@@ -1,16 +1,5 @@
-export class KsecSecurityViolationError extends Error {
-    actionType;
-    target;
-    ruleId;
-    constructor(message, actionType, target, ruleId) {
-        super(message);
-        this.name = 'KsecSecurityViolationError';
-        this.actionType = actionType;
-        this.target = target;
-        this.ruleId = ruleId;
-        Object.setPrototypeOf(this, KsecSecurityViolationError.prototype);
-    }
-}
+import { KsecSecurityViolationError } from './errors.js';
+export { KsecSecurityViolationError };
 export class PolicyCache {
     cache = new Map();
     failureCount = 0;

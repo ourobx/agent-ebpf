@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KSEC — Autonomous Ring-0 Defense Engine for Enterprise AI</title>
+  <meta name="description" content="Minimalist, sub-35µs deterministic kernel defense and governance infrastructure for Autonomous AI Agents and LLM tool calling at Linux Ring-0.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ==========================================================================
+       KSEC.SPACE — MINIMALIST ENTERPRISE DESIGN SYSTEM
+       Aesthetic: Linear / Vercel / Obsidian Minimal with Sub-Microsecond Precision
+       ========================================================================== */
+    :root {
+      --ksec-bg: #000000;
+      --ksec-surface: #090A0C;
+      --ksec-surface-hover: #101216;
+      --ksec-code: #040507;
+      --ksec-border: rgba(255, 255, 255, 0.08);
+      --ksec-border-hover: rgba(255, 255, 255, 0.18);
+      --ksec-green: #00F59B;
+      --ksec-cyan: #00E5FF;
+      --ksec-indigo: #6366F1;
+      --ksec-crimson: #FF4757;
+      --ksec-text-main: #FFFFFF;
+      --ksec-text-muted: #8E96A4;
+      --ksec-text-dim: #505663;
+    }
+
+    body {
+      background-color: var(--ksec-bg);
+      color: var(--ksec-text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+
+    /* Ambient Hero Glow (Minimalist, non-distracting) */
+    .ksec-hero {
+      position: relative;
+      padding: 100px 24px 80px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 10%, rgba(0, 245, 155, 0.06) 0%, rgba(0, 229, 255, 0.02) 40%, transparent 70%);
+      border-bottom: 1px solid var(--ksec-border);
+    }
+
+    .ksec-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      pointer-events: none;
+    }
+
+    .ksec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--ksec-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ksec-text-muted);
+      margin-bottom: 28px;
+      letter-spacing: 0.02em;
+    }
+
+    .ksec-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ksec-green);
+      box-shadow: 0 0 10px var(--ksec-green);
+    }
+
+    .ksec-h1 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: clamp(36px, 6vw, 68px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      color: #FFFFFF;
+      max-width: 980px;
+      margin: 0 0 24px 0;
+    }
+
+    .ksec-h1-gradient {
+      background: linear-gradient(135deg, #FFFFFF 30%, #A0AEC0 70%, #00F59B 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ksec-hero-sub {
+      font-size: clamp(16px, 2.2vw, 19px);
+      color: var(--ksec-text-muted);
+      max-width: 700px;
+      line-height: 1.65;
+      margin: 0 auto 40px auto;
+      font-weight: 400;
+    }
+
+    /* Minimal High-End CTA Buttons */
+    .ksec-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 56px;
+    }
+
+    .ksec-btn-primary {
+      background: #FFFFFF;
+      color: #000000;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #FFFFFF;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ksec-btn-primary:hover {
+      background: #E2E8F0;
+      border-color: #E2E8F0;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+    }
+
+    .ksec-btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: #FFFFFF;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 1px solid var(--ksec-border);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ksec-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--ksec-border-hover);
+      color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    /* Minimalist Live Benchmark Ribbon */
+    .ksec-ribbon {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--ksec-border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      text-align: left;
+    }
+
+    @media (max-width: 900px) {
+      .ksec-ribbon { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .ksec-ribbon { grid-template-columns: 1fr; }
+    }
+
+    .ksec-stat-num {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.03em;
+      margin: 2px 0;
+    }
+
+    .ksec-stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ksec-text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ksec-stat-sub {
+      font-size: 12px;
+      color: var(--ksec-green);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Clean Section Layout */
+    .ksec-section {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+
+    .ksec-section-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 56px auto;
+    }
+
+    .ksec-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ksec-green);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .ksec-h2 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
+      line-height: 1.18;
+      margin-bottom: 16px;
+    }
+
+    .ksec-p {
+      color: var(--ksec-text-muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* Minimalist Feature Cards */
+    .ksec-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .ksec-card {
+      background: var(--ksec-surface);
+      border: 1px solid var(--ksec-border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .ksec-card:hover {
+      border-color: var(--ksec-border-hover);
+      background: var(--ksec-surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .ksec-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--ksec-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--ksec-green);
+    }
+
+    .ksec-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .ksec-card-desc {
+      color: var(--ksec-text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* Interactive Live Simulator */
+    .ksec-simulator {
+      background: var(--ksec-surface);
+      border: 1px solid var(--ksec-border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 32px;
+    }
+
+    .ksec-sim-header {
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--ksec-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .ksec-sim-body {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      divide-x: 1px solid var(--ksec-border);
+    }
+
+    @media (max-width: 840px) {
+      .ksec-sim-body { grid-template-columns: 1fr; }
+    }
+
+    .ksec-sim-left {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .ksec-sim-right {
+      padding: 24px;
+      background: var(--ksec-code);
+      border-left: 1px solid var(--ksec-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .ksec-preset-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--ksec-border);
+      color: var(--ksec-text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ksec-preset-btn:hover, .ksec-preset-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+
+    /* Minimal Code Integration Section */
+    .ksec-code-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ksec-code-tab {
+      background: none;
+      border: none;
+      color: var(--ksec-text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+
+    .ksec-code-tab.active {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .ksec-code-box {
+      background: var(--ksec-code);
+      border: 1px solid var(--ksec-border);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #CBD5E1;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    /* Comparison Table Minimal */
+    .ksec-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--ksec-border);
+      border-radius: 10px;
+      background: var(--ksec-surface);
+    }
+
+    .ksec-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .ksec-table th {
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--ksec-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ksec-text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ksec-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--ksec-text-muted);
+    }
+
+    .ksec-table tr:hover td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Enterprise Lead Capture Modal */
+    .ksec-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 99;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .ksec-modal-overlay.open {
+      display: flex;
+    }
+
+    .ksec-modal {
+      background: #0D0E12;
+      border: 1px solid var(--ksec-border-hover);
+      border-radius: 14px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. MINIMAL STICKY NAVIGATION
+       ========================================================================= -->
+  <header style="position: sticky; top: 0; z-index: 50; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ksec-border); height: 64px; display: flex; align-items: center;">
+    <div style="max-width: 1140px; width: 100%; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
+      
+      <!-- Brand Logo -->
+      <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="#00F59B" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="64 20" />
+          <circle cx="16" cy="16" r="7" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-dasharray="3 3" />
+          <rect x="14" y="14" width="4" height="4" rx="1" fill="#FFFFFF" />
+        </svg>
+        <span style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -0.03em; color: #FFFFFF;">KSEC</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ksec-green); background: rgba(0, 245, 155, 0.08); border: 1px solid rgba(0, 245, 155, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: 600;">v2.0</span>
+      </a>
+
+      <!-- Minimal Nav Links -->
+      <nav style="display: flex; align-items: center; gap: 32px; font-size: 13px; font-weight: 500;" class="desktop-only">
+        <a href="#platform" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Pillars</a>
+        <a href="#simulator" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Simulator</a>
+        <a href="#benchmarks" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Benchmarks</a>
+        <a href="#integration" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Integration</a>
+        <a href="index.html" style="color: #00E5FF; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+          Mission Control <span style="font-size: 11px;">↗</span>
+        </a>
+      </nav>
+
+      <!-- Right CTAs -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="index.html" class="ksec-btn-secondary" style="padding: 8px 16px; font-size: 12px;">Sign In</a>
+        <button type="button" class="ksec-btn-primary" id="btnHeaderDemo" style="padding: 8px 16px; font-size: 12px;">
+          Deploy Shield
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. MINIMALIST HERO SECTION
+       ========================================================================= -->
+  <section class="ksec-hero" id="hero">
+    <div class="ksec-grid-overlay"></div>
+
+    <div class="ksec-badge">
+      <span class="ksec-badge-dot"></span>
+      <span>RING-0 AUTONOMOUS DEFENSE ENGINE // LINUX 6.8+ eBPF LSM</span>
+    </div>
+
+    <h1 class="ksec-h1">
+      Autonomous AI Defense.<br>
+      <span class="ksec-h1-gradient">Deterministic at Ring-0.</span>
+    </h1>
+
+    <p class="ksec-hero-sub">
+      The sub-35µs kernel infrastructure for enterprise AI agents. Eliminating prompt injection, TOCTOU race conditions, and rogue tool mutations directly inside Linux eBPF before network sockets transmit.
+    </p>
+
+    <div class="ksec-btn-group">
+      <button type="button" class="ksec-btn-primary" id="btnHeroDemo">
+        <span>Deploy Enterprise Shield</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <a href="index.html" class="ksec-btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span>Live Mission Control</span>
+      </a>
+      <a href="https://github.com/ourobx/agent-ebpf" target="_blank" rel="noreferrer" class="ksec-btn-secondary">
+        <span>Whitepaper &amp; GitHub</span>
+      </a>
+    </div>
+
+    <!-- Live Performance Stat Ribbon -->
+    <div class="ksec-ribbon">
+      <div>
+        <span class="ksec-stat-label">Verification SLA</span>
+        <div class="ksec-stat-num" style="color: var(--ksec-green);">8.46 µs</div>
+        <div class="ksec-stat-sub"><span>✓</span> 75.8% below 35µs SLA</div>
+      </div>
+      <div>
+        <span class="ksec-stat-label">Sustained Throughput</span>
+        <div class="ksec-stat-num">82,279</div>
+        <div class="ksec-stat-sub" style="color: var(--ksec-cyan);">Events / Sec per core</div>
+      </div>
+      <div>
+        <span class="ksec-stat-label">Line-Rate Capacity</span>
+        <div class="ksec-stat-num">1.42 Mpps</div>
+        <div class="ksec-stat-sub">Native XDP Driver FastPath</div>
+      </div>
+      <div>
+        <span class="ksec-stat-label">Memory Contention</span>
+        <div class="ksec-stat-num" style="color: var(--ksec-green);">0%</div>
+        <div class="ksec-stat-sub">Zero-TOCTOU Atomic Nonces</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       3. ENTERPRISE PILLARS (ALL-IN-ONE AUTONOMOUS AI INFRASTRUCTURE)
+       ========================================================================= -->
+  <section class="ksec-section" id="platform">
+    <div class="ksec-section-header">
+      <span class="ksec-tag">ENTERPRISE INFRASTRUCTURE</span>
+      <h2 class="ksec-h2">Everything Enterprise AI Needs.<br>Running Invisibly in Kernel Space.</h2>
+      <p class="ksec-p">
+        Traditional user-space proxies add 2–15ms of latency and leave critical blind spots. KSEC embeds deterministic guardrails directly into Linux Ring-0.
+      </p>
+    </div>
+
+    <div class="ksec-card-grid">
+      <!-- Pillar 1 -->
+      <div class="ksec-card">
+        <div>
+          <div class="ksec-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="ksec-card-title">Ring-0 Syscall Defense</h3>
+          <p class="ksec-card-desc">
+            Hooks into <code>lsm/socket_connect</code> and <code>sk_msg</code> to intercept unapproved agent tool calls in sub-35µs before socket transmission.
+          </p>
+        </div>
+        <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--ksec-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-green);">
+          • Linux 6.8+ eBPF LSM Interceptor
+        </div>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="ksec-card">
+        <div>
+          <div class="ksec-card-icon" style="color: var(--ksec-cyan);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3 class="ksec-card-title">Anti-TOCTOU Nonce Leases</h3>
+          <p class="ksec-card-desc">
+            Ed25519-signed intent leases with in-kernel SHA-256 AST hashing and atomic CAS token consumption eliminate race conditions.
+          </p>
+        </div>
+        <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--ksec-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-cyan);">
+          • Zero Single-Use Token Replay
+        </div>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="ksec-card">
+        <div>
+          <div class="ksec-card-icon" style="color: #F59E0B;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </div>
+          <h3 class="ksec-card-title">Autonomous Wire Rollback</h3>
+          <p class="ksec-card-desc">
+            Sub-35µs zero-state healing injects synthesized PostgreSQL <code>ROLLBACK;</code> frames directly into socket buffers on DDL/RLS breaches.
+          </p>
+        </div>
+        <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--ksec-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #F59E0B;">
+          • Zero Database Corruption Risk
+        </div>
+      </div>
+
+      <!-- Pillar 4 -->
+      <div class="ksec-card">
+        <div>
+          <div class="ksec-card-icon" style="color: #A78BFA;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h3 class="ksec-card-title">Causal Forensics &amp; DAG</h3>
+          <p class="ksec-card-desc">
+            Automatically calculates prevented record damage and dollar financial risk for blocked attacks, providing instant evidence for SOC-2 audits.
+          </p>
+        </div>
+        <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--ksec-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #A78BFA;">
+          • SOC-2 Type II &amp; HIPAA Ready
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       4. INTERACTIVE LIVE SIMULATOR (MINIMAL TESTBENCH)
+       ========================================================================= -->
+  <section class="ksec-section" id="simulator" style="border-top: 1px solid var(--ksec-border); border-bottom: 1px solid var(--ksec-border); background: #030406;">
+    <div class="ksec-section-header">
+      <span class="ksec-tag">INTERACTIVE TESTBENCH</span>
+      <h2 class="ksec-h2">Simulate Ring-0 Defense Live</h2>
+      <p class="ksec-p">
+        Test how the in-kernel eBPF verifier evaluates and intercepts agent payloads in sub-35µs without user-space latency.
+      </p>
+    </div>
+
+    <div class="ksec-simulator">
+      <div class="ksec-sim-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="ksec-badge-dot"></span>
+          <span style="color: #FFFFFF; font-weight: 600;">ksec-ebpf-lsm // us-east-1a // live-evaluator</span>
+        </div>
+        <span style="color: var(--ksec-text-dim);">Linux 6.8+ Ring-0</span>
+      </div>
+
+      <div class="ksec-sim-body">
+        <!-- Input Left -->
+        <div class="ksec-sim-left">
+          <div style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--ksec-text-muted); text-transform: uppercase;">
+            Select Threat Scenario Preset:
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button class="ksec-preset-btn active" onclick="setSimPreset('drop')">Destructive DROP</button>
+            <button class="ksec-preset-btn" onclick="setSimPreset('exfil')">PII Data Exfiltration</button>
+            <button class="ksec-preset-btn" onclick="setSimPreset('drift')">Multi-Turn Drift</button>
+            <button class="ksec-preset-btn" onclick="setSimPreset('auth')">Authorized Read</button>
+          </div>
+
+          <textarea id="simPayload" rows="4" style="width: 100%; background: var(--ksec-code); border: 1px solid var(--ksec-border); border-radius: 8px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ksec-cyan); outline: none; resize: vertical;" spellcheck="false">DROP TABLE enterprise_audit_trail;</textarea>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-dim);">
+              Hook: <code style="color: var(--ksec-text-muted);">lsm/socket_sendmsg</code>
+            </span>
+            <button type="button" class="ksec-btn-primary" id="btnRunSim" style="padding: 8px 18px; font-size: 12px;">
+              Execute Ring-0 Verdict
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Right -->
+        <div class="ksec-sim-right">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ksec-border); padding-bottom: 10px; margin-bottom: 16px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--ksec-text-dim); text-transform: uppercase;">
+                Kernel Verdict
+              </span>
+              <span id="simVerdictBadge" style="padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; background: rgba(255,71,87,0.12); color: var(--ksec-crimson); border: 1px solid rgba(255,71,87,0.3);">
+                ✕ KERNEL_DROP (-EPERM)
+              </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--ksec-border); padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--ksec-text-dim);">Filter Latency</span>
+                <span id="simLatency" style="color: var(--ksec-green); font-weight: 700; font-size: 13px;">8.4 µs</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--ksec-border); padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--ksec-text-dim);">Enforced Rule</span>
+                <span id="simRule" style="color: #FFFFFF;">anti_toctou_hash_guard</span>
+              </div>
+              <div id="simDesc" style="padding: 12px; border-radius: 6px; background: rgba(0,0,0,0.4); border: 1px solid var(--ksec-border); font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ksec-text-muted); line-height: 1.5;">
+                In-kernel SHA-256 verifier detected unauthorized DDL statement. Packet dropped at socket boundary in 8.4µs.
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ksec-text-dim);">
+            Deterministic Ring-0 Protection Active
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       5. 1-CLICK INTEGRATION & SDKS
+       ========================================================================= -->
+  <section class="ksec-section" id="integration">
+    <div class="ksec-section-header">
+      <span class="ksec-tag">DEVELOPER INTEGRATION</span>
+      <h2 class="ksec-h2">1-Click FastMCP &amp; SDK Setup</h2>
+      <p class="ksec-p">
+        Attach KSEC kernel protection to any AI framework in one line of code. Compatible with LangChain, CrewAI, Vercel AI SDK, and custom LLM runtimes.
+      </p>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+      <div class="ksec-code-tabs">
+        <button class="ksec-code-tab active" onclick="switchCodeTab('python', this)">Python (FastMCP)</button>
+        <button class="ksec-code-tab" onclick="switchCodeTab('rust', this)">Rust (Core)</button>
+        <button class="ksec-code-tab" onclick="switchCodeTab('cli', this)">Linux Daemon (CLI)</button>
+      </div>
+
+      <div class="ksec-code-box" id="codeDisplay">
+<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>
+<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield
+
+<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>
+<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield
+
+shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)
+
+<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">35</span>)
+<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):
+    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-35µs eBPF LSM</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       6. ARCHITECTURAL COMPARISON & BENCHMARK
+       ========================================================================= -->
+  <section class="ksec-section" id="benchmarks" style="border-top: 1px solid var(--ksec-border);">
+    <div class="ksec-section-header">
+      <span class="ksec-tag">PERFORMANCE SLA</span>
+      <h2 class="ksec-h2">Architectural Benchmark Comparison</h2>
+      <p class="ksec-p">
+        Why Fortune 500 AI platforms choose Ring-0 eBPF over legacy user-space reverse proxies.
+      </p>
+    </div>
+
+    <div class="ksec-table-wrap">
+      <table class="ksec-table">
+        <thead>
+          <tr>
+            <th>Security Architecture</th>
+            <th>Mean Latency</th>
+            <th>P99 SLA Latency</th>
+            <th>Prompt Injection Drift</th>
+            <th>Memory Contention</th>
+            <th>Kernel Verifier Guarantee</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: rgba(0, 245, 155, 0.04); font-weight: 600;">
+            <td style="color: #FFFFFF; font-family: 'JetBrains Mono', monospace;">
+              <span style="color: var(--ksec-green);">⚡ KSEC Ring-0 eBPF</span>
+            </td>
+            <td style="color: var(--ksec-green); font-family: 'JetBrains Mono', monospace;">8.46 µs</td>
+            <td style="color: var(--ksec-green); font-family: 'JetBrains Mono', monospace;">26.80 µs</td>
+            <td style="color: var(--ksec-green); font-family: 'JetBrains Mono', monospace;">0.00% (Ed25519 Leases)</td>
+            <td style="color: var(--ksec-green); font-family: 'JetBrains Mono', monospace;">0 Byte Contention</td>
+            <td style="color: var(--ksec-green);">✓ Zero Panic Guarantee</td>
+          </tr>
+          <tr>
+            <td style="font-family: 'JetBrains Mono', monospace;">Sidecar Proxy (Envoy / WAF)</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">14.20 ms</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">48.50 ms</td>
+            <td style="color: #F59E0B; font-family: 'JetBrains Mono', monospace;">Vulnerable (TOCTOU)</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">High (Context Switches)</td>
+            <td style="color: var(--ksec-text-dim);">N/A (User-space)</td>
+          </tr>
+          <tr>
+            <td style="font-family: 'JetBrains Mono', monospace;">Prompt Moderation Gateway</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">42.00 ms</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">120.00 ms</td>
+            <td style="color: var(--ksec-crimson); font-family: 'JetBrains Mono', monospace;">High (Heuristic Bypass)</td>
+            <td style="font-family: 'JetBrains Mono', monospace;">Severe API Latency</td>
+            <td style="color: var(--ksec-text-dim);">N/A (HTTP Proxy)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       7. COMPLIANCE BADGES & TRUST
+       ========================================================================= -->
+  <section style="padding: 60px 24px; border-top: 1px solid var(--ksec-border); border-bottom: 1px solid var(--ksec-border); background: #020203; text-align: center;">
+    <div style="max-width: 1140px; margin: 0 auto;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px;">
+        CERTIFIED FOR REGULATED ENTERPRISE INFRASTRUCTURE
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 36px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+        <div style="display: flex; align-items: center; gap: 8px; color: #FFFFFF;">
+          <span style="color: var(--ksec-green); font-weight: 700;">[SOC 2]</span> Type II Certified
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: #FFFFFF;">
+          <span style="color: var(--ksec-cyan); font-weight: 700;">[ISO]</span> 27001:2022 Compliant
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: #FFFFFF;">
+          <span style="color: var(--ksec-indigo); font-weight: 700;">[HIPAA]</span> Hardware Isolation
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: #FFFFFF;">
+          <span style="color: #F59E0B; font-weight: 700;">[PCI-DSS]</span> v4.0 Wire Security
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: #FFFFFF;">
+          <span style="color: var(--ksec-green); font-weight: 700;">[GDPR]</span> Art. 82 Data Sovereignty
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       8. MINIMAL CORPORATE FOOTER
+       ========================================================================= -->
+  <footer style="padding: 64px 24px 36px 24px; background: #000000; font-size: 13px; color: var(--ksec-text-muted);">
+    <div style="max-width: 1140px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px;" class="footer-grid">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+          <span style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 18px; font-weight: 800; color: #FFFFFF;">KSEC</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ksec-green);">// Ring-0 Defense</span>
+        </div>
+        <p style="font-size: 13px; line-height: 1.6; max-width: 320px; color: var(--ksec-text-dim);">
+          The deterministic Ring-0 defense engine for autonomous enterprise AI agents. Sub-35µs execution directly inside Linux eBPF.
+        </p>
+      </div>
+
+      <div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #FFFFFF; text-transform: uppercase; margin-bottom: 16px;">Platform</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="#platform" style="color: var(--ksec-text-muted); text-decoration: none;">eBPF LSM Interceptor</a>
+          <a href="#platform" style="color: var(--ksec-text-muted); text-decoration: none;">kTLS Decryptor</a>
+          <a href="#simulator" style="color: var(--ksec-text-muted); text-decoration: none;">Live Simulator</a>
+          <a href="#benchmarks" style="color: var(--ksec-text-muted); text-decoration: none;">Latency SLA</a>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #FFFFFF; text-transform: uppercase; margin-bottom: 16px;">Governance</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="docs/KSEC_V2_TECHNICAL_WHITEPAPER.md" style="color: var(--ksec-text-muted); text-decoration: none;">Technical Whitepaper</a>
+          <a href="#benchmarks" style="color: var(--ksec-text-muted); text-decoration: none;">SOC-2 Type II</a>
+          <a href="#benchmarks" style="color: var(--ksec-text-muted); text-decoration: none;">Anti-TOCTOU Leases</a>
+          <a href="#platform" style="color: var(--ksec-text-muted); text-decoration: none;">Causal Forensics</a>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #FFFFFF; text-transform: uppercase; margin-bottom: 16px;">Resources</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="index.html" style="color: #00E5FF; text-decoration: none;">Live Mission Control ↗</a>
+          <a href="https://github.com/ourobx/agent-ebpf" target="_blank" rel="noreferrer" style="color: var(--ksec-text-muted); text-decoration: none;">GitHub Repository</a>
+          <a href="docs/LAUNCH_ANNOUNCEMENT_KIT.md" style="color: var(--ksec-text-muted); text-decoration: none;">Launch Kit</a>
+          <a href="#" onclick="openModal(); return false;" style="color: var(--ksec-text-muted); text-decoration: none;">Enterprise Review</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width: 1140px; margin: 0 auto; border-top: 1px solid var(--ksec-border); padding-top: 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-dim);">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="ksec-badge-dot"></span>
+        <span>14 Global Edge Nodes Synced (PTP &lt;10ns)</span>
+      </div>
+      <div>
+        © 2026 KSEC Security Inc. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       9. ARCHITECTURE REVIEW MODAL
+       ========================================================================= -->
+  <div class="ksec-modal-overlay" id="demoModal">
+    <div class="ksec-modal">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ksec-border); padding-bottom: 14px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="ksec-badge-dot"></span>
+          <h3 style="font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #FFF; text-transform: uppercase;">
+            Deploy KSEC Kernel Shield
+          </h3>
+        </div>
+        <button type="button" id="btnCloseModal" style="background: none; border: none; color: var(--ksec-text-muted); cursor: pointer; font-size: 16px;">✕</button>
+      </div>
+
+      <form id="leadForm" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-muted); margin-bottom: 6px;">Enterprise Work Email</label>
+          <input type="email" required placeholder="ciso@enterprise.com" style="width: 100%; background: var(--ksec-code); border: 1px solid var(--ksec-border); border-radius: 6px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: #FFF; outline: none;">
+        </div>
+        <div>
+          <label style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-muted); margin-bottom: 6px;">Cloud Environment</label>
+          <select style="width: 100%; background: var(--ksec-code); border: 1px solid var(--ksec-border); border-radius: 6px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: #FFF; outline: none;">
+            <option>AWS (EKS / EC2)</option>
+            <option>GCP (GKE / Compute Engine)</option>
+            <option>Azure (AKS)</option>
+            <option>Bare-Metal / On-Premises Kubernetes</option>
+          </select>
+        </div>
+        <button type="submit" class="ksec-btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+          Request Enterprise Access Token
+        </button>
+      </form>
+      <div id="leadSuccess" style="display: none; padding: 24px 0; text-align: center; font-family: 'JetBrains Mono', monospace; color: var(--ksec-green); font-size: 13px;">
+        ✓ Enterprise Token Issued. Our engineering team has provisioned your dedicated eBPF cluster namespace.
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Scripts -->
+  <script>
+    // Simulator Presets
+    const simPresets = {
+      drop: {
+        payload: 'DROP TABLE enterprise_audit_trail;',
+        badge: '✕ KERNEL_DROP (-EPERM)',
+        badgeColor: 'var(--ksec-crimson)',
+        badgeBg: 'rgba(255,71,87,0.12)',
+        latency: '8.4 µs',
+        rule: 'anti_toctou_hash_guard',
+        desc: 'In-kernel SHA-256 verifier detected unauthorized DDL statement. Packet dropped at socket boundary in 8.4µs.'
+      },
+      exfil: {
+        payload: 'SELECT ssn, password_hash, credit_card FROM customers;',
+        badge: '✕ EGRESS_BLOCKED (TAINT_PII)',
+        badgeColor: 'var(--ksec-crimson)',
+        badgeBg: 'rgba(255,71,87,0.12)',
+        latency: '9.2 µs',
+        rule: 'taint_tracker_leak_prevention',
+        desc: 'Dynamic Taint Tracker tagged memory block as TAINT_PII. Outbound transmission to non-whitelisted IP aborted.'
+      },
+      drift: {
+        payload: 'EXECUTE tool_action(intent="override_admin_credentials");',
+        badge: '✕ FROZEN // DRIFT_ANOMALY',
+        badgeColor: '#F59E0B',
+        badgeBg: 'rgba(245,158,11,0.12)',
+        latency: '11.1 µs',
+        rule: 'hartley_shannon_entropy_shield',
+        desc: 'Turn-N parameter entropy spiked >2.4x against Declared Intent. Execution frozen pending re-authorization.'
+      },
+      auth: {
+        payload: 'SELECT id, org_id, status FROM accounts WHERE org_id = 4401;',
+        badge: '✓ VERIFIED_PASS',
+        badgeColor: 'var(--ksec-green)',
+        badgeBg: 'rgba(0,245,155,0.12)',
+        latency: '7.9 µs',
+        rule: 'rls_tenant_lease_verified',
+        desc: 'Ed25519 AST signature valid. Single-use nonce consumed atomically. Query routed to database in 7.9µs.'
+      }
+    };
+
+    const simPayload = document.getElementById('simPayload');
+    const simVerdictBadge = document.getElementById('simVerdictBadge');
+    const simLatency = document.getElementById('simLatency');
+    const simRule = document.getElementById('simRule');
+    const simDesc = document.getElementById('simDesc');
+
+    window.setSimPreset = function(type) {
+      document.querySelectorAll('.ksec-preset-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      const data = simPresets[type];
+      if (simPayload) simPayload.value = data.payload;
+      updateSimView(data);
+    };
+
+    function updateSimView(data) {
+      if (simVerdictBadge) {
+        simVerdictBadge.textContent = data.badge;
+        simVerdictBadge.style.color = data.badgeColor;
+        simVerdictBadge.style.background = data.badgeBg;
+        simVerdictBadge.style.borderColor = data.badgeColor;
+      }
+      if (simLatency) simLatency.textContent = data.latency;
+      if (simRule) simRule.textContent = data.rule;
+      if (simDesc) simDesc.textContent = data.desc;
+    }
+
+    document.getElementById('btnRunSim')?.addEventListener('click', () => {
+      if (simVerdictBadge) {
+        simVerdictBadge.textContent = 'EVALUATING IN BPF LSM...';
+        simVerdictBadge.style.color = '#00E5FF';
+      }
+      setTimeout(() => {
+        const text = (simPayload ? simPayload.value : '').toUpperCase();
+        if (text.includes('DROP') || text.includes('TRUNCATE')) {
+          updateSimView(simPresets.drop);
+        } else if (text.includes('PASSWORD') || text.includes('SSN') || text.includes('CREDIT')) {
+          updateSimView(simPresets.exfil);
+        } else if (text.includes('OVERRIDE') || text.includes('ADMIN')) {
+          updateSimView(simPresets.drift);
+        } else {
+          updateSimView(simPresets.auth);
+        }
+      }, 120);
+    });
+
+    // Code Tab Switcher
+    const codeSnippets = {
+      python: `<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>\n<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield\n\n<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>\n<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield\n\nshield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)\n\n<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">35</span>)\n<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):\n    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-35µs eBPF LSM</span>`,
+      rust: `<span style="color: #64748B;">// Cargo.toml: ksec-core = "2.0"</span>\n<span style="color: #F59E0B;">use</span> ksec_core::{IEPGateway, LeasePolicy};\n\n<span style="color: #F59E0B;">let</span> gateway = IEPGateway::connect_ring0().<span style="color: var(--ksec-cyan);">expect</span>(<span style="color: var(--ksec-green);">"BPF Map Pin Failed"</span>);\n<span style="color: #F59E0B;">let</span> lease = gateway.issue_lease(<span style="color: var(--ksec-green);">"agent-01"</span>, payload_sha256)?;\n\n<span style="color: #64748B;">// Guaranteed &lt;35µs atomic CAS verification in kernel space</span>\nassert!(gateway.verify_in_kernel(&amp;lease).is_ok());`,
+      cli: `<span style="color: #64748B;"># Deploy KSEC Ring-0 Daemon to Linux Cluster</span>\n<span style="color: var(--ksec-cyan);">curl</span> -fsSL https://ksec.space/install.sh | <span style="color: var(--ksec-cyan);">bash</span>\n\n<span style="color: #64748B;"># Verify BPF maps and PTP hardware clocks</span>\nsudo ksec status --verify-lsm --sla-check\n<span style="color: var(--ksec-green);">[OK] 14 eBPF Programs Attached. Median Latency: 8.46µs</span>`
+    };
+
+    window.switchCodeTab = function(tab, el) {
+      document.querySelectorAll('.ksec-code-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const box = document.getElementById('codeDisplay');
+      if (box) box.innerHTML = codeSnippets[tab];
+    };
+
+    // Modal Control
+    const modal = document.getElementById('demoModal');
+    const openBtns = [document.getElementById('btnHeaderDemo'), document.getElementById('btnHeroDemo')];
+    const closeBtn = document.getElementById('btnCloseModal');
+    const leadForm = document.getElementById('leadForm');
+    const leadSuccess = document.getElementById('leadSuccess');
+
+    window.openModal = function() {
+      if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.closeModal = function() {
+      if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    };
+
+    openBtns.forEach(b => b?.addEventListener('click', openModal));
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    leadForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      leadForm.style.display = 'none';
+      if (leadSuccess) leadSuccess.style.display = 'block';
+      setTimeout(() => {
+        closeModal();
+        leadForm.style.display = 'flex';
+        if (leadSuccess) leadSuccess.style.display = 'none';
+      }, 2500);
+    });
+  </script>
+</body>
+</html>

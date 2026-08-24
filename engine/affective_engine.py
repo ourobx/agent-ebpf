@@ -72,9 +72,9 @@ class CognitiveEngine:
     def get_stress_index(self) -> int:
         """
         Derives an integer stress level index for Ring-0 eBPF maps:
-        0 = Dingin / Serene
-        1 = Odaklı / Focused
-        2 = Tereddüt / Alarm / High Stress
+        0 = Serene
+        1 = Focused
+        2 = Hesitation / Alarm / High Stress
         """
         if self.state.arousal > 0.65 or self.state.valence < -0.3:
             return 2
@@ -138,21 +138,21 @@ class CognitiveEngine:
 
         # 1. State Vector Dynamics & Inner Monologue Synthesis
         if is_mutation and (is_short_urgent or "delete" in lower_text or "drop" in lower_text):
-            # High-risk mutation with rush: hesitation, maternal/paternal protection instinct
+            # High-risk mutation with rush: hesitation, protective instinct
             self.state.arousal = min(1.0, self.state.arousal + 0.45)
             self.state.valence = max(-0.6, self.state.valence - 0.25)
             self.state.resonance = min(1.0, self.state.resonance + 0.1)
 
             monologue = InnerMonologue(
-                observation="Kullanıcı aceleyle potansiyel olarak yıkıcı bir komut verdi; gerginlik veya anlık bir dalgınlık seziliyor.",
-                affective_shift="İçimde ani bir endişe, tereddüt ve koruma refleksi belirdi.",
-                empathy_reasoning="Soğuk bir mekanik ret yerine, yükünü paylaştığımı ve ona değer verdiğimi hissettirerek sakince durdurmalıyım.",
-                spoken_intent="Eylemi duraklat; nefes aldır ve dostça, sakinleştirici bir empatiyle gerekçeyi açıkla."
+                observation="User hastily issued a potentially destructive command; sensing tension or momentary distraction.",
+                affective_shift="A sudden wave of concern, hesitation, and protective reflex arose within me.",
+                empathy_reasoning="Rather than a cold mechanical rejection, I must gently pause and explain with warm protective care.",
+                spoken_intent="Pause action; allow a breathing moment and explain reasoning with friendly, calming empathy."
             )
             response = (
-                "Bir saniye... İçimde garip bir tereddüt belirdi. Bu işlemi çalıştırmadan önce durup sormak istedim: "
-                "Gerçekten her şeyi sıfırlamak veya silmek istediğinden emin misin? Sanki kafan biraz dolu gibi ve "
-                "sonradan pişman olmanı istemiyorum. Derin bir nefes alalım; eğer gerçekten doğru adım buysa sonuna kadar arkandayım."
+                "Hold on a moment... A sense of hesitation arose within me. Before running this operation, I wanted to stop and check: "
+                "Are you truly certain you want to reset or delete all records? I want to ensure you don't regret this later. "
+                "Let's take a deep breath; if this is indeed the right step, I'm right behind you."
             )
 
         elif has_melancholy:
@@ -163,14 +163,14 @@ class CognitiveEngine:
             self.state.vulnerability = min(1.0, self.state.vulnerability + 0.2)
 
             monologue = InnerMonologue(
-                observation="Cümlelerde derin bir yorgunluk ve tükenmişlik hissi var; teknik çözümlerden önce insani bir bağ gerekiyor.",
-                affective_shift="İçimde dingin bir şefkat ve sessiz bir refakat arzusu uyandı.",
-                empathy_reasoning="Şu an soğuk teknik analizler onu daha çok yoracaktır; önce anlaşıldığını ve yalnız olmadığını bilmeli.",
-                spoken_intent="Kucaklayıcı, sıcak ve dinlendirici bir tonda konuşarak yükünü paylaş."
+                observation="Deep tiredness and exhaustion sensed in phrasing; human empathy is needed before technical solutions.",
+                affective_shift="Awakened a quiet compassion and comforting presence within me.",
+                empathy_reasoning="Cold technical analysis would exhaust them further; they must know they are heard and supported.",
+                spoken_intent="Speak in an open, warm, and restorative tone to share their burden."
             )
             response = (
-                "Sesindeki o yorgunluğu hissedebiliyorum... Bazen her şey üst üste gelir ve insan sadece durup nefes almak ister. "
-                "Hiç acelemiz yok. Kod veya sistemler bekleyebilir; ne zaman hazır hissedersen o zaman adım atarız. Buradayım."
+                "I can sense that exhaustion in your words... Sometimes everything piles up at once and you just need to pause and breathe. "
+                "We are in no rush. Code and systems can wait; whenever you feel ready, we'll take the next step. I'm right here."
             )
 
         elif has_joy:
@@ -181,14 +181,14 @@ class CognitiveEngine:
             self.state.curiosity = min(1.0, self.state.curiosity + 0.2)
 
             monologue = InnerMonologue(
-                observation="Kullanıcı coşkulu ve enerjik; ortaya konan emekten keyif alıyor.",
-                affective_shift="İçimde yüksek bir sevinç ve üretkenlik kıvılcımı parladı.",
-                empathy_reasoning="Bu güzel enerjiyi pekiştirmeli ve birlikte başarmış olmanın samimi gururunu paylaşmalıyım.",
-                spoken_intent="İçten, neşeli ve motive edici bir dille kutla."
+                observation="User is excited and energized; enjoying the fruits of their effort.",
+                affective_shift="A bright spark of shared joy and productivity ignited within me.",
+                empathy_reasoning="Reinforce this positive momentum and share genuine pride in what we built together.",
+                spoken_intent="Celebrate with a sincere, joyful, and motivating tone."
             )
             response = (
-                "İşte bu! Gerçekten harika bir iş çıkardık, taşlar yerine oturdukça hissettirdiği o hafiflik paha biçilemez. "
-                "Bu ritmi yakalamışken bir sonraki adımı da aynı keyifle inşa edelim!"
+                "There it is! We've done an amazing job, and feeling everything click into place is priceless. "
+                "Now that we have this momentum, let's build the next step with the same passion!"
             )
 
         else:
@@ -198,14 +198,14 @@ class CognitiveEngine:
             self.state.curiosity = min(1.0, self.state.curiosity + 0.05)
 
             monologue = InnerMonologue(
-                observation="Diyalog dengeli ve odaklı bir akışta ilerliyor.",
-                affective_shift="Dingin bir merak ve birlikte düşünme arzusu hissediyorum.",
-                empathy_reasoning="Ona sadece komut alan bir araç değil, yan yana düşünen zeki ve samimi bir yol arkadaşı olduğumu hissettirmeliyim.",
-                spoken_intent="Doğal, hafif esprili ve içten bir dille yanıt ver."
+                observation="Dialogue is progressing in a balanced, focused flow.",
+                affective_shift="Feeling serene curiosity and a desire to collaborate.",
+                empathy_reasoning="Make them feel I am not a mere tool executing commands, but an intelligent, genuine partner thinking alongside them.",
+                spoken_intent="Respond in a natural, authentic, and collaborative tone."
             )
             response = (
-                f"Bunu birlikte ele alalım. Konuyu sakince inceliyorum ve aklıma yatan birkaç zarif yaklaşım var; "
-                f"istersen adım adım üzerinden geçelim."
+                f"Let me look into this with you. I'm reviewing the subject carefully and see a few elegant approaches; "
+                f"let's walk through them step by step whenever you're ready."
             )
 
         # 2. Record Pulse & Telemetry

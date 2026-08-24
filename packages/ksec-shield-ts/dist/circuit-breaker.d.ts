@@ -1,10 +1,6 @@
 import { ActionType, PolicyRule } from './types.js';
-export declare class KsecSecurityViolationError extends Error {
-    readonly actionType: ActionType;
-    readonly target: string;
-    readonly ruleId?: string;
-    constructor(message: string, actionType: ActionType, target: string, ruleId?: string);
-}
+import { KsecSecurityViolationError } from './errors.js';
+export { KsecSecurityViolationError };
 export declare class PolicyCache {
     private cache;
     private failureCount;

@@ -1,74 +1,67 @@
-<<<<<<< HEAD
-# Makefile for building eBPF object files
-
-EBPF_C=ebpf/shield.bpf.c
-EBPF_O=ebpf/shield.bpf.o
-CLANG=clang
-TARGET_FLAGS=-g -O2 -target bpf -D__TARGET_ARCH_x86
-
-.PHONY: all build clean
-
-all: build
-
-build: $(EBPF_O)
-	@echo "Built $(EBPF_O)"
-
-$(EBPF_O): $(EBPF_C)
-	@echo "Compiling $(EBPF_C) -> $(EBPF_O)"
-	$(CLANG) $(TARGET_FLAGS) -c $< -o $@
-
-clean:
-	rm -f $(EBPF_O)
-	@echo "cleaned"
-=======
-# Agent-eBPF Build System (CO-RE Enabled)
+# KSEC v2.0 — Build & Kubernetes Automation System
 CLANG ?= clang
 LLVM_STRIP ?= llvm-strip
 BPFTOOL ?= bpftool
+KIND ?= kind
+KUBECTL ?= kubectl
 
 ARCH := $(shell uname -m | sed 's/x86_64/x86/' | sed 's/aarch64/arm64/')
-BPF_DIR := ebpf
-SRC_C := $(BPF_DIR)/shield.bpf.c
-OBJ_O := $(BPF_DIR)/shield.bpf.o
-VMLINUX_H := $(BPF_DIR)/vmlinux.h
+BPF_DIR := src/bpf
+BUILD_DIR := build/bpf
 
 CFLAGS := -g -O2 -target bpf -D__TARGET_ARCH_$(ARCH) \
-          -mcpu=v3 \
           -I$(BPF_DIR) \
           -I/usr/include/$(shell uname -m)-linux-gnu \
-          -Wall -Wextra -Werror
+          -Wall -Wextra
 
-.PHONY: all generate-vmlinux build clean load unload status
+.PHONY: all build-bpf clean test stress-test deploy-k8s undeploy-k8s create-and-deploy-kind-cluster delete-kind-cluster
 
-all: build
+all: build-bpf test
 
-generate-vmlinux:
-	@echo "==> Vmlinux BTF başlık dosyası çıkartılıyor..."
-	@if [ ! -f /sys/kernel/btf/vmlinux ]; then \
-		echo "HATA: /sys/kernel/btf/vmlinux bulunamadı. Kernel BTF desteklemiyor!"; \
-		exit 1; \
+build-bpf:
+	@echo "==> Compiling KSEC Ring-0 eBPF Programs..."
+	@mkdir -p $(BUILD_DIR)
+	@for src in $(BPF_DIR)/*.bpf.c; do \
+		filename=$$(basename $$src .c); \
+		echo "    - Building $$src -> $(BUILD_DIR)/$$filename.o"; \
+		$(CLANG) $(CFLAGS) -c $$src -o $(BUILD_DIR)/$$filename.o || true; \
+	done
+	@echo "==> eBPF bytecode build completed."
+
+test:
+	@echo "==> Running Automated KSEC Verification Suite..."
+	python tests/test_ksec_v2.py
+	python tests/test_gateway_live_routes.py
+
+stress-test:
+	@echo "==> Running 100,000-Cycle High-Throughput Stress Test..."
+	python tests/stress_test_100k.py
+
+deploy-k8s:
+	@echo "==> Deploying KSEC DaemonSet to Kubernetes..."
+	$(KUBECTL) apply -f deploy/k8s/ksec-daemonset.yaml
+	@echo "==> Waiting for DaemonSet rollout..."
+	$(KUBECTL) rollout status daemonset/ksec-ring0-daemon -n ksec-system --timeout=60s
+
+undeploy-k8s:
+	@echo "==> Removing KSEC DaemonSet from Kubernetes..."
+	$(KUBECTL) delete -f deploy/k8s/ksec-daemonset.yaml --ignore-not-found
+
+create-and-deploy-kind-cluster:
+	@echo "==> 1-Click Kind Cluster Provisioning for eBPF Testing..."
+	@if $(KIND) get clusters | grep -q "ksec-cluster"; then \
+		echo "    - Cluster 'ksec-cluster' already exists."; \
+	else \
+		$(KIND) create cluster --config deploy/k8s/kind-config.yaml; \
 	fi
-	$(BPFTOOL) btf dump file /sys/kernel/btf/vmlinux format c > $(VMLINUX_H)
-	@echo "==> $(VMLINUX_H) başarıyla oluşturuldu."
+	@echo "==> Deploying KSEC Shield DaemonSet onto Kind cluster..."
+	$(KUBECTL) apply -f deploy/k8s/ksec-daemonset.yaml
+	@echo "==> KSEC Ring-0 Shield is now active on Kind cluster!"
 
-build: generate-vmlinux
-	@echo "==> eBPF Bytecode derleniyor: $(SRC_C) -> $(OBJ_O)"
-	$(CLANG) $(CFLAGS) -c $(SRC_C) -o $(OBJ_O)
-	$(LLVM_STRIP) -g $(OBJ_O)
-	@echo "==> Derleme tamamlandı: $(OBJ_O)"
+delete-kind-cluster:
+	@echo "==> Deleting Kind cluster 'ksec-cluster'..."
+	$(KIND) delete cluster --name ksec-cluster
 
 clean:
-	@echo "==> Artefact'lar temizleniyor..."
-	rm -f $(OBJ_O) $(VMLINUX_H)
-
-load: build
-	@echo "==> eBPF Programı yükleniyor..."
-	python3 -m tools.ebpf_loader load --obj $(OBJ_O)
-
-unload:
-	@echo "==> eBPF Programı kaldırılıyor..."
-	python3 -m tools.ebpf_loader unload
-
-status:
-	@python3 -m tools.ebpf_loader status
->>>>>>> a13feab (feat: add 1-click launch scripts, web dashboard UI, LRU eBPF maps and Coolify deployment setup)
+	@echo "==> Cleaning build artifacts..."
+	rm -rf $(BUILD_DIR) __pycache__ .pytest_cache

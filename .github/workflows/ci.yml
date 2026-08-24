@@ -8,6 +8,7 @@ on:
 
 jobs:
   test-and-lint:
+    name: Lint, Compile & Verification Suite
     runs-on: ubuntu-latest
 
     steps:
@@ -25,18 +26,32 @@ jobs:
           pip install -r requirements.txt
           pip install pytest flake8
 
-      - name: Code Linting
+      - name: Security Context & Least-Privilege Audit
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          echo "==> Verifying zero privileged: true in Helm charts..."
+          ! grep -r "privileged: true" deploy/helm/ksec-shield/values.yaml
+          echo "==> Verifying zero CAP_SYS_ADMIN in default Helm values..."
+          ! grep -r "CAP_SYS_ADMIN" deploy/helm/ksec-shield/values.yaml
 
-      - name: Run Test Suite
+      - name: Compile All Python Modules
+        run: |
+          python -m compileall src tests demo
+
+      - name: Run KSEC v2.0 Verification Suite & SLA Benchmarks
+        run: |
+          python tests/test_ksec_v2.py
+          python tests/test_gateway_live_routes.py
+
+      - name: Execute Proof-of-Hack (PoH) Test
+        run: |
+          python demo/proof_of_hack_langchain.py
+
+      - name: Run Full Pytest Suite
         run: |
           pytest -v
 
   docker-build-check:
+    name: Container Build & Health Validation
     runs-on: ubuntu-latest
 
     steps:

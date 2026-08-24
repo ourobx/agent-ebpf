@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /landing
+Allow: /whitepaper
+Allow: /styles.css
+Allow: /app.js
+Allow: /docs/
+
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://ksec.space/sitemap.xml

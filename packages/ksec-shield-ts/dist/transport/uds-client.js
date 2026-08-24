@@ -35,6 +35,7 @@ export class UdsTransportClient extends EventEmitter {
                     allowed,
                     decision: allowed ? 'ALLOW' : 'BLOCK',
                     reason: `UDS daemon timeout (${this.timeoutMs}ms) - Handled with ${this.failMode}`,
+                    isTransportError: true,
                 });
             });
             client.on('error', (err) => {
@@ -44,6 +45,7 @@ export class UdsTransportClient extends EventEmitter {
                     allowed,
                     decision: allowed ? 'ALLOW' : 'BLOCK',
                     reason: `UDS connection failed (${err.code || err.message}) - Handled with ${this.failMode}`,
+                    isTransportError: true,
                 });
             });
             client.connect(this.socketPath, () => {

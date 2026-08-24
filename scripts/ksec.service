@@ -1,0 +1,23 @@
+[Unit]
+Description=KSEC v2.0 Ring-0 Autonomous AI Defense Gateway
+After=network.target local-fs.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ksec
+ExecStartPre=/opt/ksec/scripts/deploy_ksec_nodes.sh
+ExecStart=/usr/bin/python3 -m src.gateway.iep_gateway
+Restart=always
+RestartSec=3
+LimitNOFILE=1048576
+LimitMEMLOCK=infinity
+
+# Security & Isolation
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

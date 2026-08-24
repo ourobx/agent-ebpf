@@ -17,6 +17,7 @@ export interface PolicyCheckResponse {
     reason?: string;
     kernelTraceId?: string;
     ruleId?: string;
+    isTransportError?: boolean;
 }
 export declare class UdsTransportClient extends EventEmitter {
     private socketPath;

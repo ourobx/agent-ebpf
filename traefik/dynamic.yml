@@ -1,0 +1,52 @@
+# Traefik Dynamic Configuration for Agent-eBPF on Coolify / Self-Hosted
+http:
+  middlewares:
+    # 1. Strict CORS Middleware for Multi-Tenant AI Agent Access
+    ebpf-cors:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "https://ksec.space"
+          - "https://staging.ksec.space"
+          - "https://sandbox.ksec.space"
+          - "http://localhost:3000"
+          - "http://localhost:8000"
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 86400
+
+    # 2. SSE Streaming Unbuffered Transport Middleware (Guarantees zero-buffering for live eBPF telemetry)
+    ebpf-sse:
+      headers:
+        customResponseHeaders:
+          X-Accel-Buffering: "no"
+          Cache-Control: "no-cache, no-transform"
+          Connection: "keep-alive"
+          Content-Type: "text/event-stream"
+
+    # 3. OWASP Production Security Headers
+    ebpf-security-headers:
+      headers:
+        sslRedirect: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        customFrameOptionsValue: "DENY"
+
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
