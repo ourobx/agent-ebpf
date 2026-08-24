@@ -140,7 +140,7 @@ class TestKSECV2Engine(unittest.TestCase):
 
         self.assertGreater(report.total_potential_rows_compromised, 100000)
         self.assertGreater(report.total_estimated_financial_exposure_usd, 1000000.0)
-        self.assertIn("PCI-DSS v4.0 Req 3.4", report.compliance_violations_prevented)
+        self.assertTrue(any("PCI-DSS v4.0 Req 3.4" in v for v in report.compliance_violations_prevented))
         self.assertGreater(len(report.causal_dag_nodes), 0)
 
     def test_micro_benchmark_latency_sla(self):

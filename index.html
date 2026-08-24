@@ -129,15 +129,20 @@
         </div>
       </nav>
 
-      <!-- Sidebar User Profile -->
-      <div class="sidebar-footer" style="padding: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; background: #090D15;">
-        <div class="user-avatar" style="width: 28px; height: 28px; border-radius: 4px; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--accent-cyan); flex-shrink: 0;">
-          KS
+      <!-- Sidebar User Profile & Session Controls -->
+      <div class="sidebar-footer" style="padding: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #090D15;">
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1;">
+          <div class="user-avatar" id="userAvatarBox" style="width: 28px; height: 28px; border-radius: 4px; background: rgba(0,245,155,0.1); border: 1px solid rgba(0,245,155,0.3); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--accent-emerald, #00F59B); flex-shrink: 0;">
+            AV
+          </div>
+          <div class="user-meta" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+            <span class="user-name" id="userNameDisplay" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Alex Vance</span>
+            <span class="user-role" id="userTenantDisplay" style="font-size: 9px; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Agent Matrix Labs</span>
+          </div>
         </div>
-        <div class="user-meta" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
-          <span class="user-name" id="userNameDisplay" style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SecOps Operator</span>
-          <span class="user-role" style="font-size: 9px; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">KSEC Enterprise // Node-04</span>
-        </div>
+        <button type="button" id="btnSidebarLogout" style="background: rgba(255,71,87,0.06); border: 1px solid rgba(255,71,87,0.25); border-radius: 4px; padding: 4px 7px; color: #FF4757; font-family: var(--font-mono); font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Terminate Session and Log Out">
+          <span>Log Out</span>
+        </button>
       </div>
     </aside>
 
@@ -237,6 +242,11 @@
           <a href="landing.html" class="status-pill" style="text-decoration: none; color: var(--accent-cyan); border-color: var(--accent-cyan-border); font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" title="View Enterprise Corporate Website">
             <span>Corporate Site ↗</span>
           </a>
+
+          <!-- Topbar Logout Button -->
+          <button type="button" class="status-pill" id="topbarLogoutBtn" style="cursor: pointer; color: #FF4757; border-color: rgba(255,71,87,0.35); font-size: 11px; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,71,87,0.06);" title="Sign out of current tenant session">
+            <span>Log Out ⎋</span>
+          </button>
 
           <button class="icon-action-btn" id="themeToggle" title="Toggle Visual Theme" aria-label="Toggle Theme">
             <span class="svg-icon" id="themeIcon">

@@ -331,6 +331,104 @@ class MCPToolRequest(BaseModel):
     params: Dict[str, Any] = {}
     id: Optional[int] = 1
 
+# --- SaaS Authentication & OTP Schemas ---
+from src.auth.auth_service import auth_service
+
+class RegisterRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    company_name: Optional[str] = "Autonomous AI Corp"
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp_code: str
+
+class ResendOtpRequest(BaseModel):
+    email: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/api/auth/register", tags=["Authentication"])
+async def register_endpoint(req: RegisterRequest):
+    try:
+        res = auth_service.register(
+            email=req.email,
+            full_name=req.full_name,
+            password=req.password,
+            company_name=req.company_name or "Autonomous AI Corp"
+        )
+        return res
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Registration failed: {err}")
+
+@app.post("/api/auth/verify-otp", tags=["Authentication"])
+async def verify_otp_endpoint(req: VerifyOtpRequest):
+    try:
+        res = auth_service.verify_otp(email=req.email, otp_code=req.otp_code)
+        return res
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"OTP verification failed: {err}")
+
+@app.post("/api/auth/resend-otp", tags=["Authentication"])
+async def resend_otp_endpoint(req: ResendOtpRequest):
+    try:
+        res = auth_service.resend_otp(email=req.email)
+        return res
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Resend OTP failed: {err}")
+
+@app.post("/api/auth/login", tags=["Authentication"])
+async def login_endpoint(req: LoginRequest):
+    try:
+        res = auth_service.login(email=req.email, password=req.password)
+        return res
+    except ValueError as err:
+        raise HTTPException(status_code=401, detail=str(err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {err}")
+
+@app.get("/api/auth/me", tags=["Authentication"])
+async def get_me_endpoint(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    token = auth_header.split(" ")[1]
+    try:
+        payload = auth_service.decode_token(token)
+        user = auth_service.db.get_user_by_email(payload["email"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        return {
+            "authenticated": True,
+            "user_id": user["user_id"],
+            "tenant_id": user["tenant_id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "role": user["role"],
+            "company_name": user["company_name"],
+            "plan_tier": user["plan_tier"],
+            "api_key": user["api_key"]
+        }
+    except ValueError as err:
+        raise HTTPException(status_code=401, detail=str(err))
+
+@app.post("/api/auth/logout", tags=["Authentication"])
+async def logout_endpoint(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        return auth_service.logout(token)
+    return {"status": "LOGGED_OUT", "message": "Session terminated."}
+
 def create_access_token(data: dict, expires_delta: Optional[int] = 86400) -> str:
     payload = data.copy()
     if "exp" not in payload:

@@ -448,13 +448,13 @@
       background: rgba(255, 255, 255, 0.015);
     }
 
-    /* Enterprise Lead Capture Modal */
+    /* Enterprise SaaS Auth & OTP Modal Styles */
     .ksec-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(12px);
-      z-index: 99;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(14px);
+      z-index: 999;
       display: none;
       align-items: center;
       justify-content: center;
@@ -466,13 +466,131 @@
     }
 
     .ksec-modal {
-      background: #0D0E12;
+      background: #0C0D12;
       border: 1px solid var(--ksec-border-hover);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 32px;
-      max-width: 480px;
+      max-width: 460px;
       width: 100%;
       box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95);
+      position: relative;
+    }
+
+    .ksec-auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--ksec-border);
+      margin-bottom: 24px;
+      gap: 20px;
+    }
+
+    .ksec-auth-tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--ksec-text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 0 10px 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ksec-auth-tab.active {
+      color: #FFFFFF;
+      border-bottom-color: var(--ksec-green);
+    }
+
+    .ksec-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .ksec-input-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ksec-text-muted);
+      font-weight: 500;
+    }
+
+    .ksec-input-control {
+      width: 100%;
+      background: var(--ksec-code);
+      border: 1px solid var(--ksec-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      color: #FFFFFF;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .ksec-input-control:focus {
+      border-color: var(--ksec-green);
+      background: rgba(0, 245, 155, 0.02);
+    }
+
+    .ksec-otp-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin: 20px 0 14px 0;
+    }
+
+    .ksec-otp-digit {
+      width: 100%;
+      height: 52px;
+      background: var(--ksec-code);
+      border: 1px solid var(--ksec-border);
+      border-radius: 8px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: #FFFFFF;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .ksec-otp-digit:focus {
+      border-color: var(--ksec-green);
+      box-shadow: 0 0 12px rgba(0, 245, 155, 0.25);
+      background: rgba(0, 245, 155, 0.04);
+    }
+
+    .ksec-toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .ksec-toast {
+      background: #101319;
+      border: 1px solid var(--ksec-border-hover);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: #FFFFFF;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
   </style>
 </head>
@@ -506,12 +624,32 @@
         </a>
       </nav>
 
-      <!-- Right CTAs -->
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <a href="index.html" class="ksec-btn-secondary" style="padding: 8px 16px; font-size: 12px;">Sign In</a>
-        <button type="button" class="ksec-btn-primary" id="btnHeaderDemo" style="padding: 8px 16px; font-size: 12px;">
-          Deploy Shield
-        </button>
+      <!-- Dynamic Auth / Session CTAs -->
+      <div style="display: flex; align-items: center; gap: 12px;" id="headerAuthContainer">
+        <!-- Guest View -->
+        <div id="headerGuestControls" style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="ksec-btn-secondary" id="btnHeaderSignIn" style="padding: 8px 16px; font-size: 12px;">Sign In</button>
+          <button type="button" class="ksec-btn-primary" id="btnHeaderSignUp" style="padding: 8px 16px; font-size: 12px;">
+            <span>Create Account</span>
+            <span class="pulse-dot" style="background: #000; width: 5px; height: 5px;"></span>
+          </button>
+        </div>
+
+        <!-- Authenticated View -->
+        <div id="headerAuthControls" style="display: none; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--ksec-border); border-radius: 999px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+            <span class="pulse-dot" style="background: var(--ksec-green); width: 6px; height: 6px;"></span>
+            <span id="headerUserEmail" style="color: #FFF; font-weight: 600;">alex@tenant.ai</span>
+            <span style="color: var(--ksec-text-dim);">•</span>
+            <span id="headerTenantTier" style="color: var(--ksec-cyan); font-weight: 700;">Team Pro</span>
+          </div>
+          <a href="index.html" class="ksec-btn-primary" style="padding: 8px 16px; font-size: 12px; text-decoration: none;">
+            <span>Mission Control ↗</span>
+          </a>
+          <button type="button" class="ksec-btn-secondary" id="btnHeaderLogout" style="padding: 8px 14px; font-size: 12px; color: var(--ksec-crimson); border-color: rgba(255,71,87,0.3);" title="Sign out of current tenant session">
+            Log Out
+          </button>
+        </div>
       </div>
 
     </div>
@@ -939,43 +1077,119 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
   </footer>
 
   <!-- =========================================================================
-       9. ARCHITECTURE REVIEW MODAL
+       9. ENTERPRISE SAAS AUTH & 6-DIGIT OTP VERIFICATION MODAL
        ========================================================================= -->
-  <div class="ksec-modal-overlay" id="demoModal">
+  <div class="ksec-modal-overlay" id="authModal">
     <div class="ksec-modal">
+      <!-- Modal Header -->
       <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ksec-border); padding-bottom: 14px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="ksec-badge-dot"></span>
-          <h3 style="font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #FFF; text-transform: uppercase;">
-            Deploy KSEC Kernel Shield
+          <h3 style="font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #FFF; text-transform: uppercase; letter-spacing: 0.05em;" id="authModalTitle">
+            KSEC Enterprise Portal
           </h3>
         </div>
-        <button type="button" id="btnCloseModal" style="background: none; border: none; color: var(--ksec-text-muted); cursor: pointer; font-size: 16px;">✕</button>
+        <button type="button" id="btnCloseAuthModal" style="background: none; border: none; color: var(--ksec-text-muted); cursor: pointer; font-size: 18px;" aria-label="Close Modal">✕</button>
       </div>
 
-      <form id="leadForm" style="display: flex; flex-direction: column; gap: 14px;">
-        <div>
-          <label style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-muted); margin-bottom: 6px;">Enterprise Work Email</label>
-          <input type="email" required placeholder="ciso@enterprise.com" style="width: 100%; background: var(--ksec-code); border: 1px solid var(--ksec-border); border-radius: 6px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: #FFF; outline: none;">
-        </div>
-        <div>
-          <label style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-text-muted); margin-bottom: 6px;">Cloud Environment</label>
-          <select style="width: 100%; background: var(--ksec-code); border: 1px solid var(--ksec-border); border-radius: 6px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: #FFF; outline: none;">
-            <option>AWS (EKS / EC2)</option>
-            <option>GCP (GKE / Compute Engine)</option>
-            <option>Azure (AKS)</option>
-            <option>Bare-Metal / On-Premises Kubernetes</option>
-          </select>
-        </div>
-        <button type="submit" class="ksec-btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
-          Request Enterprise Access Token
-        </button>
-      </form>
-      <div id="leadSuccess" style="display: none; padding: 24px 0; text-align: center; font-family: 'JetBrains Mono', monospace; color: var(--ksec-green); font-size: 13px;">
-        ✓ Enterprise Token Issued. Our engineering team has provisioned your dedicated eBPF cluster namespace.
+      <!-- Auth Tabs (Sign In / Sign Up) -->
+      <div class="ksec-auth-tabs" id="authTabsContainer">
+        <button type="button" class="ksec-auth-tab active" id="tabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
+        <button type="button" class="ksec-auth-tab" id="tabSignUp" onclick="switchAuthMode('signup')">Create Tenant Account</button>
       </div>
+
+      <!-- 1. Sign In Form View -->
+      <form id="signInForm" style="display: flex; flex-direction: column;" onsubmit="handleSignInSubmit(event)">
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Work Email</label>
+          <input type="email" id="signInEmail" required placeholder="alex@enterprise.ai" class="ksec-input-control">
+        </div>
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Password</label>
+          <input type="password" id="signInPassword" required placeholder="••••••••••••" class="ksec-input-control">
+        </div>
+        <button type="submit" class="ksec-btn-primary" id="btnSignInSubmit" style="width: 100%; justify-content: center; margin-top: 10px;">
+          <span>Sign In to Mission Control</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <div style="margin-top: 14px; text-align: center; font-size: 12px; color: var(--ksec-text-dim);">
+          Don't have a tenant account? <a href="#" onclick="switchAuthMode('signup'); return false;" style="color: var(--ksec-green); text-decoration: none; font-weight: 600;">Sign Up</a>
+        </div>
+      </form>
+
+      <!-- 2. Sign Up Form View -->
+      <form id="signUpForm" style="display: none; flex-direction: column;" onsubmit="handleSignUpSubmit(event)">
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Full Name</label>
+          <input type="text" id="signUpName" required placeholder="Alex Vance" class="ksec-input-control">
+        </div>
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Work Email</label>
+          <input type="email" id="signUpEmail" required placeholder="alex@agentmatrix.ai" class="ksec-input-control">
+        </div>
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Company / Tenant Organization</label>
+          <input type="text" id="signUpCompany" required placeholder="Agent Matrix Labs" class="ksec-input-control">
+        </div>
+        <div class="ksec-input-group">
+          <label class="ksec-input-label">Password (min. 8 characters)</label>
+          <input type="password" id="signUpPassword" required minlength="8" placeholder="••••••••••••" class="ksec-input-control">
+        </div>
+        <button type="submit" class="ksec-btn-primary" id="btnSignUpSubmit" style="width: 100%; justify-content: center; margin-top: 10px;">
+          <span>Continue to OTP Verification</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <div style="margin-top: 14px; text-align: center; font-size: 12px; color: var(--ksec-text-dim);">
+          Already registered? <a href="#" onclick="switchAuthMode('signin'); return false;" style="color: var(--ksec-green); text-decoration: none; font-weight: 600;">Sign In</a>
+        </div>
+      </form>
+
+      <!-- 3. OTP Verification Form View -->
+      <div id="otpView" style="display: none;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 4px;">
+            ENTER 6-DIGIT SECURITY PASSCODE
+          </div>
+          <div style="font-size: 12px; color: var(--ksec-text-muted);" id="otpTargetEmailText">
+            Sent to your email address. Valid for 5 minutes.
+          </div>
+        </div>
+
+        <form id="otpForm" onsubmit="handleOtpSubmit(event)">
+          <div class="ksec-otp-grid">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-1" autofocus inputmode="numeric">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-2" inputmode="numeric">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-3" inputmode="numeric">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-4" inputmode="numeric">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-5" inputmode="numeric">
+            <input type="text" maxlength="1" class="ksec-otp-digit" id="otp-6" inputmode="numeric">
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+            <button type="button" id="btnAutoFillOtp" style="background: rgba(0,245,155,0.06); border: 1px solid rgba(0,245,155,0.2); color: var(--ksec-green); border-radius: 4px; padding: 3px 8px; cursor: pointer; font-size: 11px;">
+              ⚡ Auto-fill Code
+            </button>
+            <span id="otpCountdownText" style="color: var(--ksec-text-dim);">Resend code in <strong style="color: #FFF;" id="otpTimerCount">60</strong>s</span>
+            <button type="button" id="btnResendOtp" style="display: none; background: none; border: none; color: var(--ksec-cyan); text-decoration: underline; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px;" onclick="handleResendOtp()">
+              Resend OTP
+            </button>
+          </div>
+
+          <button type="submit" class="ksec-btn-primary" id="btnVerifyOtpSubmit" style="width: 100%; justify-content: center;">
+            <span>Verify &amp; Activate Tenant Shield</span>
+          </button>
+        </form>
+
+        <div style="margin-top: 14px; text-align: center; font-size: 12px;">
+          <a href="#" onclick="switchAuthMode('signin'); return false;" style="color: var(--ksec-text-muted); text-decoration: none;">← Back to Sign In</a>
+        </div>
+      </div>
+
     </div>
   </div>
+
+  <!-- Global Toast Notification Container -->
+  <div class="ksec-toast-container" id="toastContainer"></div>
 
   <!-- Interactive Scripts -->
   <script>
@@ -1066,8 +1280,8 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
     // Code Tab Switcher
     const codeSnippets = {
-      python: `<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>\n<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield\n\n<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>\n<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield\n\nshield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)\n\n<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">35</span>)\n<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):\n    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-35µs eBPF LSM</span>`,
-      rust: `<span style="color: #64748B;">// Cargo.toml: ksec-core = "2.0"</span>\n<span style="color: #F59E0B;">use</span> ksec_core::{IEPGateway, LeasePolicy};\n\n<span style="color: #F59E0B;">let</span> gateway = IEPGateway::connect_ring0().<span style="color: var(--ksec-cyan);">expect</span>(<span style="color: var(--ksec-green);">"BPF Map Pin Failed"</span>);\n<span style="color: #F59E0B;">let</span> lease = gateway.issue_lease(<span style="color: var(--ksec-green);">"agent-01"</span>, payload_sha256)?;\n\n<span style="color: #64748B;">// Guaranteed &lt;35µs atomic CAS verification in kernel space</span>\nassert!(gateway.verify_in_kernel(&amp;lease).is_ok());`,
+      python: `<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>\n<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield\n\n<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>\n<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield\n\nshield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)\n\n<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">50</span>)\n<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):\n    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-50µs eBPF LSM</span>`,
+      rust: `<span style="color: #64748B;">// Cargo.toml: ksec-core = "2.0"</span>\n<span style="color: #F59E0B;">use</span> ksec_core::{IEPGateway, LeasePolicy};\n\n<span style="color: #F59E0B;">let</span> gateway = IEPGateway::connect_ring0().<span style="color: var(--ksec-cyan);">expect</span>(<span style="color: var(--ksec-green);">"BPF Map Pin Failed"</span>);\n<span style="color: #F59E0B;">let</span> lease = gateway.issue_lease(<span style="color: var(--ksec-green);">"agent-01"</span>, payload_sha256)?;\n\n<span style="color: #64748B;">// Guaranteed &lt;50µs atomic CAS verification in kernel space</span>\nassert!(gateway.verify_in_kernel(&amp;lease).is_ok());`,
       cli: `<span style="color: #64748B;"># Deploy KSEC Ring-0 Daemon to Linux Cluster</span>\n<span style="color: var(--ksec-cyan);">curl</span> -fsSL https://ksec.space/install.sh | <span style="color: var(--ksec-cyan);">bash</span>\n\n<span style="color: #64748B;"># Verify BPF maps and PTP hardware clocks</span>\nsudo ksec status --verify-lsm --sla-check\n<span style="color: var(--ksec-green);">[OK] 14 eBPF Programs Attached. Median Latency: 8.46µs</span>`
     };
 
@@ -1078,42 +1292,331 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       if (box) box.innerHTML = codeSnippets[tab];
     };
 
-    // Modal Control
-    const modal = document.getElementById('demoModal');
-    const openBtns = [document.getElementById('btnHeaderDemo'), document.getElementById('btnHeroDemo')];
-    const closeBtn = document.getElementById('btnCloseModal');
-    const leadForm = document.getElementById('leadForm');
-    const leadSuccess = document.getElementById('leadSuccess');
+    // --- Enterprise SaaS Auth, OTP & Session Management ---
+    let pendingOtpEmail = '';
+    let latestDebugOtp = '';
+    let otpTimerInterval = null;
 
-    window.openModal = function() {
-      if (modal) {
-        modal.classList.add('open');
+    function showToast(message, isSuccess = true) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'ksec-toast';
+      toast.style.borderColor = isSuccess ? 'rgba(0,245,155,0.3)' : 'rgba(255,71,87,0.3)';
+      toast.innerHTML = `
+        <span style="color: ${isSuccess ? 'var(--ksec-green)' : 'var(--ksec-crimson)'}; font-weight: 700;">
+          ${isSuccess ? '✓' : '✕'}
+        </span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 3500);
+    }
+
+    function checkSessionState() {
+      const token = localStorage.getItem('ksec_token');
+      const userRaw = localStorage.getItem('ksec_user');
+      const guestControls = document.getElementById('headerGuestControls');
+      const authControls = document.getElementById('headerAuthControls');
+      const headerEmail = document.getElementById('headerUserEmail');
+      const headerTier = document.getElementById('headerTenantTier');
+
+      if (token && userRaw) {
+        try {
+          const user = JSON.parse(userRaw);
+          if (guestControls) guestControls.style.display = 'none';
+          if (authControls) authControls.style.display = 'flex';
+          if (headerEmail) headerEmail.textContent = user.email || 'operator@tenant.ai';
+          if (headerTier) headerTier.textContent = user.plan_tier || 'Team Pro';
+          return true;
+        } catch (e) {
+          localStorage.removeItem('ksec_token');
+          localStorage.removeItem('ksec_user');
+        }
+      }
+
+      if (guestControls) guestControls.style.display = 'flex';
+      if (authControls) authControls.style.display = 'none';
+      return false;
+    }
+
+    const authModal = document.getElementById('authModal');
+    const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
+
+    window.openAuthModal = function(mode = 'signin') {
+      switchAuthMode(mode);
+      if (authModal) {
+        authModal.classList.add('open');
         document.body.style.overflow = 'hidden';
       }
     };
 
-    window.closeModal = function() {
-      if (modal) {
-        modal.classList.remove('open');
+    window.closeAuthModal = function() {
+      if (authModal) {
+        authModal.classList.remove('open');
         document.body.style.overflow = '';
       }
     };
 
-    openBtns.forEach(b => b?.addEventListener('click', openModal));
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
+    btnCloseAuthModal?.addEventListener('click', closeAuthModal);
+    authModal?.addEventListener('click', (e) => {
+      if (e.target === authModal) closeAuthModal();
     });
 
-    leadForm?.addEventListener('submit', (e) => {
+    window.switchAuthMode = function(mode) {
+      const tabSignIn = document.getElementById('tabSignIn');
+      const tabSignUp = document.getElementById('tabSignUp');
+      const signInForm = document.getElementById('signInForm');
+      const signUpForm = document.getElementById('signUpForm');
+      const otpView = document.getElementById('otpView');
+      const tabsContainer = document.getElementById('authTabsContainer');
+
+      if (mode === 'signin') {
+        if (tabsContainer) tabsContainer.style.display = 'flex';
+        tabSignIn?.classList.add('active');
+        tabSignUp?.classList.remove('active');
+        if (signInForm) signInForm.style.display = 'flex';
+        if (signUpForm) signUpForm.style.display = 'none';
+        if (otpView) otpView.style.display = 'none';
+      } else if (mode === 'signup') {
+        if (tabsContainer) tabsContainer.style.display = 'flex';
+        tabSignUp?.classList.add('active');
+        tabSignIn?.classList.remove('active');
+        if (signInForm) signInForm.style.display = 'none';
+        if (signUpForm) signUpForm.style.display = 'flex';
+        if (otpView) otpView.style.display = 'none';
+      } else if (mode === 'otp') {
+        if (tabsContainer) tabsContainer.style.display = 'none';
+        if (signInForm) signInForm.style.display = 'none';
+        if (signUpForm) signUpForm.style.display = 'none';
+        if (otpView) otpView.style.display = 'block';
+        setupOtpInputs();
+        startOtpCountdown(60);
+      }
+    };
+
+    async function handleSignInSubmit(e) {
       e.preventDefault();
-      leadForm.style.display = 'none';
-      if (leadSuccess) leadSuccess.style.display = 'block';
-      setTimeout(() => {
-        closeModal();
-        leadForm.style.display = 'flex';
-        if (leadSuccess) leadSuccess.style.display = 'none';
-      }, 2500);
+      const email = document.getElementById('signInEmail')?.value;
+      const password = document.getElementById('signInPassword')?.value;
+      const submitBtn = document.getElementById('btnSignInSubmit');
+
+      try {
+        if (submitBtn) submitBtn.disabled = true;
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Sign in failed.');
+        }
+
+        if (data.status === 'OTP_REQUIRED') {
+          pendingOtpEmail = email;
+          latestDebugOtp = data.otp_debug || '';
+          showToast('Account verification required. 6-digit OTP code dispatched.', true);
+          switchAuthMode('otp');
+          return;
+        }
+
+        localStorage.setItem('ksec_token', data.access_token);
+        localStorage.setItem('ksec_user', JSON.stringify(data.user));
+        showToast('Authenticated successfully. Welcome to KSEC!', true);
+        checkSessionState();
+        closeAuthModal();
+        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      } catch (err) {
+        showToast(err.message, false);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    async function handleSignUpSubmit(e) {
+      e.preventDefault();
+      const full_name = document.getElementById('signUpName')?.value;
+      const email = document.getElementById('signUpEmail')?.value;
+      const company_name = document.getElementById('signUpCompany')?.value;
+      const password = document.getElementById('signUpPassword')?.value;
+      const submitBtn = document.getElementById('btnSignUpSubmit');
+
+      try {
+        if (submitBtn) submitBtn.disabled = true;
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, company_name, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Registration failed.');
+        }
+
+        pendingOtpEmail = email;
+        latestDebugOtp = data.otp_debug || '';
+        showToast('6-digit OTP passcode dispatched to your email.', true);
+        const targetEmailEl = document.getElementById('otpTargetEmailText');
+        if (targetEmailEl) targetEmailEl.textContent = `Sent to ${email}. Valid for 5 minutes.`;
+        switchAuthMode('otp');
+      } catch (err) {
+        showToast(err.message, false);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    function setupOtpInputs() {
+      const inputs = Array.from({ length: 6 }, (_, i) => document.getElementById(`otp-${i + 1}`));
+      inputs.forEach((input, index) => {
+        if (!input) return;
+        input.value = '';
+        input.oninput = (e) => {
+          if (input.value.length === 1 && index < 5) {
+            inputs[index + 1].focus();
+          }
+        };
+        input.onkeydown = (e) => {
+          if (e.key === 'Backspace' && !input.value && index > 0) {
+            inputs[index - 1].focus();
+          }
+        };
+        input.onpaste = (e) => {
+          e.preventDefault();
+          const pasted = (e.clipboardData || window.clipboardData).getData('text').trim();
+          if (/^\d{6}$/.test(pasted)) {
+            pasted.split('').forEach((char, idx) => {
+              if (inputs[idx]) inputs[idx].value = char;
+            });
+            inputs[5]?.focus();
+          }
+        };
+      });
+      setTimeout(() => inputs[0]?.focus(), 50);
+    }
+
+    document.getElementById('btnAutoFillOtp')?.addEventListener('click', () => {
+      if (latestDebugOtp && latestDebugOtp.length === 6) {
+        latestDebugOtp.split('').forEach((char, idx) => {
+          const el = document.getElementById(`otp-${idx + 1}`);
+          if (el) el.value = char;
+        });
+        showToast(`Auto-filled debug OTP: ${latestDebugOtp}`, true);
+      } else {
+        showToast('No debug OTP found. Please enter code manually.', false);
+      }
+    });
+
+    function startOtpCountdown(seconds = 60) {
+      if (otpTimerInterval) clearInterval(otpTimerInterval);
+      let count = seconds;
+      const timerEl = document.getElementById('otpTimerCount');
+      const countdownContainer = document.getElementById('otpCountdownText');
+      const resendBtn = document.getElementById('btnResendOtp');
+
+      if (countdownContainer) countdownContainer.style.display = 'inline';
+      if (resendBtn) resendBtn.style.display = 'none';
+      if (timerEl) timerEl.textContent = count;
+
+      otpTimerInterval = setInterval(() => {
+        count -= 1;
+        if (timerEl) timerEl.textContent = count;
+        if (count <= 0) {
+          clearInterval(otpTimerInterval);
+          if (countdownContainer) countdownContainer.style.display = 'none';
+          if (resendBtn) resendBtn.style.display = 'inline';
+        }
+      }, 1000);
+    }
+
+    async function handleResendOtp() {
+      if (!pendingOtpEmail) return;
+      try {
+        const res = await fetch('/api/auth/resend-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingOtpEmail })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Resend failed.');
+        latestDebugOtp = data.otp_debug || '';
+        showToast('Fresh 6-digit OTP code dispatched.', true);
+        startOtpCountdown(60);
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    }
+
+    async function handleOtpSubmit(e) {
+      e.preventDefault();
+      const code = Array.from({ length: 6 }, (_, i) => document.getElementById(`otp-${i + 1}`)?.value || '').join('');
+      if (code.length !== 6) {
+        showToast('Please enter all 6 digits of the OTP passcode.', false);
+        return;
+      }
+
+      const submitBtn = document.getElementById('btnVerifyOtpSubmit');
+      try {
+        if (submitBtn) submitBtn.disabled = true;
+        const res = await fetch('/api/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingOtpEmail, otp_code: code })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'OTP verification failed.');
+        }
+
+        localStorage.setItem('ksec_token', data.access_token);
+        localStorage.setItem('ksec_user', JSON.stringify(data.user));
+        showToast('Tenant verified! Welcome to KSEC Ring-0 Defense.', true);
+        checkSessionState();
+        closeAuthModal();
+        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      } catch (err) {
+        showToast(err.message, false);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    async function handleLogout() {
+      const token = localStorage.getItem('ksec_token');
+      try {
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
+      } catch (e) {
+        // Ignore network errors on logout
+      } finally {
+        localStorage.removeItem('ksec_token');
+        localStorage.removeItem('ksec_user');
+        showToast('Session terminated successfully.', true);
+        checkSessionState();
+      }
+    }
+
+    // Attach Header Button Listeners
+    document.getElementById('btnHeaderSignIn')?.addEventListener('click', () => openAuthModal('signin'));
+    document.getElementById('btnHeaderSignUp')?.addEventListener('click', () => openAuthModal('signup'));
+    document.getElementById('btnHeroDemo')?.addEventListener('click', () => openAuthModal('signup'));
+    document.getElementById('btnHeaderLogout')?.addEventListener('click', handleLogout);
+
+    // Initialize session check on load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkSessionState();
     });
   </script>
 </body>

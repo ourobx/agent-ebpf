@@ -833,13 +833,67 @@ function initExport() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showToast("Forensic audit log exported as CSV", "success");
     });
   }
 }
 
+// ---- SaaS Auth Session & Logout Management ----
+function initAuthSession() {
+  const token = localStorage.getItem("ksec_token");
+  const userRaw = localStorage.getItem("ksec_user");
+
+  if (token && userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      const nameEl = $("#userNameDisplay");
+      const tenantEl = $("#userTenantDisplay");
+      const avatarEl = $("#userAvatarBox");
+
+      if (nameEl && user.full_name) {
+        nameEl.textContent = user.full_name;
+      }
+      if (tenantEl && user.company_name) {
+        tenantEl.textContent = `${user.company_name} // ${user.plan_tier || 'Team Pro'}`;
+      }
+      if (avatarEl && user.full_name) {
+        const initials = user.full_name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
+        avatarEl.textContent = initials || "OP";
+      }
+    } catch (e) {
+      console.warn("Failed to parse stored user session", e);
+    }
+  }
+
+  async function performLogout() {
+    const activeToken = localStorage.getItem("ksec_token");
+    try {
+      if (activeToken) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${activeToken}` },
+        });
+      }
+    } catch (err) {
+      console.error("Logout network error:", err);
+    } finally {
+      localStorage.removeItem("ksec_token");
+      localStorage.removeItem("ksec_user");
+      window.location.href = "landing.html#";
+    }
+  }
+
+  $("#btnSidebarLogout")?.addEventListener("click", performLogout);
+  $("#topbarLogoutBtn")?.addEventListener("click", performLogout);
+}
+
 // ---- Initialize Workbench ----
 function initApp() {
+  initAuthSession();
   initNavigation();
   initTheme();
   initCopyButtons();
@@ -856,3 +910,4 @@ if (document.readyState === "loading") {
 } else {
   initApp();
 }
+
