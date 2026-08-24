@@ -1092,6 +1092,22 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         <button type="button" id="btnCloseAuthModal" style="background: none; border: none; color: var(--ksec-text-muted); cursor: pointer; font-size: 18px;" aria-label="Close Modal">✕</button>
       </div>
 
+      <!-- In-Modal Alert Box -->
+      <div id="authAlertBox" style="display: none; background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: #FF6B7A; line-height: 1.45;">
+        <div style="display: flex; align-items: flex-start; gap: 8px;">
+          <span style="font-weight: 800; font-size: 14px;">✕</span>
+          <span id="authAlertText" style="flex: 1;">Error details</span>
+        </div>
+      </div>
+
+      <!-- In-Modal OTP Hint Box -->
+      <div id="authOtpDebugBox" style="display: none; background: rgba(0,245,155,0.06); border: 1px solid rgba(0,245,155,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ksec-green); cursor: pointer;" title="Click to auto-fill" onclick="autoFillDebugOtp()">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span>⚡ Passcode: <strong id="debugOtpCodeValue" style="color: #FFF; letter-spacing: 0.1em; font-size: 14px;">------</strong></span>
+          <span style="font-size: 10px; text-decoration: underline;">Click to Fill</span>
+        </div>
+      </div>
+
       <!-- Auth Tabs (Sign In / Sign Up) -->
       <div class="ksec-auth-tabs" id="authTabsContainer">
         <button type="button" class="ksec-auth-tab active" id="tabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
@@ -1166,7 +1182,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
           </div>
 
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
-            <button type="button" id="btnAutoFillOtp" style="background: rgba(0,245,155,0.06); border: 1px solid rgba(0,245,155,0.2); color: var(--ksec-green); border-radius: 4px; padding: 3px 8px; cursor: pointer; font-size: 11px;">
+            <button type="button" id="btnAutoFillOtp" style="background: rgba(0,245,155,0.06); border: 1px solid rgba(0,245,155,0.2); color: var(--ksec-green); border-radius: 4px; padding: 3px 8px; cursor: pointer; font-size: 11px;" onclick="autoFillDebugOtp()">
               ⚡ Auto-fill Code
             </button>
             <span id="otpCountdownText" style="color: var(--ksec-text-dim);">Resend code in <strong style="color: #FFF;" id="otpTimerCount">60</strong>s</span>
@@ -1193,6 +1209,11 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
   <!-- Interactive Scripts -->
   <script>
+    // API Base URL Resolution (Supports file://, localhost:8000, and live domains)
+    const API_BASE = (window.location.protocol === 'file:' || (window.location.port !== '8000' && window.location.port !== ''))
+      ? 'http://localhost:8000'
+      : '';
+
     // Simulator Presets
     const simPresets = {
       drop: {
@@ -1297,6 +1318,20 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
     let latestDebugOtp = '';
     let otpTimerInterval = null;
 
+    function setAuthAlert(msg) {
+      const box = document.getElementById('authAlertBox');
+      const text = document.getElementById('authAlertText');
+      if (box && text) {
+        text.textContent = msg;
+        box.style.display = 'block';
+      }
+    }
+
+    function clearAuthAlert() {
+      const box = document.getElementById('authAlertBox');
+      if (box) box.style.display = 'none';
+    }
+
     function showToast(message, isSuccess = true) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
@@ -1348,6 +1383,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
     const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
 
     window.openAuthModal = function(mode = 'signin') {
+      clearAuthAlert();
       switchAuthMode(mode);
       if (authModal) {
         authModal.classList.add('open');
@@ -1368,12 +1404,14 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
     });
 
     window.switchAuthMode = function(mode) {
+      clearAuthAlert();
       const tabSignIn = document.getElementById('tabSignIn');
       const tabSignUp = document.getElementById('tabSignUp');
       const signInForm = document.getElementById('signInForm');
       const signUpForm = document.getElementById('signUpForm');
       const otpView = document.getElementById('otpView');
       const tabsContainer = document.getElementById('authTabsContainer');
+      const otpDebugBox = document.getElementById('authOtpDebugBox');
 
       if (mode === 'signin') {
         if (tabsContainer) tabsContainer.style.display = 'flex';
@@ -1382,6 +1420,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         if (signInForm) signInForm.style.display = 'flex';
         if (signUpForm) signUpForm.style.display = 'none';
         if (otpView) otpView.style.display = 'none';
+        if (otpDebugBox) otpDebugBox.style.display = 'none';
       } else if (mode === 'signup') {
         if (tabsContainer) tabsContainer.style.display = 'flex';
         tabSignUp?.classList.add('active');
@@ -1389,6 +1428,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         if (signInForm) signInForm.style.display = 'none';
         if (signUpForm) signUpForm.style.display = 'flex';
         if (otpView) otpView.style.display = 'none';
+        if (otpDebugBox) otpDebugBox.style.display = 'none';
       } else if (mode === 'otp') {
         if (tabsContainer) tabsContainer.style.display = 'none';
         if (signInForm) signInForm.style.display = 'none';
@@ -1396,26 +1436,31 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         if (otpView) otpView.style.display = 'block';
         setupOtpInputs();
         startOtpCountdown(60);
+        if (latestDebugOtp && otpDebugBox) {
+          document.getElementById('debugOtpCodeValue').textContent = latestDebugOtp;
+          otpDebugBox.style.display = 'block';
+        }
       }
     };
 
     async function handleSignInSubmit(e) {
       e.preventDefault();
+      clearAuthAlert();
       const email = document.getElementById('signInEmail')?.value;
       const password = document.getElementById('signInPassword')?.value;
       const submitBtn = document.getElementById('btnSignInSubmit');
 
       try {
         if (submitBtn) submitBtn.disabled = true;
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(data.detail || 'Sign in failed.');
+          throw new Error(data.detail || `Sign in failed with code ${res.status}.`);
         }
 
         if (data.status === 'OTP_REQUIRED') {
@@ -1433,7 +1478,11 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         closeAuthModal();
         setTimeout(() => { window.location.href = 'index.html'; }, 800);
       } catch (err) {
-        showToast(err.message, false);
+        const errorMsg = err.message === 'Failed to fetch'
+          ? `Could not connect to KSEC SaaS backend (${API_BASE || 'http://localhost:8000'}). Please ensure the server is active.`
+          : err.message;
+        setAuthAlert(errorMsg);
+        showToast(errorMsg, false);
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -1441,6 +1490,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
     async function handleSignUpSubmit(e) {
       e.preventDefault();
+      clearAuthAlert();
       const full_name = document.getElementById('signUpName')?.value;
       const email = document.getElementById('signUpEmail')?.value;
       const company_name = document.getElementById('signUpCompany')?.value;
@@ -1449,15 +1499,15 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
       try {
         if (submitBtn) submitBtn.disabled = true;
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ full_name, email, company_name, password })
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(data.detail || 'Registration failed.');
+          throw new Error(data.detail || `Registration failed with code ${res.status}.`);
         }
 
         pendingOtpEmail = email;
@@ -1467,7 +1517,11 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         if (targetEmailEl) targetEmailEl.textContent = `Sent to ${email}. Valid for 5 minutes.`;
         switchAuthMode('otp');
       } catch (err) {
-        showToast(err.message, false);
+        const errorMsg = err.message === 'Failed to fetch'
+          ? `Could not connect to KSEC SaaS backend (${API_BASE || 'http://localhost:8000'}). Please ensure the server is active.`
+          : err.message;
+        setAuthAlert(errorMsg);
+        showToast(errorMsg, false);
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -1502,17 +1556,17 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       setTimeout(() => inputs[0]?.focus(), 50);
     }
 
-    document.getElementById('btnAutoFillOtp')?.addEventListener('click', () => {
+    window.autoFillDebugOtp = function() {
       if (latestDebugOtp && latestDebugOtp.length === 6) {
         latestDebugOtp.split('').forEach((char, idx) => {
           const el = document.getElementById(`otp-${idx + 1}`);
           if (el) el.value = char;
         });
-        showToast(`Auto-filled debug OTP: ${latestDebugOtp}`, true);
+        showToast(`Auto-filled OTP: ${latestDebugOtp}`, true);
       } else {
-        showToast('No debug OTP found. Please enter code manually.', false);
+        showToast('No OTP code available to auto-fill.', false);
       }
-    });
+    };
 
     function startOtpCountdown(seconds = 60) {
       if (otpTimerInterval) clearInterval(otpTimerInterval);
@@ -1538,26 +1592,35 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
     async function handleResendOtp() {
       if (!pendingOtpEmail) return;
+      clearAuthAlert();
       try {
-        const res = await fetch('/api/auth/resend-otp', {
+        const res = await fetch(`${API_BASE}/api/auth/resend-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: pendingOtpEmail })
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.detail || 'Resend failed.');
         latestDebugOtp = data.otp_debug || '';
         showToast('Fresh 6-digit OTP code dispatched.', true);
+        const otpDebugBox = document.getElementById('authOtpDebugBox');
+        if (latestDebugOtp && otpDebugBox) {
+          document.getElementById('debugOtpCodeValue').textContent = latestDebugOtp;
+          otpDebugBox.style.display = 'block';
+        }
         startOtpCountdown(60);
       } catch (err) {
+        setAuthAlert(err.message);
         showToast(err.message, false);
       }
     }
 
     async function handleOtpSubmit(e) {
       e.preventDefault();
+      clearAuthAlert();
       const code = Array.from({ length: 6 }, (_, i) => document.getElementById(`otp-${i + 1}`)?.value || '').join('');
       if (code.length !== 6) {
+        setAuthAlert('Please enter all 6 digits of the OTP passcode.');
         showToast('Please enter all 6 digits of the OTP passcode.', false);
         return;
       }
@@ -1565,12 +1628,12 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       const submitBtn = document.getElementById('btnVerifyOtpSubmit');
       try {
         if (submitBtn) submitBtn.disabled = true;
-        const res = await fetch('/api/auth/verify-otp', {
+        const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: pendingOtpEmail, otp_code: code })
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
           throw new Error(data.detail || 'OTP verification failed.');
@@ -1583,6 +1646,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         closeAuthModal();
         setTimeout(() => { window.location.href = 'index.html'; }, 800);
       } catch (err) {
+        setAuthAlert(err.message);
         showToast(err.message, false);
       } finally {
         if (submitBtn) submitBtn.disabled = false;
@@ -1593,7 +1657,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       const token = localStorage.getItem('ksec_token');
       try {
         if (token) {
-          await fetch('/api/auth/logout', {
+          await fetch(`${API_BASE}/api/auth/logout`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
           });
