@@ -146,6 +146,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Web UI Dashboard & Static Assets
 @app.get("/", include_in_schema=False)
 async def serve_landing(request: Request):
@@ -167,55 +169,71 @@ async def serve_landing(request: Request):
 @app.get("/landing", include_in_schema=False)
 @app.get("/home", include_in_schema=False)
 async def serve_landing_alias():
-    if os.path.exists("landing.html"):
-        return FileResponse("landing.html")
+    landing_path = os.path.join(BASE_DIR, "landing.html")
+    if os.path.exists(landing_path):
+        return FileResponse(landing_path, media_type="text/html")
     raise HTTPException(status_code=404, detail="landing.html not found")
 
+@app.get("/index.html", include_in_schema=False)
+@app.get("/index", include_in_schema=False)
 @app.get("/console", include_in_schema=False)
 @app.get("/app", include_in_schema=False)
 @app.get("/dashboard", include_in_schema=False)
 async def serve_console():
-    if os.path.exists("index.html"):
-        return FileResponse("index.html")
+    index_path = os.path.join(BASE_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
     raise HTTPException(status_code=404, detail="index.html not found")
 
 @app.get("/whitepaper", include_in_schema=False)
 @app.get("/docs/whitepaper", include_in_schema=False)
 async def serve_whitepaper():
-    whitepaper_path = os.path.join("docs", "KSEC_V2_TECHNICAL_WHITEPAPER.md")
+    whitepaper_path = os.path.join(BASE_DIR, "docs", "KSEC_V2_TECHNICAL_WHITEPAPER.md")
     if os.path.exists(whitepaper_path):
         return FileResponse(whitepaper_path, media_type="text/markdown")
     raise HTTPException(status_code=404, detail="Whitepaper not found")
 
 @app.get("/styles.css", include_in_schema=False)
 async def serve_styles():
-    if os.path.exists("styles.css"):
-        return FileResponse("styles.css", media_type="text/css")
+    styles_path = os.path.join(BASE_DIR, "styles.css")
+    if os.path.exists(styles_path):
+        return FileResponse(styles_path, media_type="text/css")
     raise HTTPException(status_code=404, detail="styles.css not found")
 
 @app.get("/app.js", include_in_schema=False)
 async def serve_app_js():
-    if os.path.exists("app.js"):
-        return FileResponse("app.js", media_type="application/javascript")
+    app_js_path = os.path.join(BASE_DIR, "app.js")
+    if os.path.exists(app_js_path):
+        return FileResponse(app_js_path, media_type="application/javascript")
     raise HTTPException(status_code=404, detail="app.js not found")
 
 @app.get("/ourobx_logo.png", include_in_schema=False)
 async def serve_logo():
-    if os.path.exists("ourobx_logo.png"):
-        return FileResponse("ourobx_logo.png", media_type="image/png")
+    logo_path = os.path.join(BASE_DIR, "ourobx_logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
     raise HTTPException(status_code=404, detail="ourobx_logo.png not found")
 
 @app.get("/robots.txt", include_in_schema=False)
 async def serve_robots():
-    if os.path.exists("robots.txt"):
-        return FileResponse("robots.txt", media_type="text/plain")
+    robots_path = os.path.join(BASE_DIR, "robots.txt")
+    if os.path.exists(robots_path):
+        return FileResponse(robots_path, media_type="text/plain")
     raise HTTPException(status_code=404, detail="robots.txt not found")
 
 @app.get("/sitemap.xml", include_in_schema=False)
 async def serve_sitemap():
-    if os.path.exists("sitemap.xml"):
-        return FileResponse("sitemap.xml", media_type="application/xml")
+    sitemap_path = os.path.join(BASE_DIR, "sitemap.xml")
+    if os.path.exists(sitemap_path):
+        return FileResponse(sitemap_path, media_type="application/xml")
     raise HTTPException(status_code=404, detail="sitemap.xml not found")
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def serve_favicon():
+    logo_path = os.path.join(BASE_DIR, "ourobx_logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
+    return Response(status_code=204)
 
 @app.get("/install.sh", include_in_schema=False)
 async def serve_install_sh():
