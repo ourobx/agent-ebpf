@@ -1209,9 +1209,9 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
   <!-- Interactive Scripts -->
   <script>
-    // API Base URL Resolution (Supports file://, localhost:8000, and live domains)
-    const API_BASE = (window.location.protocol === 'file:' || (window.location.port !== '8000' && window.location.port !== ''))
-      ? 'http://localhost:8000'
+    // API Base URL Resolution (Production ksec.space domain & local fallback)
+    const API_BASE = (window.location.protocol === 'file:')
+      ? 'https://ksec.space'
       : '';
 
     // Simulator Presets
@@ -1479,7 +1479,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         setTimeout(() => { window.location.href = 'index.html'; }, 800);
       } catch (err) {
         const errorMsg = err.message === 'Failed to fetch'
-          ? `Could not connect to KSEC SaaS backend (${API_BASE || 'http://localhost:8000'}). Please ensure the server is active.`
+          ? `Could not reach KSEC API (https://ksec.space). Please check your connection.`
           : err.message;
         setAuthAlert(errorMsg);
         showToast(errorMsg, false);
@@ -1518,7 +1518,7 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         switchAuthMode('otp');
       } catch (err) {
         const errorMsg = err.message === 'Failed to fetch'
-          ? `Could not connect to KSEC SaaS backend (${API_BASE || 'http://localhost:8000'}). Please ensure the server is active.`
+          ? `Could not reach KSEC API (https://ksec.space). Please check your connection.`
           : err.message;
         setAuthAlert(errorMsg);
         showToast(errorMsg, false);
