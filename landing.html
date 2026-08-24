@@ -534,7 +534,7 @@
     </h1>
 
     <p class="ksec-hero-sub">
-      The sub-35µs kernel infrastructure for enterprise AI agents. Eliminating prompt injection, TOCTOU race conditions, and rogue tool mutations directly inside Linux eBPF before network sockets transmit.
+      The sub-50µs kernel infrastructure for enterprise AI agents (~8µs average latency). Eliminating prompt injection, TOCTOU race conditions, and rogue tool mutations directly inside Linux eBPF before network sockets transmit.
     </p>
 
     <div class="ksec-btn-group">
@@ -556,7 +556,7 @@
       <div>
         <span class="ksec-stat-label">Verification SLA</span>
         <div class="ksec-stat-num" style="color: var(--ksec-green);">8.46 µs</div>
-        <div class="ksec-stat-sub"><span>✓</span> 75.8% below 35µs SLA</div>
+        <div class="ksec-stat-sub"><span>✓</span> Avg ~8µs | P99 &lt;50µs SLA</div>
       </div>
       <div>
         <span class="ksec-stat-label">Sustained Throughput</span>
@@ -572,6 +572,30 @@
         <span class="ksec-stat-label">Memory Contention</span>
         <div class="ksec-stat-num" style="color: var(--ksec-green);">0%</div>
         <div class="ksec-stat-sub">Zero-TOCTOU Atomic Nonces</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       CORE PHILOSOPHY & GOVERNANCE DOCTRINE
+       ========================================================================= -->
+  <section class="ksec-section" style="padding-top: 30px; padding-bottom: 30px;" id="doctrine">
+    <div style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0.008) 100%); border: 1px solid var(--ksec-border); border-radius: 16px; padding: 36px 40px; position: relative; overflow: hidden; max-width: 1100px; margin: 0 auto; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0, 245, 155, 0.6), transparent);"></div>
+      
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-green); text-transform: uppercase; letter-spacing: 0.08em;">
+          <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ksec-green); box-shadow: 0 0 8px var(--ksec-green);"></span>
+          <span>THE KSEC GOVERNANCE DOCTRINE</span>
+        </div>
+        
+        <blockquote style="margin: 0; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: clamp(17px, 2.2vw, 23px); font-weight: 600; line-height: 1.45; color: #FFFFFF; letter-spacing: -0.02em;">
+          “Ajan güvenliği yalnızca prompt filtreleriyle değil; ajanın çalışma zamanı ortamını, araç çağırma protokollerini ve işletim sistemi seviyesindeki erişim sınırlarını deterministik kurallarla çevreleyerek sağlanabilir.”
+        </blockquote>
+        
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ksec-text-muted); max-width: 920px;">
+          <strong style="color: #FFFFFF;">Deterministic Runtime Enforcement vs. Probabilistic Prompt Filters:</strong> Traditional prompt guards are easily bypassed through indirect injection, adversarial encoding, and context drift. KSEC establishes an impenetrable runtime boundary: every tool call, SQL mutation, and socket frame is mathematically validated against cryptographic Ed25519 leases inside Linux Ring-0 before execution.
+        </p>
       </div>
     </div>
   </section>
