@@ -35,9 +35,11 @@ Thumbs.db
 *.tmp
 *.log
 
-# IDE & AI Scratch
-.vscode/
-.idea/
+# Database & Auth Stores
+*.db
+*.sqlite
+*.sqlite3
+ksec_auth.db
 .claude/
 .cursor/
 .kiro/
