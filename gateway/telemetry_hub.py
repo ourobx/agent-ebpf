@@ -27,9 +27,16 @@ class TelemetryHub:
         queue = asyncio.Queue(maxsize=1000)
         self._subscribers.append(queue)
         try:
+            # Yield initial connected event
+            yield "event: connected\ndata: {\"status\": \"STREAM_CONNECTED\", \"timestamp\": " + str(time.time_ns()) + "}\n\n"
             while True:
-                payload = await queue.get()
-                yield f"event: {payload['type']}\ndata: {json.dumps(payload)}\n\n"
+                try:
+                    # 15s timeout for SSE keep-alive heartbeat against proxy idle disconnects
+                    payload = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield f"event: {payload['type']}\ndata: {json.dumps(payload)}\n\n"
+                except asyncio.TimeoutError:
+                    # SSE Keep-Alive Ping Comment (keeps Cloudflare Tunnel QUIC streams alive)
+                    yield f": ping {time.time_ns()}\n\n"
         finally:
             if queue in self._subscribers:
                 self._subscribers.remove(queue)

@@ -193,6 +193,14 @@ async def serve_whitepaper():
         return FileResponse(whitepaper_path, media_type="text/markdown")
     raise HTTPException(status_code=404, detail="Whitepaper not found")
 
+@app.get("/docs/{filename}", include_in_schema=False)
+async def serve_doc_file(filename: str):
+    safe_name = os.path.basename(filename)
+    doc_path = os.path.join(BASE_DIR, "docs", safe_name)
+    if os.path.exists(doc_path) and safe_name.endswith(".md"):
+        return FileResponse(doc_path, media_type="text/markdown")
+    raise HTTPException(status_code=404, detail=f"Document {safe_name} not found")
+
 @app.get("/styles.css", include_in_schema=False)
 async def serve_styles():
     styles_path = os.path.join(BASE_DIR, "styles.css")
