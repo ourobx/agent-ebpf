@@ -130,6 +130,8 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     return response
 
 # Strict & Configurable CORS for ksec.space production & dev environments
@@ -195,11 +197,16 @@ async def serve_whitepaper():
 
 @app.get("/docs/{filename}", include_in_schema=False)
 async def serve_doc_file(filename: str):
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid path characters")
     safe_name = os.path.basename(filename)
-    doc_path = os.path.join(BASE_DIR, "docs", safe_name)
-    if os.path.exists(doc_path) and safe_name.endswith(".md"):
-        return FileResponse(doc_path, media_type="text/markdown")
-    raise HTTPException(status_code=404, detail=f"Document {safe_name} not found")
+    if not safe_name.endswith(".md"):
+        raise HTTPException(status_code=403, detail="Only markdown documents are accessible")
+    doc_path = os.path.abspath(os.path.join(BASE_DIR, "docs", safe_name))
+    docs_dir = os.path.abspath(os.path.join(BASE_DIR, "docs"))
+    if not doc_path.startswith(docs_dir) or not os.path.exists(doc_path):
+        raise HTTPException(status_code=404, detail=f"Document {safe_name} not found")
+    return FileResponse(doc_path, media_type="text/markdown")
 
 @app.get("/styles.css", include_in_schema=False)
 async def serve_styles():

@@ -36,7 +36,7 @@ Sistem; Coolify üzerinde tam yalıtımlı sandbox ortamı, Traefik TLS/CORS kal
 # Coolify Sandbox Dağıtımı
 docker compose -f docker-compose.sandbox.yml up -d --build
 ```
-- **Konteyner Yetkileri**: `CAP_BPF`, `CAP_NET_ADMIN`, `CAP_PERFMON`, `CAP_SYS_RESOURCE`, `CAP_SYS_ADMIN`
+- **Konteyner Yetkileri**: `CAP_BPF`, `CAP_NET_ADMIN`, `CAP_PERFMON`, `CAP_SYS_RESOURCE` (Sıfır CAP_SYS_ADMIN / Sıfır Privileged)
 - **Volume Bağlantıları**: `/sys/fs/bpf` (rw), `/sys/kernel/debug` (rw), `policy.yaml` (ro)
 - **Arabellek & Veritabanı**: Redis 7 LRU (256MB AOF) + PostgreSQL 16 RLS (`gateway/schema.sql`)
 

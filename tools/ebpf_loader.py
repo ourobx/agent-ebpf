@@ -39,9 +39,9 @@ class EBPFLoaderError(Exception):
     pass
 
 def check_system_capabilities() -> None:
-    """Verifies EUID 0 or CAP_BPF / CAP_SYS_ADMIN, BTF support, and memory lock limits."""
+    """Verifies EUID 0 or CAP_BPF / CAP_PERFMON / CAP_NET_ADMIN, BTF support, and memory lock limits."""
     if hasattr(os, "geteuid") and os.geteuid() != 0:
-        raise KernelCapabilityError("Root permissions (CAP_BPF / CAP_SYS_ADMIN) are required for eBPF operations.")
+        raise KernelCapabilityError("Zero-trust Linux capabilities (CAP_BPF, CAP_NET_ADMIN, CAP_PERFMON, CAP_SYS_RESOURCE) are required for eBPF operations.")
 
     btf_path = Path("/sys/kernel/btf/vmlinux")
     if not btf_path.exists():

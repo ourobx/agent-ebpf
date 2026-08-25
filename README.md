@@ -79,12 +79,13 @@ Deploy Agent-eBPF securely without `privileged: true` by granting strictly bound
 securityContext:
   privileged: false
   capabilities:
+    drop:
+      - ALL
     add:
       - CAP_BPF
       - CAP_NET_ADMIN
       - CAP_PERFMON
       - CAP_SYS_RESOURCE
-      - CAP_SYS_ADMIN
 ```
 
 ---

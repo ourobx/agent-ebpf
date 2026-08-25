@@ -153,7 +153,7 @@ def test_blocked_destructive_query():
 
 #### 6. Production Deployment (Docker & Coolify)
 
-When running in bare-metal or Docker environments, simply add `CAP_SYS_ADMIN`, `CAP_BPF`, and `CAP_NET_ADMIN` capabilities to your `docker-compose.yml` configuration to inspect container network sockets:
+When running in bare-metal or Docker environments, enforce zero-trust Linux capabilities (`CAP_BPF`, `CAP_NET_ADMIN`, `CAP_PERFMON`, `CAP_SYS_RESOURCE`) with `privileged: false`:
 
 ```yaml
 version: "3.8"
@@ -163,11 +163,14 @@ services:
     image: ghcr.io/agent-ebpf/daemon:latest
     container_name: agent_ebpf_shield
     network_mode: "host"
-    privileged: true
+    privileged: false
+    cap_drop:
+      - ALL
     cap_add:
-      - SYS_ADMIN
       - BPF
       - NET_ADMIN
+      - PERFMON
+      - SYS_RESOURCE
     volumes:
       - /sys/fs/bpf:/sys/fs/bpf
       - /etc/agent-ebpf/policy.yaml:/etc/agent-ebpf/policy.yaml:ro

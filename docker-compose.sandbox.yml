@@ -17,7 +17,6 @@ services:
       - CAP_NET_ADMIN
       - CAP_PERFMON
       - CAP_SYS_RESOURCE
-      - CAP_SYS_ADMIN
     security_opt:
       - seccomp:unconfined
     volumes:
