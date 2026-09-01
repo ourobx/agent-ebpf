@@ -1,0 +1,16 @@
+.git
+.agents
+frontend/node_modules
+frontend/.next
+packages/*/node_modules
+packages/*/dist
+venv
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+*.pem
+credentials.json
+.cloudflared

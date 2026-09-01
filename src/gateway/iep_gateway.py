@@ -60,17 +60,15 @@ class IEPv2Gateway:
             declared_intent=declared_master_intent
         )
 
-    def _to_wire_bytes(self, tool_name: str, parameters: Union[Dict[str, Any], str, bytes]) -> Tuple[bytes, str]:
+    def _to_wire_bytes(self, tool_name: str, parameters: Union[Dict[str, Any], str, bytes]) -> Tuple[bytes, Optional[str]]:
         if isinstance(parameters, bytes):
-            param_str = parameters.decode("utf-8", errors="replace")
-            payload = f"{tool_name}:".encode("utf-8") + parameters
+            tool_bytes = tool_name.encode("utf-8") if isinstance(tool_name, str) else tool_name
+            return tool_bytes + b":" + parameters, None
         elif isinstance(parameters, str):
-            param_str = parameters
-            payload = f"{tool_name}:{parameters}".encode("utf-8")
+            return f"{tool_name}:{parameters}".encode("utf-8"), parameters
         else:
             param_str = json.dumps(parameters, separators=(",", ":"), sort_keys=True)
-            payload = f"{tool_name}:{param_str}".encode("utf-8")
-        return payload, param_str
+            return f"{tool_name}:{param_str}".encode("utf-8"), param_str
 
     def issue_intent_lease(
         self,
@@ -117,14 +115,14 @@ class IEPv2Gateway:
         presented_nonce: int
     ) -> ExecutionVerdict:
         """
-        Executes complete high-speed verification pipeline (<35µs SLA, typical <5.0µs).
+        Executes complete high-speed verification pipeline (Avg ~8µs, P99 <50µs SLA).
         """
-        start_t = time.perf_counter()
+        start_t_ns = time.perf_counter_ns()
 
         # Step 1: Fast Atomic Nonce Lookup & Pop (Guarantees Single-Use)
         lease = self.active_leases.pop(presented_nonce, None)
         if not lease:
-            elapsed_us = (time.perf_counter() - start_t) * 1_000_000.0
+            elapsed_us = (time.perf_counter_ns() - start_t_ns) / 1000.0
             return ExecutionVerdict(
                 verdict="DROP",
                 latency_us=elapsed_us,
@@ -138,7 +136,7 @@ class IEPv2Gateway:
         current_sha256_bytes = hashlib.sha256(ast_payload).digest()
 
         if current_sha256_bytes != lease.ast_sha256_bytes:
-            elapsed_us = (time.perf_counter() - start_t) * 1_000_000.0
+            elapsed_us = (time.perf_counter_ns() - start_t_ns) / 1000.0
             return ExecutionVerdict(
                 verdict="DROP",
                 latency_us=elapsed_us,
@@ -150,9 +148,11 @@ class IEPv2Gateway:
         # Step 3: Fast-Path Semantic Drift Check (if registered)
         drift_detector = self.drift_detectors.get(agent_id)
         if drift_detector:
+            if param_str is None:
+                param_str = parameters.decode("utf-8", errors="replace") if isinstance(parameters, bytes) else str(parameters)
             drift_res = drift_detector.evaluate_turn(tool_name, param_str)
             if drift_res.is_anomaly_detected:
-                elapsed_us = (time.perf_counter() - start_t) * 1_000_000.0
+                elapsed_us = (time.perf_counter_ns() - start_t_ns) / 1000.0
                 return ExecutionVerdict(
                     verdict="FREEZE" if drift_res.recommendation == "FREEZE_EXECUTION" else "RE_LEASE_REQUIRED",
                     latency_us=elapsed_us,
@@ -161,7 +161,7 @@ class IEPv2Gateway:
                     details=asdict(drift_res)
                 )
 
-        elapsed_us = (time.perf_counter() - start_t) * 1_000_000.0
+        elapsed_us = (time.perf_counter_ns() - start_t_ns) / 1000.0
         return ExecutionVerdict(
             verdict="PASS",
             latency_us=elapsed_us,

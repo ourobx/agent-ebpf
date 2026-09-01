@@ -47,9 +47,9 @@ globalThis.fetch = shield.protectFetch(globalThis.fetch);
 ---
 
 ## 🦜 LangChain / LangGraph Integration
-
 ```typescript
-import { KsecShield, KsecLangChainCallback } from '@ksec/shield';
+import { KsecShield } from '@ourobx/shield';
+import { KsecLangChainCallback } from '@ourobx/shield/langchain';
 
 const shield = new KsecShield({ gatewayUrl: 'https://ksec.space' });
 const ksecCallback = new KsecLangChainCallback(shield);

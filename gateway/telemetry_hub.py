@@ -17,11 +17,20 @@ class TelemetryHub:
             "timestamp": time.time_ns(),
             "data": data
         }
-        for queue in list(self._subscribers):
+        # Snapshot to avoid mutation during iteration
+        subscribers_snapshot = list(self._subscribers)
+        dead: list[asyncio.Queue] = []
+        for queue in subscribers_snapshot:
             try:
                 queue.put_nowait(payload)
             except asyncio.QueueFull:
-                self._subscribers.remove(queue)
+                dead.append(queue)
+        # Clean up dead subscribers in a single pass
+        for q in dead:
+            try:
+                self._subscribers.remove(q)
+            except ValueError:
+                pass  # Already removed by another coroutine
 
     async def subscribe(self) -> AsyncGenerator[str, None]:
         queue = asyncio.Queue(maxsize=1000)
@@ -38,8 +47,10 @@ class TelemetryHub:
                     # SSE Keep-Alive Ping Comment (keeps Cloudflare Tunnel QUIC streams alive)
                     yield f": ping {time.time_ns()}\n\n"
         finally:
-            if queue in self._subscribers:
+            try:
                 self._subscribers.remove(queue)
+            except ValueError:
+                pass  # Already cleaned up by broadcast()
 
 telemetry_hub = TelemetryHub()
 

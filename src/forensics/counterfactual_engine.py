@@ -56,12 +56,12 @@ class CounterfactualReplayEngine:
     """
 
     DEFAULT_SCHEMA: Dict[str, SchemaTable] = {
-        "users": SchemaTable("users", 150000, "CRITICAL", True, 45.0, ["orders", "auth_tokens"]),
+        "users": SchemaTable("users", 1100000, "CRITICAL", True, 60.0, ["orders", "auth_tokens"]),
         "auth_tokens": SchemaTable("auth_tokens", 450000, "CRITICAL", False, 30.0, []),
         "orders": SchemaTable("orders", 1200000, "HIGH", True, 60.0, ["order_items", "invoices"]),
         "order_items": SchemaTable("order_items", 4800000, "MEDIUM", False, 45.0, []),
-        "invoices": SchemaTable("invoices", 950000, "CRITICAL", True, 45.0, ["payment_records"]),
-        "payment_records": SchemaTable("payment_records", 950000, "CRITICAL", True, 45.0, []),
+        "invoices": SchemaTable("invoices", 450000, "CRITICAL", True, 45.0, ["payment_records"]),
+        "payment_records": SchemaTable("payment_records", 500000, "CRITICAL", True, 30.0, []),
         "audit_logs": SchemaTable("audit_logs", 8500000, "HIGH", False, 90.0, []),
     }
 
@@ -111,6 +111,7 @@ class CounterfactualReplayEngine:
             total_recovery_mins += meta.recovery_time_minutes
 
             if meta.contains_pii:
+                compliance_breaches.add("GDPR Art 82 Preserved")
                 compliance_breaches.add("GDPR Art. 33/82 Breach Avoided")
                 compliance_breaches.add("HIPAA §164.312 Data Integrity Preserved")
                 compliance_breaches.add("PCI-DSS v4.0 Req 3.4 Cardholder Protection")

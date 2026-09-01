@@ -4,8 +4,8 @@ import { KsecShield } from '../dist/index.js';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('Kullanım: ksec-shield <komut> [argümanlar...]');
-  console.error('Örnek:   ksec-shield claude-code --dangerously-skip-permissions');
+  console.error('Usage:   ksec-shield <command> [arguments...]');
+  console.error('Example: ksec-shield claude-code --dangerously-skip-permissions');
   process.exit(1);
 }
 

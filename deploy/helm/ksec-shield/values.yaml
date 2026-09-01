@@ -19,7 +19,7 @@ gateway:
   endpoint: "https://ksec.space"
   slaCeilingUs: 50
 
-# Strict Zero-Trust Linux Capabilities (Zero privileged / Zero CAP_SYS_ADMIN)
+# Strict Zero-Trust Linux Capabilities (Kernel 5.15+ Least Privilege Standard)
 securityContext:
   privileged: false
   seccompProfile:

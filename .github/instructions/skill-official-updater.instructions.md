@@ -2,7 +2,7 @@
 name: "skill-official-updater"
 description: "At the start of a new session, do a cheap check for new or updated official Anthropic skills (github.com/anthropics/skills) and automatically add or update them in skills_library/ (no user prompt). Also use on explicit request (\"check for official skill updates\", \"sync official skills\")."
 applyTo: "**/*"
-deployedAt: "2026-08-24T11:16:24.848Z"
+deployedAt: "2026-09-01T06:28:32.738Z"
 ---
 
 # skill-official-updater

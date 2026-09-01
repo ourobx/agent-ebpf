@@ -6,6 +6,8 @@ Features:
 - Sub-500ms Non-Blocking Buffer for Benign High-Volume Events
 - Bounded Dead Letter Queue (DLQ max 10k: drops oldest benign, preserves threats)
 - High-Precision Monotonic Timer & SOC-2 Compliant S3 Partitioning
+- Automatic Wire PII Redaction (Credit Cards, SSNs, Bearer Tokens)
+- Real ClickHouse HTTP JSONEachRow Streaming and S3 Compressed Archival
 """
 
 from __future__ import annotations
@@ -14,8 +16,26 @@ import time
 import gzip
 import uuid
 import datetime
+import re
+import os
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any, Optional, Callable
+
+
+# PII Redaction Regex Patterns
+_PII_CC_REGEX = re.compile(r"\b(?:\d{4}[- ]?){3}\d{4}\b")
+_PII_SSN_REGEX = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
+_PII_AUTH_REGEX = re.compile(r"(?i)(password|secret|bearer|token|apikey|api_key)\s*[:=]\s*['\"]?([a-zA-Z0-9_\-\.]{8,})['\"]?")
+
+
+def redact_pii(text: Optional[str]) -> str:
+    """Sanitizes sensitive cardholder, authentication, and identity data from wire previews."""
+    if not text:
+        return ""
+    text = _PII_CC_REGEX.sub("[REDACTED_CC]", text)
+    text = _PII_SSN_REGEX.sub("[REDACTED_SSN]", text)
+    text = _PII_AUTH_REGEX.sub(r"\1=[REDACTED_SECRET]", text)
+    return text
 
 
 @dataclass
@@ -46,10 +66,39 @@ class TelemetryPipeline:
         clickhouse_transport: Optional[Callable[[str], bool]] = None,
         s3_transport: Optional[Callable[[str, bytes], bool]] = None
     ):
-        self.clickhouse_endpoint = clickhouse_endpoint
-        self.s3_bucket = s3_bucket or "ksec-audit-vault"
+        self.clickhouse_endpoint = clickhouse_endpoint or os.getenv("CLICKHOUSE_ENDPOINT")
+        self.s3_bucket = s3_bucket or os.getenv("KSEC_S3_VAULT_BUCKET", "ksec-audit-vault")
         self.clickhouse_transport = clickhouse_transport
         self.s3_transport = s3_transport
+
+        # Auto-configure real transports if endpoints or AWS credentials are provided
+        if not self.clickhouse_transport and self.clickhouse_endpoint:
+            try:
+                import httpx
+                def _http_clickhouse_writer(payload_str: str) -> bool:
+                    target_url = f"{self.clickhouse_endpoint.rstrip('/')}/?query=INSERT+INTO+ksec.events+FORMAT+JSONEachRow"
+                    res = httpx.post(target_url, content=payload_str.encode("utf-8"), timeout=5.0)
+                    return res.status_code == 200
+                self.clickhouse_transport = _http_clickhouse_writer
+            except ImportError:
+                pass
+
+        if not self.s3_transport and (os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_DEFAULT_REGION")):
+            try:
+                import boto3
+                _s3_client = boto3.client("s3")
+                def _boto3_s3_writer(key: str, data: bytes) -> bool:
+                    _s3_client.put_object(
+                        Bucket=self.s3_bucket,
+                        Key=key,
+                        Body=data,
+                        ContentEncoding="gzip",
+                        ContentType="application/json"
+                    )
+                    return True
+                self.s3_transport = _boto3_s3_writer
+            except ImportError:
+                pass
 
         self.buffer: List[KernelTelemetryEvent] = []
         self.dlq: List[KernelTelemetryEvent] = []
@@ -60,9 +109,11 @@ class TelemetryPipeline:
 
     def ingest_event(self, event: KernelTelemetryEvent) -> None:
         """
-        Appends event to the ingestion ring.
+        Appends event to the ingestion ring with PII redaction.
         CRITICAL: Threat events trigger an immediate flush.
         """
+        # Redact any PII before buffering
+        event.payload_preview = redact_pii(event.payload_preview)
         self.buffer.append(event)
         now_mono = time.monotonic()
 
@@ -86,7 +137,10 @@ class TelemetryPipeline:
 
     def _enqueue_to_dlq(self, failed_events: List[KernelTelemetryEvent]) -> None:
         """Appends failed events to DLQ while enforcing max size bounds (preserving threats)."""
-        self.dlq.extend(failed_events)
+        existing_ids = {e.event_id for e in self.dlq}
+        new_failed = [e for e in failed_events if e.event_id not in existing_ids]
+        self.dlq.extend(new_failed)
+
         if len(self.dlq) > self.max_dlq_size:
             # Separate threats from benign events
             threats = [e for e in self.dlq if e.is_threat]

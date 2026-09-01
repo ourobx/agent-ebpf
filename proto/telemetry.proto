@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package ksec.telemetry;
+
+// Distributed Telemetry Mesh Service
+service TelemetryMesh {
+    // Continuous upstream telemetry event stream from edge agents to control plane
+    rpc StreamTelemetry (stream TelemetryEvent) returns (StreamAcknowledgement);
+}
+
+message TelemetryEvent {
+    string tenant_id = 1;
+    string node_id = 2;
+    uint64 timestamp_ns = 3;
+    uint32 pid = 4;
+    uint32 uid = 5;
+    string comm = 6;
+    string event_type = 7;
+    string syscall = 8;
+    string severity = 9;
+    map<string, string> details = 10;
+}
+
+message StreamAcknowledgement {
+    bool received = 1;
+    string message = 2;
+    int32 processed_count = 3;
+}

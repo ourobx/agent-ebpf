@@ -1,5 +1,3 @@
-version: '3.8'
-
 # =============================================================================
 # Agent-eBPF Sandbox / Staging Isolated Multi-Agent Testing Environment
 # Designed for Coolify & Self-Hosted Zero-Trust Staging Deployment

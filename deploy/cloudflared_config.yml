@@ -1,0 +1,28 @@
+# Cloudflare Tunnel Configuration for ksec.space Production Infrastructure
+# Note: Tunnel UUID and credentials should be mapped dynamically or set via environment
+tunnel: ${CLOUDFLARE_TUNNEL_ID:-ksec-production-mesh-tunnel}
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Next.js App Router Frontend Dashboard & Public Landing
+  # CNAME ksec.space -> <tunnel-id>.cfargotunnel.com
+  - hostname: ksec.space
+    service: http://127.0.0.1:3000
+
+  # FastAPI Control Plane, MCP Server & REST / SSE Endpoints
+  # CNAME api.ksec.space -> 3fbd6b55-6caf-4891-a282-4864965216d5.cfargotunnel.com
+  - hostname: api.ksec.space
+    service: http://127.0.0.1:8000
+
+  # Distributed gRPC Telemetry Mesh (HTTP/2 Multiplexed Binary Stream)
+  # CNAME grpc.ksec.space -> 3fbd6b55-6caf-4891-a282-4864965216d5.cfargotunnel.com
+  - hostname: grpc.ksec.space
+    service: http2://127.0.0.1:50051
+
+  # Prometheus Telemetry & System Observability Metrics
+  # CNAME metrics.ksec.space -> 3fbd6b55-6caf-4891-a282-4864965216d5.cfargotunnel.com
+  - hostname: metrics.ksec.space
+    service: http://127.0.0.1:8000
+
+  # Default Catch-all Rule
+  - service: http_status:404

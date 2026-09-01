@@ -3,7 +3,7 @@ import uuid
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 from fastapi import FastAPI, HTTPException, status, Depends, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +38,7 @@ DEFAULT_FALLBACK_RULES: List[Dict[str, Any]] = [
     },
 ]
 
-worker_task: asyncio.Task = None
+worker_task: Optional[asyncio.Task] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

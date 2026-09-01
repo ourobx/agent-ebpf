@@ -676,6 +676,89 @@
                 </div>
               </div>
             </div>
+
+            <!-- Interactive Causal DAG Forensics & Blast Radius Simulator -->
+            <div class="causal-dag-container" id="causalDagSection">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="pulse-dot" style="background: var(--accent-crimson);"></span>
+                  <div>
+                    <h3 class="font-bold text-xs text-primary" style="text-transform: uppercase; letter-spacing: 0.06em;">Causal DAG Incident Replay &amp; Blast Radius Simulator</h3>
+                    <p class="text-xs text-muted" style="margin: 0;">Hypothetical schema corruption DAG, RTO downtime avoided, and compliance preservation if Ring-0 BPF hadn't intervened.</p>
+                  </div>
+                </div>
+                <button type="button" class="btn-secondary" id="btnTriggerDagSim" style="font-size: 11px; padding: 4px 10px; color: var(--accent-cyan);">
+                  <span>Replay Incident DAG</span>
+                </button>
+              </div>
+
+              <!-- DAG Top KPI Strip -->
+              <div class="dag-kpi-strip">
+                <div class="dag-kpi-box">
+                  <span class="dag-kpi-title">Records Saved</span>
+                  <span class="dag-kpi-value text-emerald" id="dagRowsSaved">8,500,000</span>
+                </div>
+                <div class="dag-kpi-box">
+                  <span class="dag-kpi-title">Disaster Recovery (RTO) Saved</span>
+                  <span class="dag-kpi-value text-cyan" id="dagRtoSaved">4.5 Hours</span>
+                </div>
+                <div class="dag-kpi-box">
+                  <span class="dag-kpi-title">Financial Exposure Prevented</span>
+                  <span class="dag-kpi-value text-amber" id="dagFinancialExposure">$106,250,000</span>
+                </div>
+                <div class="dag-kpi-box">
+                  <span class="dag-kpi-title">Ring-0 Verdict Latency</span>
+                  <span class="dag-kpi-value text-primary" id="dagVerdictLatency">5.80 µs (ROLLBACK)</span>
+                </div>
+              </div>
+
+              <!-- DAG Node Canvas -->
+              <div class="dag-canvas-wrap" id="dagNodesContainer">
+                <div class="dag-node-item catastrophic">
+                  <div class="dag-node-header">
+                    <span class="dag-node-name">Table: users</span>
+                    <span class="dag-badge-impact catastrophic">CATASTROPHIC</span>
+                  </div>
+                  <div class="dag-node-meta">
+                    <span>1,100,000 Rows</span>
+                    <span>RTO: 60m</span>
+                  </div>
+                </div>
+                <div style="color: var(--accent-crimson); font-size: 18px; font-weight: 700;">➔</div>
+                <div class="dag-node-item severe">
+                  <div class="dag-node-header">
+                    <span class="dag-node-name">Table: orders</span>
+                    <span class="dag-badge-impact severe">SEVERE</span>
+                  </div>
+                  <div class="dag-node-meta">
+                    <span>1,200,000 Rows</span>
+                    <span>RTO: 60m</span>
+                  </div>
+                </div>
+                <div style="color: var(--accent-amber); font-size: 18px; font-weight: 700;">➔</div>
+                <div class="dag-node-item moderate">
+                  <div class="dag-node-header">
+                    <span class="dag-node-name">Table: invoices</span>
+                    <span class="dag-badge-impact moderate">MODERATE</span>
+                  </div>
+                  <div class="dag-node-meta">
+                    <span>450,000 Rows</span>
+                    <span>RTO: 45m</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Compliance Preservation Badges -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span class="text-xs text-muted font-semibold">Regulatory Breaches Preserved by eBPF Guard:</span>
+                <div class="compliance-badge-row" id="dagComplianceRow">
+                  <span class="compliance-seal-badge">🛡️ GDPR Art. 33/82 Breach Avoided</span>
+                  <span class="compliance-seal-badge">🛡️ HIPAA §164.312 Data Integrity Preserved</span>
+                  <span class="compliance-seal-badge">🛡️ PCI-DSS v4.0 Req 3.4 Cardholder Protection</span>
+                  <span class="compliance-seal-badge">🛡️ SOC-2 Type II Availability Breach Avoided</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -892,6 +975,104 @@ export const guardedTool = guardTool({
                   <label class="text-xs text-muted">Operations Alert Webhook URL</label>
                   <input type="url" class="select-control" value="https://hooks.slack.com/services/T00/B00/XXXX" style="font-size: 11px;">
                 </div>
+              </div>
+            </div>
+
+            <!-- SaaS Subscription & Stripe Metered Billing Management -->
+            <div class="ent-card" style="margin-top: 14px; background: var(--bg-surface);">
+              <div class="ent-card-header">
+                <div>
+                  <h3 class="ent-card-title">
+                    <span class="svg-icon text-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                    SaaS Subscription &amp; Metered Billing (Stripe)
+                  </h3>
+                  <p class="ent-card-sub">Dynamic event verification quotas, automated Stripe checkout, and self-service billing portal.</p>
+                </div>
+                <button type="button" class="btn-secondary" id="btnOpenStripePortal" style="font-size: 11px; padding: 4px 10px; color: var(--accent-emerald);">
+                  <span>Manage Billing Portal ↗</span>
+                </button>
+              </div>
+
+              <div class="saas-billing-grid">
+                <!-- Community Tier -->
+                <div class="plan-card">
+                  <div>
+                    <span class="dag-badge-impact moderate">COMMUNITY</span>
+                    <div class="plan-price-row" style="margin-top: 6px;">
+                      <span class="plan-price">$0</span>
+                      <span class="plan-period">/ month</span>
+                    </div>
+                    <ul class="plan-feature-list" style="margin-top: 10px;">
+                      <li>Ring-0 XDP Filter</li>
+                      <li>100k Daily Verified Events</li>
+                      <li>Community Support</li>
+                    </ul>
+                  </div>
+                  <button type="button" class="btn-secondary" style="font-size: 10px; width: 100%; justify-content: center;" disabled>Active Plan</button>
+                </div>
+
+                <!-- Team Pro Tier (Featured) -->
+                <div class="plan-card featured">
+                  <div>
+                    <span class="dag-badge-impact severe">TEAM PRO</span>
+                    <div class="plan-price-row" style="margin-top: 6px;">
+                      <span class="plan-price text-cyan">$99</span>
+                      <span class="plan-period">/ month</span>
+                    </div>
+                    <ul class="plan-feature-list" style="margin-top: 10px;">
+                      <li>Sub-35µs TOCTOU Leases</li>
+                      <li>2.5M Daily Verified Events</li>
+                      <li>ClickHouse Realtime UI</li>
+                      <li>Stripe Metered Sync</li>
+                    </ul>
+                  </div>
+                  <button type="button" class="btn-cta" id="btnUpgradeTeamPro" style="font-size: 10px; width: 100%; justify-content: center;">Upgrade to Team Pro ($99)</button>
+                </div>
+
+                <!-- Enterprise Ultra Tier -->
+                <div class="plan-card">
+                  <div>
+                    <span class="dag-badge-impact catastrophic">ENTERPRISE ULTRA</span>
+                    <div class="plan-price-row" style="margin-top: 6px;">
+                      <span class="plan-price text-emerald">$499</span>
+                      <span class="plan-period">/ month</span>
+                    </div>
+                    <ul class="plan-feature-list" style="margin-top: 10px;">
+                      <li>Dedicated S3 Audit Vault</li>
+                      <li>25M Daily Verified Events</li>
+                      <li>SOC-2 Sealed Manifests</li>
+                      <li>24/7 SLA Guarantee</li>
+                    </ul>
+                  </div>
+                  <button type="button" class="btn-cta" id="btnUpgradeEnterprise" style="font-size: 10px; width: 100%; justify-content: center; background: linear-gradient(135deg, #10B981, #06B6D4); color: #000;">Upgrade to Enterprise ($499)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 1-Click Kubernetes Helm Cluster Onboarding & SOC-2 Audit Export -->
+            <div class="ent-card" style="margin-top: 14px; background: var(--bg-surface);">
+              <div class="ent-card-header">
+                <div>
+                  <h3 class="ent-card-title">1-Click Kubernetes DaemonSet Deployment (Helm)</h3>
+                  <p class="ent-card-sub">Deploy KSEC Ring-0 kernel defense to any EKS, GKE, AKS, or bare-metal Kubernetes cluster with least-privilege capabilities.</p>
+                </div>
+                <button type="button" class="btn-secondary" id="btnExportSoc2Manifest" style="font-size: 11px; padding: 4px 10px; color: var(--accent-indigo);">
+                  <span>Export SOC-2 Sealed Manifest</span>
+                </button>
+              </div>
+
+              <div class="code-viewer-box">
+                <div class="code-viewer-header">
+                  <span>Bash (Helm CLI)</span>
+                  <button class="btn-copy" id="btnCopyHelmCmd" data-copy="helm repo add ourobx https://charts.ksec.space && helm install ksec-shield ourobx/ksec-shield --namespace ksec-system --create-namespace">Copy</button>
+                </div>
+                <pre class="code-viewer-content" id="helmCmdViewer">helm repo add ourobx https://charts.ksec.space &amp;&amp; \
+helm repo update &amp;&amp; \
+helm install ksec-shield ourobx/ksec-shield \
+  --namespace ksec-system --create-namespace \
+  --set tenantId="default-tenant" \
+  --set apiKey="ksec_live_..." \
+  --set gateway.endpoint="https://ksec.space"</pre>
               </div>
             </div>
           </div>

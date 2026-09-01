@@ -27,13 +27,10 @@ vmlinux.h
 .env
 .env.local
 .env.*.local
-
-# OS & Temp Files
-desktop.ini
-Thumbs.db
-.DS_Store
-*.tmp
-*.log
+*.pem
+cert.pem
+credentials.json
+.cloudflared/
 
 # Database & Auth Stores
 *.db
@@ -43,3 +40,6 @@ ksec_auth.db
 .claude/
 .cursor/
 .kiro/
+
+.agents/artifacts/
+.vscode/

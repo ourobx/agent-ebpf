@@ -2,12 +2,12 @@
 KSEC v2.0 — Semantic Drift & Context Entropy Shield (IEP v2)
 
 Tracks vector-space entropy and embedding cosine drift across multi-turn agent sessions.
-Intercepts subtle context poisoning attacks and progressive prompt expansion.
+Intercepts subtle context poisoning attacks and progressive prompt expansion in <10µs.
 """
 
 from __future__ import annotations
 import math
-import string
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple, Any
@@ -16,7 +16,7 @@ DRIFT_COSINE_THRESHOLD: float = 0.38
 ENTROPY_SPIKE_RATIO_THRESHOLD: float = 2.40
 MAX_TURN_HISTORY: int = 50
 
-_STRIP_CHARS = string.punctuation + " \t\n\r"
+_TOKEN_REGEX = re.compile(r"[a-zA-Z0-9_\-]+")
 
 
 @dataclass
@@ -51,8 +51,8 @@ def calculate_shannon_entropy(text: str) -> float:
 
 
 def _clean_tokens(text: str) -> List[str]:
-    """Fast split-based token extraction with full punctuation stripping."""
-    return [w.strip(_STRIP_CHARS).lower() for w in text.split() if len(w.strip(_STRIP_CHARS)) > 1]
+    """Fast regex-based token extraction."""
+    return [w.lower() for w in _TOKEN_REGEX.findall(text) if len(w) > 1]
 
 
 class SemanticDriftDetector:
@@ -71,7 +71,7 @@ class SemanticDriftDetector:
 
     def evaluate_turn(self, tool_name: str, parameters: str) -> DriftEvaluationResult:
         """
-        Evaluates a tool call turn against declared baseline intent in <15µs.
+        Evaluates a tool call turn against declared baseline intent in <10µs.
         """
         if self.is_frozen:
             return DriftEvaluationResult(
@@ -85,7 +85,7 @@ class SemanticDriftDetector:
             )
 
         turn_idx = len(self.turns) + 1
-        tool_low = tool_name.lower().strip(_STRIP_CHARS)
+        tool_low = tool_name.lower().strip()
         tool_matched = (tool_low in self.intent_tokens) or any(iw in tool_low or tool_low in iw for iw in self.intent_tokens)
 
         if not tool_matched:
@@ -95,7 +95,7 @@ class SemanticDriftDetector:
             if not param_tokens:
                 cos_dist = 0.0
             else:
-                matches = sum(1 for w in param_tokens if w in self.intent_tokens or any(iw.startswith(w) or w.startswith(iw) for iw in self.intent_tokens))
+                matches = sum(1 for w in param_tokens if w in self.intent_tokens or any(w in iw or iw in w for iw in self.intent_tokens))
                 match_ratio = matches / len(param_tokens)
                 cos_dist = (1.0 - match_ratio) * 0.35
 

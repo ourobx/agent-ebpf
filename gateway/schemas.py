@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 class ActionType(str, Enum):
     TOOL_EXECUTION = "tool_execution"
@@ -43,7 +43,7 @@ class TelemetryEvent(BaseModel):
     reason: Optional[str] = None
     kernel_trace_id: Optional[str] = Field(None, alias="kernelTraceId")
     duration_ms: Optional[float] = Field(0.0, alias="durationMs")
-    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     agent_id: Optional[str] = Field(None, alias="agentId")
     tenant_id: Optional[str] = Field(None, alias="tenantId")
     metadata: Optional[Dict[str, Any]] = None

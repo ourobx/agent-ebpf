@@ -9,7 +9,7 @@ export declare class ShieldPresets {
      */
     static readonly NoOutboundNetwork: ShieldRule[];
     /**
-     * Güvenli Web Tarama: Yalnızca HTTP/HTTPS GET isteklerine izin verir, yerel ağ/loopback sızmalarını engeller.
+     * Safe Web Browsing: Permits only HTTP/HTTPS GET requests, blocking local network/loopback SSRF leaks.
      */
     static readonly SafeWebBrowsing: ShieldRule[];
 }

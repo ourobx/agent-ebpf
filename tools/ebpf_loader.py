@@ -41,7 +41,7 @@ class EBPFLoaderError(Exception):
 def check_system_capabilities() -> None:
     """Verifies EUID 0 or CAP_BPF / CAP_PERFMON / CAP_NET_ADMIN, BTF support, and memory lock limits."""
     if hasattr(os, "geteuid") and os.geteuid() != 0:
-        raise KernelCapabilityError("Zero-trust Linux capabilities (CAP_BPF, CAP_NET_ADMIN, CAP_PERFMON, CAP_SYS_RESOURCE) are required for eBPF operations.")
+        raise KernelCapabilityError("Root permissions or zero-trust Linux capabilities (CAP_BPF, CAP_NET_ADMIN, CAP_PERFMON, CAP_SYS_RESOURCE) are required for eBPF operations.")
 
     btf_path = Path("/sys/kernel/btf/vmlinux")
     if not btf_path.exists():
@@ -258,56 +258,43 @@ def poll_security_events(window_ms: int = 1000) -> List[Dict[str, Any]]:
     return events
 
 
+_SOCK_OPS_STRUCT = struct.Struct("<IIIHHIIQQQIII16s")
+_OP_NAMES = {
+    3: "BPF_SOCK_OPS_TCP_CONNECT_CB",
+    4: "BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB",
+    5: "BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB",
+    12: "BPF_SOCK_OPS_STATE_CB",
+}
+_STATE_NAMES = {
+    1: "TCP_ESTABLISHED",
+    2: "TCP_SYN_SENT",
+    3: "TCP_SYN_RECV",
+    7: "TCP_CLOSE",
+}
+
+
 def parse_sock_ops_event_bytes(blob: bytes) -> Dict[str, Any]:
     """Decodes a single 76-byte sock_ops_event_t struct from the kernel ring buffer."""
-    # struct sock_ops_event_t layout (76 bytes):
-    #  0: u32 op
-    #  4: u32 src_ip
-    #  8: u32 dst_ip
-    # 12: u16 src_port
-    # 14: u16 dst_port
-    # 16: u32 old_state
-    # 20: u32 new_state
-    # 24: u64 start_ts_ns
-    # 32: u64 end_ts_ns
-    # 40: u64 latency_us
-    # 48: u32 is_db_socket
-    # 52: u32 action
-    # 56: u32 pid
-    # 60: char comm[16]
     if len(blob) < 76:
         raise ValueError(f"Invalid sock_ops event byte length: {len(blob)} (expected 76)")
 
-    op, src_ip, dst_ip = struct.unpack("<III", blob[0:12])
-    src_port, dst_port = struct.unpack("<HH", blob[12:16])
-    old_state, new_state = struct.unpack("<II", blob[16:24])
-    start_ts_ns, end_ts_ns, latency_us = struct.unpack("<QQQ", blob[24:48])
-    is_db_socket, action, pid = struct.unpack("<III", blob[48:60])
-    comm = blob[60:76].split(b"\x00", 1)[0].decode("utf-8", "replace")
+    (
+        op, src_ip, dst_ip, src_port, dst_port,
+        old_state, new_state, start_ts_ns, end_ts_ns, latency_us,
+        is_db_socket, action, pid, comm_raw
+    ) = _SOCK_OPS_STRUCT.unpack(blob[:76])
 
-    op_names = {
-        3: "BPF_SOCK_OPS_TCP_CONNECT_CB",
-        4: "BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB",
-        5: "BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB",
-        12: "BPF_SOCK_OPS_STATE_CB",
-    }
-
-    state_names = {
-        1: "TCP_ESTABLISHED",
-        2: "TCP_SYN_SENT",
-        3: "TCP_SYN_RECV",
-        7: "TCP_CLOSE",
-    }
+    comm = comm_raw.split(b"\x00", 1)[0].decode("utf-8", "replace")
 
     return {
         "op": op,
-        "op_name": op_names.get(op, f"OP_{op}"),
+        "op_name": _OP_NAMES.get(op, f"OP_{op}"),
         "src_ip": socket.inet_ntoa(struct.pack("!I", src_ip)),
         "dst_ip": socket.inet_ntoa(struct.pack("!I", dst_ip)),
         "src_port": src_port,
         "dst_port": dst_port,
-        "old_state": state_names.get(old_state, str(old_state)),
-        "new_state": state_names.get(new_state, str(new_state)),
+        "old_state": _STATE_NAMES.get(old_state, str(old_state)),
+        "new_state": _STATE_NAMES.get(new_state, str(new_state)),
         "start_ts_ns": start_ts_ns,
         "end_ts_ns": end_ts_ns,
         "latency_us": latency_us,

@@ -1869,3 +1869,385 @@ aside svg, header svg, table svg, button svg, .icon svg, .svg-icon svg, .metric-
   border: 1px solid var(--accent-amber-border);
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   KSEC V2.0 SaaS — Causal DAG Forensics & Stripe Billing Components
+   ========================================================================== */
+
+.causal-dag-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dag-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.dag-kpi-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dag-kpi-title {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dag-kpi-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dag-canvas-wrap {
+  min-height: 240px;
+  background: #04060A;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow-x: auto;
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.dag-node-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.dag-node-item.catastrophic {
+  border-color: var(--accent-crimson);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}
+
+.dag-node-item.severe {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.dag-node-item.moderate {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.15);
+}
+
+.dag-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dag-node-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dag-badge-impact {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.dag-badge-impact.catastrophic { background: var(--accent-crimson-subtle); color: var(--accent-crimson); }
+.dag-badge-impact.severe { background: var(--accent-amber-subtle); color: var(--accent-amber); }
+.dag-badge-impact.moderate { background: var(--accent-cyan-subtle); color: var(--accent-cyan); }
+
+.dag-node-meta {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+.compliance-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compliance-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--accent-emerald);
+}
+
+/* ---- Stripe SaaS Billing Card ---- */
+.saas-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.plan-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-card.featured {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.15);
+}
+
+.plan-card.featured::before {
+  content: 'POPULAR';
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--accent-cyan);
+  color: #000;
+}
+
+.plan-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.plan-price {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.plan-period {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.plan-feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.plan-feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plan-feature-list li::before {
+  content: '✓';
+  color: var(--accent-emerald);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Mobile & Responsive Viewport Optimizations (@media queries)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .app-container,
+  .dashboard-layout,
+  .main-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-main-wrapper {
+    margin-left: 0 !important;
+  }
+
+  .app-sidebar,
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    background: #070B12 !important;
+    border-right: 1px solid var(--border-subtle) !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  }
+
+  .app-sidebar.open,
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .grid-2col,
+  .grid-3col,
+  .grid-4col {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px !important;
+    overflow-x: hidden !important;
+  }
+
+  .app-topbar {
+    padding: 0 12px !important;
+    height: 56px !important;
+  }
+
+  .breadcrumbs-wrap .breadcrumb-root,
+  .breadcrumbs-wrap .breadcrumb-node,
+  .breadcrumbs-wrap .breadcrumb-sep {
+    display: none !important;
+  }
+
+  .topbar-right .status-pill {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kernel-health-popover {
+    position: fixed !important;
+    top: 60px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 1001 !important;
+  }
+
+  .grid-2col,
+  .grid-3col,
+  .grid-4col,
+  .metric-row,
+  .card-grid,
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .table-responsive,
+  .telemetry-table-wrapper,
+  .table-container {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  table {
+    min-width: 600px !important;
+  }
+
+  .modal-dialog,
+  .dialog-content {
+    width: 95% !important;
+    margin: 16px auto !important;
+    padding: 16px !important;
+  }
+
+  .btn,
+  button {
+    min-height: 44px !important;
+    padding: 10px 16px !important;
+    touch-action: manipulation !important;
+  }
+
+  .form-row,
+  .input-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .form-row > * {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: 8px !important;
+  }
+
+  .card,
+  .panel,
+  .widget {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .metric-value {
+    font-size: 20px !important;
+  }
+
+  .page-title {
+    font-size: 16px !important;
+  }
+}
+
+

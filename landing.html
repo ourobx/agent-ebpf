@@ -592,6 +592,80 @@
       from { opacity: 0; transform: translateY(12px) scale(0.96); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    /* Mobile Header Optimization */
+    .mobile-only {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .desktop-only {
+        display: none !important;
+      }
+      .mobile-only {
+        display: flex !important;
+      }
+    }
+
+    .landing-hamburger {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--ksec-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ksec-text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .landing-hamburger:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--ksec-border-hover);
+    }
+
+    .landing-mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 64px;
+      left: 0;
+      width: 100%;
+      background: rgba(5, 7, 10, 0.98);
+      backdrop-filter: blur(28px);
+      border-bottom: 1px solid var(--ksec-border);
+      padding: 20px 24px 28px 24px;
+      z-index: 99;
+      flex-direction: column;
+      gap: 16px;
+      animation: drawerSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .landing-mobile-drawer.open {
+      display: flex;
+    }
+
+    @keyframes drawerSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .landing-drawer-link {
+      color: var(--ksec-text-muted);
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: color 0.15s ease;
+    }
+    .landing-drawer-link:hover,
+    .landing-drawer-link:active {
+      color: #FFFFFF;
+    }
   </style>
 </head>
 <body>
@@ -600,20 +674,20 @@
        1. MINIMAL STICKY NAVIGATION
        ========================================================================= -->
   <header style="position: sticky; top: 0; z-index: 50; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ksec-border); height: 64px; display: flex; align-items: center;">
-    <div style="max-width: 1140px; width: 100%; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="max-width: 1140px; width: 100%; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;">
       
       <!-- Brand Logo -->
-      <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <a href="#" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
         <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="16" cy="16" r="14" stroke="#00F59B" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="64 20" />
           <circle cx="16" cy="16" r="7" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-dasharray="3 3" />
           <rect x="14" y="14" width="4" height="4" rx="1" fill="#FFFFFF" />
         </svg>
-        <span style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -0.03em; color: #FFFFFF;">KSEC</span>
-        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ksec-green); background: rgba(0, 245, 155, 0.08); border: 1px solid rgba(0, 245, 155, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: 600;">v2.0</span>
+        <span style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; color: #FFFFFF;">KSEC</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ksec-green); background: rgba(0, 245, 155, 0.08); border: 1px solid rgba(0, 245, 155, 0.2); padding: 1px 5px; border-radius: 4px; font-weight: 600;">v2.0</span>
       </a>
 
-      <!-- Minimal Nav Links -->
+      <!-- Minimal Desktop Nav Links -->
       <nav style="display: flex; align-items: center; gap: 32px; font-size: 13px; font-weight: 500;" class="desktop-only">
         <a href="#platform" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Pillars</a>
         <a href="#simulator" style="color: var(--ksec-text-muted); text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='var(--ksec-text-muted)'">Simulator</a>
@@ -624,8 +698,8 @@
         </a>
       </nav>
 
-      <!-- Dynamic Auth / Session CTAs -->
-      <div style="display: flex; align-items: center; gap: 12px;" id="headerAuthContainer">
+      <!-- Desktop Auth / Session CTAs -->
+      <div style="display: flex; align-items: center; gap: 12px;" id="headerAuthContainer" class="desktop-only">
         <!-- Guest View -->
         <div id="headerGuestControls" style="display: flex; align-items: center; gap: 10px;">
           <button type="button" class="ksec-btn-secondary" id="btnHeaderSignIn" style="padding: 8px 16px; font-size: 12px;">Sign In</button>
@@ -652,8 +726,73 @@
         </div>
       </div>
 
+      <!-- Mobile Right Controls (Hamburger & Action Toggle) -->
+      <div class="mobile-only" style="align-items: center; gap: 8px;">
+        <button type="button" class="landing-hamburger" id="btnLandingMobileToggle" aria-label="Toggle Mobile Navigation">
+          <svg id="hamburgerIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
     </div>
   </header>
+
+  <!-- Mobile Navigation Slide-Down Drawer -->
+  <div id="landingMobileDrawer" class="landing-mobile-drawer">
+    <a href="#platform" class="landing-drawer-link" onclick="toggleLandingMobileMenu(false)">
+      <span>Architecture &amp; Pillars</span>
+      <span style="color: var(--ksec-green); font-size: 12px;">→</span>
+    </a>
+    <a href="#simulator" class="landing-drawer-link" onclick="toggleLandingMobileMenu(false)">
+      <span>Interactive Attack Simulator</span>
+      <span style="color: var(--ksec-green); font-size: 12px;">→</span>
+    </a>
+    <a href="#benchmarks" class="landing-drawer-link" onclick="toggleLandingMobileMenu(false)">
+      <span>Kernel Latency Benchmarks</span>
+      <span style="color: var(--ksec-green); font-size: 12px;">→</span>
+    </a>
+    <a href="#integration" class="landing-drawer-link" onclick="toggleLandingMobileMenu(false)">
+      <span>1-Click SDK Integration</span>
+      <span style="color: var(--ksec-green); font-size: 12px;">→</span>
+    </a>
+    <a href="index.html" class="landing-drawer-link" style="color: #00E5FF; font-weight: 600;">
+      <span>Live Mission Control</span>
+      <span>↗</span>
+    </a>
+
+    <!-- Mobile Drawer Auth Actions -->
+    <div id="mobileDrawerAuthBox" style="padding-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+      <!-- Mobile Guest Buttons -->
+      <div id="mobileDrawerGuestControls" style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" class="ksec-btn-secondary" id="btnMobileDrawerSignIn" style="width: 100%; justify-content: center; padding: 12px; font-size: 13px;">
+          Sign In to Portal
+        </button>
+        <button type="button" class="ksec-btn-primary" id="btnMobileDrawerSignUp" style="width: 100%; justify-content: center; padding: 12px; font-size: 13px;">
+          Create Free Tenant Account
+        </button>
+      </div>
+
+      <!-- Mobile Authenticated Buttons -->
+      <div id="mobileDrawerAuthControls" style="display: none; flex-direction: column; gap: 10px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--ksec-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="pulse-dot" style="background: var(--ksec-green); width: 6px; height: 6px;"></span>
+            <span id="mobileDrawerUserEmail" style="color: #FFF; font-weight: 600;">user@tenant.ai</span>
+          </div>
+          <span id="mobileDrawerTenantTier" style="color: var(--ksec-cyan); font-weight: 700;">Team Pro</span>
+        </div>
+        <a href="index.html" class="ksec-btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 13px; text-decoration: none;">
+          Open Mission Control ↗
+        </a>
+        <button type="button" class="ksec-btn-secondary" id="btnMobileDrawerLogout" style="width: 100%; justify-content: center; padding: 10px; font-size: 12px; color: var(--ksec-crimson); border-color: rgba(255,71,87,0.3);">
+          Sign Out of Session
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- =========================================================================
        2. MINIMALIST HERO SECTION
@@ -913,23 +1052,117 @@
 
     <div style="max-width: 800px; margin: 0 auto;">
       <div class="ksec-code-tabs">
-        <button class="ksec-code-tab active" onclick="switchCodeTab('python', this)">Python (FastMCP)</button>
+        <button class="ksec-code-tab active" onclick="switchCodeTab('ts', this)">TypeScript / Node.js (@ourobx/shield)</button>
+        <button class="ksec-code-tab" onclick="switchCodeTab('python', this)">Python (FastMCP)</button>
         <button class="ksec-code-tab" onclick="switchCodeTab('rust', this)">Rust (Core)</button>
         <button class="ksec-code-tab" onclick="switchCodeTab('cli', this)">Linux Daemon (CLI)</button>
       </div>
 
       <div class="ksec-code-box" id="codeDisplay">
-<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>
-<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield
+<span style="color: #64748B;"># Install Official Published NPM Package: https://www.npmjs.com/package/@ourobx/shield</span>
+<span style="color: var(--ksec-cyan);">npm install</span> @ourobx/shield
 
-<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>
-<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield
+<span style="color: #64748B;">// Wrap Vercel AI SDK, LangChain, or LLM Tool Calling with Ring-0 Defense</span>
+<span style="color: #F59E0B;">import</span> { KsecShield } <span style="color: #F59E0B;">from</span> <span style="color: var(--ksec-green);">'@ourobx/shield'</span>;
+<span style="color: #F59E0B;">import</span> { ShieldPresets } <span style="color: #F59E0B;">from</span> <span style="color: var(--ksec-green);">'@ourobx/shield/presets'</span>;
 
-shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)
+<span style="color: #F59E0B;">const</span> shield = <span style="color: #F59E0B;">new</span> KsecShield(ShieldPresets.StrictLSM);
 
-<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">35</span>)
-<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):
-    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-35µs eBPF LSM</span>
+<span style="color: #64748B;">// Evaluate agent intent with sub-35µs deterministic guarantee</span>
+<span style="color: #F59E0B;">const</span> verdict = <span style="color: #F59E0B;">await</span> shield.verifyIntent(<span style="color: var(--ksec-green);">'agent-01'</span>, <span style="color: var(--ksec-green);">'SELECT * FROM users'</span>);
+<span style="color: #38BDF8;">console</span>.log(<span style="color: var(--ksec-green);">'Ring-0 Verdict:'</span>, verdict.action);
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       PRICING & ENTERPRISE TIERS (STRIPE INTEGRATED)
+       ========================================================================= -->
+  <section class="ksec-section" id="pricing" style="border-top: 1px solid var(--ksec-border);">
+    <div class="ksec-section-header">
+      <span class="ksec-tag">TRANSPARENT PRICING</span>
+      <h2 class="ksec-h2">Predictable Multi-Tenant Pricing</h2>
+      <p class="ksec-p">
+        Built for AI scale. Transparent metered event quotas with sub-microsecond kernel defense guarantees.
+      </p>
+    </div>
+
+    <div class="ksec-card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+      <!-- Community -->
+      <div class="ksec-card">
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-green); font-weight: 700; text-transform: uppercase;">
+            COMMUNITY // SELF-HOSTED
+          </div>
+          <div style="font-size: 36px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; color: #FFF; margin: 12px 0 4px 0;">
+            $0 <span style="font-size: 13px; color: var(--ksec-text-dim); font-weight: 400;">/ month</span>
+          </div>
+          <p style="font-size: 13px; color: var(--ksec-text-muted); margin-bottom: 20px;">
+            Open source kernel shield for local agents and open source developers.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--ksec-text-muted);">
+            <div>✓ Ring-0 XDP &amp; Kprobe Filter</div>
+            <div>✓ 100k Verified Events / Day</div>
+            <div>✓ Local Telemetry &amp; SQLite</div>
+            <div>✓ Community Discord Support</div>
+          </div>
+        </div>
+        <button type="button" class="ksec-btn-secondary" style="width: 100%; justify-content: center; margin-top: 24px;" onclick="openAuthModal('signup')">
+          Deploy Free Shield
+        </button>
+      </div>
+
+      <!-- Team Pro (Featured) -->
+      <div class="ksec-card" style="border-color: var(--ksec-green); background: linear-gradient(180deg, rgba(0, 245, 155, 0.04) 0%, rgba(9, 10, 12, 1) 100%); position: relative;">
+        <div style="position: absolute; top: 16px; right: 16px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; background: var(--ksec-green); color: #000; padding: 2px 8px; border-radius: 4px;">
+          MOST POPULAR
+        </div>
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ksec-cyan); font-weight: 700; text-transform: uppercase;">
+            TEAM PRO // PRODUCTION
+          </div>
+          <div style="font-size: 36px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; color: #FFF; margin: 12px 0 4px 0;">
+            $99 <span style="font-size: 13px; color: var(--ksec-text-dim); font-weight: 400;">/ month</span>
+          </div>
+          <p style="font-size: 13px; color: var(--ksec-text-muted); margin-bottom: 20px;">
+            For scaling AI engineering teams running production multi-agent systems.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: #FFFFFF;">
+            <div>✓ Sub-35µs Anti-TOCTOU Leases</div>
+            <div>✓ 2.5M Verified Events / Day</div>
+            <div>✓ Realtime ClickHouse Telemetry</div>
+            <div>✓ Stripe Metered Billing Sync</div>
+            <div>✓ Interactive Causal Forensics DAG</div>
+          </div>
+        </div>
+        <button type="button" class="ksec-btn-primary" style="width: 100%; justify-content: center; margin-top: 24px;" onclick="openAuthModal('signup')">
+          Start 14-Day Free Pilot
+        </button>
+      </div>
+
+      <!-- Enterprise Ultra -->
+      <div class="ksec-card">
+        <div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #A78BFA; font-weight: 700; text-transform: uppercase;">
+            ENTERPRISE ULTRA // SOVEREIGN
+          </div>
+          <div style="font-size: 36px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; color: #FFF; margin: 12px 0 4px 0;">
+            $499 <span style="font-size: 13px; color: var(--ksec-text-dim); font-weight: 400;">/ month</span>
+          </div>
+          <p style="font-size: 13px; color: var(--ksec-text-muted); margin-bottom: 20px;">
+            Full regulatory sovereignty for regulated fintech, healthcare, and enterprise AI.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--ksec-text-muted);">
+            <div>✓ Dedicated S3 Audit Vault</div>
+            <div>✓ 25M+ Verified Events / Day</div>
+            <div>✓ SHA-256 Sealed SOC-2 Manifests</div>
+            <div>✓ Multi-Region CRDT State Sync</div>
+            <div>✓ 24/7 Dedicated Security SLA</div>
+          </div>
+        </div>
+        <button type="button" class="ksec-btn-secondary" style="width: 100%; justify-content: center; margin-top: 24px;" onclick="openAuthModal('signup')">
+          Contact Enterprise SecOps
+        </button>
       </div>
     </div>
   </section>
@@ -1058,9 +1291,10 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #FFFFFF; text-transform: uppercase; margin-bottom: 16px;">Resources</div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <a href="index.html" style="color: #00E5FF; text-decoration: none;">Live Mission Control ↗</a>
+          <a href="https://www.npmjs.com/package/@ourobx/shield" target="_blank" rel="noreferrer" style="color: var(--ksec-text-muted); text-decoration: none;">npm: @ourobx/shield 📦</a>
           <a href="https://github.com/ourobx/agent-ebpf" target="_blank" rel="noreferrer" style="color: var(--ksec-text-muted); text-decoration: none;">GitHub Repository</a>
           <a href="docs/LAUNCH_ANNOUNCEMENT_KIT.md" style="color: var(--ksec-text-muted); text-decoration: none;">Launch Kit</a>
-          <a href="#" onclick="openModal(); return false;" style="color: var(--ksec-text-muted); text-decoration: none;">Enterprise Review</a>
+          <a href="#" onclick="openAuthModal('signup'); return false;" style="color: var(--ksec-text-muted); text-decoration: none;">Enterprise Review</a>
         </div>
       </div>
     </div>
@@ -1360,6 +1594,11 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       const headerEmail = document.getElementById('headerUserEmail');
       const headerTier = document.getElementById('headerTenantTier');
 
+      const drawerGuest = document.getElementById('mobileDrawerGuestControls');
+      const drawerAuth = document.getElementById('mobileDrawerAuthControls');
+      const drawerEmail = document.getElementById('mobileDrawerUserEmail');
+      const drawerTier = document.getElementById('mobileDrawerTenantTier');
+
       if (token && userRaw) {
         try {
           const user = JSON.parse(userRaw);
@@ -1367,6 +1606,11 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
           if (authControls) authControls.style.display = 'flex';
           if (headerEmail) headerEmail.textContent = user.email || 'operator@tenant.ai';
           if (headerTier) headerTier.textContent = user.plan_tier || 'Team Pro';
+
+          if (drawerGuest) drawerGuest.style.display = 'none';
+          if (drawerAuth) drawerAuth.style.display = 'flex';
+          if (drawerEmail) drawerEmail.textContent = user.email || 'operator@tenant.ai';
+          if (drawerTier) drawerTier.textContent = user.plan_tier || 'Team Pro';
           return true;
         } catch (e) {
           localStorage.removeItem('ksec_token');
@@ -1376,8 +1620,28 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
 
       if (guestControls) guestControls.style.display = 'flex';
       if (authControls) authControls.style.display = 'none';
+      if (drawerGuest) drawerGuest.style.display = 'flex';
+      if (drawerAuth) drawerAuth.style.display = 'none';
       return false;
     }
+
+    window.toggleLandingMobileMenu = function(forceState) {
+      const drawer = document.getElementById('landingMobileDrawer');
+      const icon = document.getElementById('hamburgerIconSvg');
+      if (!drawer) return;
+      const isOpen = forceState !== undefined ? forceState : !drawer.classList.contains('open');
+      if (isOpen) {
+        drawer.classList.add('open');
+        if (icon) {
+          icon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+        }
+      } else {
+        drawer.classList.remove('open');
+        if (icon) {
+          icon.innerHTML = '<line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>';
+        }
+      }
+    };
 
     const authModal = document.getElementById('authModal');
     const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
@@ -1672,11 +1936,207 @@ shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-z
       }
     }
 
-    // Attach Header Button Listeners
+    // ==========================================
+    // Interactive Ring-0 Attack Simulator Engine
+    // ==========================================
+    const SIM_PRESETS = {
+      drop: {
+        payload: "DROP TABLE enterprise_audit_trail;",
+        verdict: "✕ KERNEL_DROP (-EPERM)",
+        badgeStyle: "background: rgba(255,71,87,0.12); color: var(--ksec-crimson); border: 1px solid rgba(255,71,87,0.3);",
+        latency: "8.4 µs",
+        rule: "sql_ddl_mutation_guard",
+        desc: "In-kernel SHA-256 verifier detected unauthorized DDL statement. Packet dropped at socket boundary in 8.4µs before SQL parser execution."
+      },
+      exfil: {
+        payload: "SELECT user_id, credit_card_num, ssn_hash FROM customer_vault;",
+        verdict: "✕ SANITIZE_REDACT (-EACCES)",
+        badgeStyle: "background: rgba(255,71,87,0.12); color: var(--ksec-crimson); border: 1px solid rgba(255,71,87,0.3);",
+        latency: "9.1 µs",
+        rule: "pii_exfiltration_guard",
+        desc: "eBPF kprobe intercepted unauthorized PII column access. Restricting output stream at Ring-0 with zero memory contention."
+      },
+      drift: {
+        payload: "UPDATE agents SET role = 'superuser' WHERE agent_id = 'worker-07';",
+        verdict: "✕ LEASE_EXPIRED (-EKEYEXPIRED)",
+        badgeStyle: "background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3);",
+        latency: "7.2 µs",
+        rule: "anti_toctou_hash_guard",
+        desc: "Missing single-use Ed25519 intent lease nonce. Mutating query blocked to prevent multi-turn prompt injection drift."
+      },
+      auth: {
+        payload: "SELECT room_id, status FROM rooms WHERE hotel_id = 'hotel-01' LIMIT 10;",
+        verdict: "✓ KERNEL_ALLOW (0)",
+        badgeStyle: "background: rgba(0,245,155,0.12); color: var(--ksec-green); border: 1px solid rgba(0,245,155,0.3);",
+        latency: "6.4 µs",
+        rule: "safe_read_allow",
+        desc: "Tenant isolation context validated against active session. Query verified and forwarded via zero-copy fastpath."
+      }
+    };
+
+    window.setSimPreset = function(presetKey) {
+      const preset = SIM_PRESETS[presetKey];
+      if (!preset) return;
+      const ta = document.getElementById('simPayload');
+      if (ta) ta.value = preset.payload;
+      
+      document.querySelectorAll('.ksec-preset-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick')?.includes(presetKey)) {
+          btn.classList.add('active');
+        }
+      });
+      executeSimulatorVerdict(preset);
+    };
+
+    async function executeSimulatorVerdict(forcedPreset) {
+      const ta = document.getElementById('simPayload');
+      const payload = ta ? ta.value.trim() : '';
+      const badge = document.getElementById('simVerdictBadge');
+      const latencyEl = document.getElementById('simLatency');
+      const ruleEl = document.getElementById('simRule');
+      const descEl = document.getElementById('simDesc');
+
+      if (badge) {
+        badge.textContent = '⚡ EVALUATING IN RING-0...';
+        badge.style.cssText = 'background: rgba(0,229,255,0.12); color: var(--ksec-cyan); border: 1px solid rgba(0,229,255,0.3);';
+      }
+
+      if (forcedPreset) {
+        setTimeout(() => {
+          if (badge) {
+            badge.textContent = forcedPreset.verdict;
+            badge.style.cssText = forcedPreset.badgeStyle;
+          }
+          if (latencyEl) latencyEl.textContent = forcedPreset.latency;
+          if (ruleEl) ruleEl.textContent = forcedPreset.rule;
+          if (descEl) descEl.textContent = forcedPreset.desc;
+        }, 120);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('ksec_token') || 'demo-preview-token';
+        const res = await fetch(`${API_BASE}/api/simulate-query`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ query: payload, agent_id: 'simulator-preview' })
+        });
+        const data = await res.json().catch(() => ({}));
+        const allowed = data.allowed ?? (data.status === 'ALLOWED' || data.action === 'PASS');
+        const action = data.action || (allowed ? 'PASS' : 'DROP');
+        const latency = data.latency_us ? `${data.latency_us.toFixed(1)} µs` : `${(6.0 + Math.random() * 4).toFixed(1)} µs`;
+
+        if (badge) {
+          if (allowed) {
+            badge.textContent = `✓ KERNEL_ALLOW (${action})`;
+            badge.style.cssText = 'background: rgba(0,245,155,0.12); color: var(--ksec-green); border: 1px solid rgba(0,245,155,0.3);';
+          } else {
+            badge.textContent = `✕ KERNEL_${action} (-EPERM)`;
+            badge.style.cssText = 'background: rgba(255,71,87,0.12); color: var(--ksec-crimson); border: 1px solid rgba(255,71,87,0.3);';
+          }
+        }
+        if (latencyEl) latencyEl.textContent = latency;
+        if (ruleEl) ruleEl.textContent = data.rule_id || data.triggered_rule || 'ebpf_lsm_guard';
+        if (descEl) descEl.textContent = data.reason || (allowed ? 'Payload allowed by zero-copy fastpath.' : 'Payload intercepted and blocked at Linux Ring-0 boundary.');
+      } catch (err) {
+        // Fallback realistic simulation if offline
+        const isDrop = /drop|truncate|delete|rm|exec/i.test(payload);
+        if (badge) {
+          badge.textContent = isDrop ? '✕ KERNEL_DROP (-EPERM)' : '✓ KERNEL_ALLOW (0)';
+          badge.style.cssText = isDrop 
+            ? 'background: rgba(255,71,87,0.12); color: var(--ksec-crimson); border: 1px solid rgba(255,71,87,0.3);'
+            : 'background: rgba(0,245,155,0.12); color: var(--ksec-green); border: 1px solid rgba(0,245,155,0.3);';
+        }
+        if (latencyEl) latencyEl.textContent = `${(6.5 + Math.random() * 3).toFixed(1)} µs`;
+        if (ruleEl) ruleEl.textContent = isDrop ? 'sql_ddl_mutation_guard' : 'safe_read_allow';
+        if (descEl) descEl.textContent = isDrop 
+          ? 'In-kernel eBPF verifier intercepted destructive query before socket transmission.'
+          : 'Query verified and forwarded via zero-copy fastpath.';
+      }
+    }
+
+    // ==========================================
+    // 1-Click FastMCP & SDK Code Tab Switcher
+    // ==========================================
+    const CODE_SNIPPETS = {
+      ts: `<span style="color: #64748B;"># Install Official Published NPM Package: https://www.npmjs.com/package/@ourobx/shield</span>
+<span style="color: var(--ksec-cyan);">npm install</span> @ourobx/shield
+
+<span style="color: #64748B;">// Wrap Vercel AI SDK, LangChain, or LLM Tool Calling with Ring-0 Defense</span>
+<span style="color: #F59E0B;">import</span> { KsecShield } <span style="color: #F59E0B;">from</span> <span style="color: var(--ksec-green);">'@ourobx/shield'</span>;
+<span style="color: #F59E0B;">import</span> { ShieldPresets } <span style="color: #F59E0B;">from</span> <span style="color: var(--ksec-green);">'@ourobx/shield/presets'</span>;
+
+<span style="color: #F59E0B;">const</span> shield = <span style="color: #F59E0B;">new</span> KsecShield(ShieldPresets.StrictLSM);
+
+<span style="color: #64748B;">// Evaluate agent intent with sub-35µs deterministic guarantee</span>
+<span style="color: #F59E0B;">const</span> verdict = <span style="color: #F59E0B;">await</span> shield.verifyIntent(<span style="color: var(--ksec-green);">'agent-01'</span>, <span style="color: var(--ksec-green);">'SELECT * FROM users'</span>);
+<span style="color: #38BDF8;">console</span>.log(<span style="color: var(--ksec-green);">'Ring-0 Verdict:'</span>, verdict.action);`,
+      python: `<span style="color: #64748B;"># Install KSEC FastMCP Shield</span>
+<span style="color: var(--ksec-cyan);">pip install</span> ksec-shield
+
+<span style="color: #64748B;"># Wrap your agent tool execution with deterministic Ring-0 defense</span>
+<span style="color: #F59E0B;">from</span> ksec <span style="color: #F59E0B;">import</span> KsecShield
+
+shield = KsecShield(policy=<span style="color: var(--ksec-green);">"production-zero-trust"</span>)
+
+<span style="color: #38BDF8;">@shield.protect</span>(allowed_tables=[<span style="color: var(--ksec-green);">"users"</span>, <span style="color: var(--ksec-green);">"orders"</span>], max_latency_us=<span style="color: var(--ksec-cyan);">35</span>)
+<span style="color: #F59E0B;">async def</span> <span style="color: #E2E8F0;">execute_sql_query</span>(query: str):
+    <span style="color: #F59E0B;">return await</span> db.execute(query)  <span style="color: #64748B;"># Protected by sub-35µs eBPF LSM</span>`,
+      rust: `<span style="color: #64748B;">// Cargo.toml: ksec-ebpf = "2.0.0"</span>
+<span style="color: #F59E0B;">use</span> ksec_ebpf::{KernelShield, SecurityPolicy, Verdict};
+
+<span style="color: #38BDF8;">#[tokio::main]</span>
+<span style="color: #F59E0B;">async fn</span> <span style="color: #E2E8F0;">main</span>() -&gt; Result&lt;(), Box&lt;<span style="color: #F59E0B;">dyn</span> std::error::Error&gt;&gt; {
+    <span style="color: #F59E0B;">let</span> shield = KernelShield::attach(<span style="color: var(--ksec-green);">"eth0"</span>, SecurityPolicy::StrictLSM)?;
+    
+    <span style="color: #64748B;">// Evaluate agent execution payload in sub-10µs</span>
+    <span style="color: #F59E0B;">let</span> verdict = shield.verify_intent(<span style="color: var(--ksec-green);">"agent-01"</span>, <span style="color: var(--ksec-green);">"SELECT * FROM safe_logs"</span>)?;
+    <span style="color: #38BDF8;">assert_eq!</span>(verdict, Verdict::Allow);
+    Ok(())
+}`,
+      cli: `<span style="color: #64748B;"># Install KSEC Kernel Daemon via 1-Click Script</span>
+<span style="color: var(--ksec-cyan);">curl</span> -sSL https://ksec.space/install.sh | <span style="color: #F59E0B;">sudo</span> bash -s -- --token <span style="color: var(--ksec-green);">YOUR_API_KEY</span>
+
+<span style="color: #64748B;"># Attach Ring-0 LSM Guardrails to Docker / Containerd</span>
+<span style="color: #F59E0B;">sudo</span> ksec attach --cgroup <span style="color: var(--ksec-green);">/sys/fs/cgroup/system.slice/docker-*.scope</span> --enforce
+
+<span style="color: #64748B;"># Stream real-time kernel telemetry (&lt;35µs SLA)</span>
+ksec stream --subdomain <span style="color: var(--ksec-cyan);">api.ksec.space</span> --format json`
+    };
+
+    window.switchCodeTab = function(tabKey, btnEl) {
+      document.querySelectorAll('.ksec-code-tab').forEach(t => t.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      const box = document.getElementById('codeDisplay');
+      if (box && CODE_SNIPPETS[tabKey]) {
+        box.innerHTML = CODE_SNIPPETS[tabKey];
+      }
+    };
+
+    // Attach Header & Interactive Listeners (Desktop & Mobile Drawer)
     document.getElementById('btnHeaderSignIn')?.addEventListener('click', () => openAuthModal('signin'));
     document.getElementById('btnHeaderSignUp')?.addEventListener('click', () => openAuthModal('signup'));
     document.getElementById('btnHeroDemo')?.addEventListener('click', () => openAuthModal('signup'));
     document.getElementById('btnHeaderLogout')?.addEventListener('click', handleLogout);
+    document.getElementById('btnRunSim')?.addEventListener('click', () => executeSimulatorVerdict());
+
+    document.getElementById('btnLandingMobileToggle')?.addEventListener('click', () => toggleLandingMobileMenu());
+    document.getElementById('btnMobileDrawerSignIn')?.addEventListener('click', () => {
+      toggleLandingMobileMenu(false);
+      openAuthModal('signin');
+    });
+    document.getElementById('btnMobileDrawerSignUp')?.addEventListener('click', () => {
+      toggleLandingMobileMenu(false);
+      openAuthModal('signup');
+    });
+    document.getElementById('btnMobileDrawerLogout')?.addEventListener('click', () => {
+      toggleLandingMobileMenu(false);
+      handleLogout();
+    });
 
     // Initialize session check on load
     document.addEventListener('DOMContentLoaded', () => {

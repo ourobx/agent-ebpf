@@ -220,6 +220,48 @@ class AuthDatabase:
                     return None
                 return dict(row)
 
+    def get_tenant(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves tenant record by tenant_id."""
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT tenant_id, company_name, plan_tier, api_key, created_at
+                FROM tenants
+                WHERE tenant_id = ?
+                """, (tenant_id,))
+                row = cursor.fetchone()
+                if not row:
+                    return None
+                return dict(row)
+
+    def update_tenant_plan(self, tenant_id: str, plan_tier: str, stripe_customer_id: Optional[str] = None) -> bool:
+        """Updates plan tier for a tenant."""
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                UPDATE tenants
+                SET plan_tier = ?
+                WHERE tenant_id = ?
+                """, (plan_tier, tenant_id))
+                conn.commit()
+                return cursor.rowcount > 0
+
+    def regenerate_api_key(self, tenant_id: str) -> str:
+        """Generates a fresh live API key for a tenant."""
+        new_key = f"ksec_live_{secrets.token_hex(16)}"
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                UPDATE tenants
+                SET api_key = ?
+                WHERE tenant_id = ?
+                """, (new_key, tenant_id))
+                conn.commit()
+                return new_key
+
     def revoke_token(self, jti: str, expires_at: float) -> None:
         """Revokes a JWT token by adding to blacklist."""
         with self._lock:
@@ -245,3 +287,4 @@ class AuthDatabase:
 
 # Global singleton instance
 auth_db = AuthDatabase()
+

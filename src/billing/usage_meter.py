@@ -107,8 +107,9 @@ class KSECUsageMeter:
 
             for tenant_id, rec in self.tenant_records.items():
                 if rec.total_verifications > 0:
-                    # Deterministic Idempotency Key bound to period start and count
-                    idempotency_raw = f"{tenant_id}_{int(rec.period_start_ts)}_{rec.total_verifications}_{rec.blocked_threats_count}"
+                    # Deterministic Idempotency Key: hash(tenant_id + period_start_ts + batch_uuid)
+                    batch_uuid = uuid.uuid4().hex[:16]
+                    idempotency_raw = f"{tenant_id}_{int(rec.period_start_ts)}_{batch_uuid}"
                     idempotency_key = hashlib.sha256(idempotency_raw.encode()).hexdigest()[:32]
 
                     stripe_events.append({

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "KSEC — Ring-0 otonom AI savunması",
+      "hasCanvas": false,
+      "bodyTextLen": 6358,
+      "bodyTextHash": "895e4a2ba6e45b592e0a37abe676fbbeff00a50c5d7bfb608248bc836633d9bf",
+      "bodyTextPrefix": "İçeriğe geç KSEC Mimari Özellikler Simülatör Fiyatlandırma Yorum",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "KSEC — Ring-0 otonom AI savunması",
+      "hasCanvas": false,
+      "bodyTextLen": 6282,
+      "bodyTextHash": "4d37cf26a3e0ac0533baa7e2878ead1f6b301071df0d796c6bb3e050994249a6",
+      "bodyTextPrefix": "İçeriğe geç KSEC RİNG-0 OTONOM SAVUNMA · LİNUX 6.8+ EBPF LSM Oto",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

@@ -1,0 +1,139 @@
+services:
+  # 1. ClickHouse Columnar Database
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: ksec-clickhouse
+    restart: always
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
+    environment:
+      - CLICKHOUSE_DB=ksec_telemetry
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-}
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse_schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - ksec-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 2. Redis In-Memory Store
+  redis:
+    image: redis:7.2-alpine
+    container_name: ksec-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ksec-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 3. FastAPI Backend Control Plane & gRPC Mesh
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ksec/agent-ebpf-backend:2.0.0
+    container_name: ksec-backend
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:50051:50051"
+    environment:
+      - NODE_ENV=production
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DB=ksec_telemetry
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ksec-production-jwt-secret-key-2026}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_live_dummy}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_dummy}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ksec-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz').read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # 4. KSEC Web Engine & Cyberpunk UI (ksec.space)
+  frontend:
+    build:
+      context: ./v2
+      dockerfile: Dockerfile
+    image: ksec/agent-ebpf-frontend:2.0.0
+    container_name: ksec-frontend
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NITRO_PRESET=node-server
+      - PORT=3000
+      - HOST=0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - ksec-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # 5. Watchtower Auto-Updater
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: ksec-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+    networks:
+      - ksec-net
+
+  # 6. Cloudflare Argo Tunnel Daemon (ksec.space / api.ksec.space / grpc.ksec.space)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ksec-cloudflared
+    restart: always
+    network_mode: "host"
+    command: ["tunnel", "--no-autoupdate", "run", "--config", "/etc/cloudflared/config.yml"]
+    volumes:
+      - ./deploy/cloudflared_config.yml:/etc/cloudflared/config.yml:ro
+      - ~/.cloudflared:/etc/cloudflared:ro
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
+      - CLOUDFLARE_TUNNEL_ID=${CLOUDFLARE_TUNNEL_ID:-}
+
+volumes:
+  clickhouse_data:
+  redis_data:
+
+networks:
+  ksec-net:
+    driver: bridge

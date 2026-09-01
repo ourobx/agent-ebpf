@@ -2,7 +2,7 @@
 name: "file-style-conventions"
 description: "Apply two lightweight file-hygiene conventions when writing or editing files - no emoji characters outside Markdown (.md) files, and YAML files (.yml/.yaml) end with exactly one trailing newline. Use whenever creating or editing non-Markdown files that might contain emoji, or any .yml/.yaml file."
 applyTo: "**/*"
-deployedAt: "2026-08-24T11:16:24.834Z"
+deployedAt: "2026-09-01T06:28:32.730Z"
 ---
 
 # file-style-conventions

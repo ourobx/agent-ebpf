@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from typing import Optional, List, Dict, Any
 import asyncpg
@@ -101,7 +102,7 @@ async def bulk_insert_telemetry(events: List[Dict[str, Any]]) -> int:
             e.get("reason"),
             e.get("kernel_trace_id") or e.get("kernelTraceId"),
             e.get("duration_ms", 0.0),
-            asyncpg.pgproto.pgproto.Json(e.get("metadata") or {})
+            e.get("metadata") or {}
         ))
 
     async with _pool.acquire() as conn:

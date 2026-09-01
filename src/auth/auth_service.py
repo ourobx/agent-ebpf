@@ -11,18 +11,29 @@ Handles:
 
 from __future__ import annotations
 import secrets
+import sys
 import time
 import uuid
 import structlog
 from typing import Dict, Any, Optional
 from jose import jwt, JWTError
 
+try:
+    from tools.config import settings as _settings
+except ImportError:
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from tools.config import settings as _settings
+
 from .auth_db import auth_db, AuthDatabase
 
 logger = structlog.get_logger(__name__)
 
-JWT_SECRET_KEY = "ksec_saas_jwt_super_secret_signing_key_v2"
-JWT_ALGORITHM = "HS256"
+# Secret must match mcp_server.py — both derive from the same settings singleton.
+# In production, set JWT_SECRET_KEY env var. In dev, a clearly-marked insecure
+# fallback is used deliberately (never for production).
+JWT_SECRET_KEY: str = _settings.effective_jwt_secret()
+JWT_ALGORITHM: str = _settings.jwt_algorithm or "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_SECONDS = 86400 * 7  # 7 Days
 
 

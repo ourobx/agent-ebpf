@@ -1,0 +1,3091 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Agent-eBPF MCP Gateway",
+    "description": "Production-Grade Security Gateway with eBPF Integration",
+    "version": "2.0.0-ULTRA"
+  },
+  "paths": {
+    "/api/v1/telemetry/stream": {
+      "get": {
+        "tags": [
+          "Telemetry Stream"
+        ],
+        "summary": "Stream Ebpf Events",
+        "description": "Real-time Server-Sent Events (SSE) telemetry stream for eBPF kernel events.\nIsolates streams to authenticated tenant processes or falls back to global stream.\nIncludes automated 15-second keepalive pings for Cloudflare Tunnel proxy buffering protection.",
+        "operationId": "stream_ebpf_events_api_v1_telemetry_stream_get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JWT Authentication token for tenant-scoped telemetry",
+              "title": "Token"
+            },
+            "description": "JWT Authentication token for tenant-scoped telemetry"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intent/lease": {
+      "post": {
+        "tags": [
+          "Intent-to-Execution"
+        ],
+        "summary": "Grant Intent Lease",
+        "description": "Evaluates and provisions an in-kernel eBPF Intent Lease for an autonomous AI agent process.",
+        "operationId": "grant_intent_lease_api_v1_intent_lease_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntentLeaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentLeaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intent/leases": {
+      "get": {
+        "tags": [
+          "Intent-to-Execution"
+        ],
+        "summary": "List Intent Leases",
+        "description": "Lists all active kernel-enforced capability leases.",
+        "operationId": "list_intent_leases_api_v1_intent_leases_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/compile": {
+      "post": {
+        "tags": [
+          "NLP Policy Compiler"
+        ],
+        "summary": "Compile Policy From Text",
+        "description": "Translates natural language security rules into typed eBPF/Cgroup policies via Gemini AI.",
+        "operationId": "compile_policy_from_text_api_v1_policy_compile_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompiledEbpfRule"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compiler/compile": {
+      "post": {
+        "tags": [
+          "NLP Policy Compiler"
+        ],
+        "summary": "Compile Policy From Nlp",
+        "description": "Synchronous fallback endpoint for compiler evaluations.",
+        "operationId": "compile_policy_from_nlp_api_v1_compiler_compile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyCompilationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compiler/apply": {
+      "post": {
+        "tags": [
+          "NLP Policy Compiler"
+        ],
+        "summary": "Apply Compiled Rule",
+        "description": "Directly provisions a compiled natural language rule into the active eBPF kernel policy map.",
+        "operationId": "apply_compiled_rule_api_v1_compiler_apply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyCompiledRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/containment/isolate": {
+      "post": {
+        "tags": [
+          "Incident Containment"
+        ],
+        "summary": "Isolate Process",
+        "description": "Triggers automated quarantine on target process (cgroupv2 SIGSTOP) and generates forensics snapshot.",
+        "operationId": "isolate_process_api_v1_containment_isolate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IsolateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/containment/release": {
+      "post": {
+        "tags": [
+          "Incident Containment"
+        ],
+        "summary": "Release Process",
+        "description": "Releases an isolated process back into normal execution (SIGCONT).",
+        "operationId": "release_process_api_v1_containment_release_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/containment/incidents": {
+      "get": {
+        "tags": [
+          "Incident Containment"
+        ],
+        "summary": "Get All Incidents",
+        "description": "Returns active and historical incident containment logs and forensics snapshots.",
+        "operationId": "get_all_incidents_api_v1_containment_incidents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentReport"
+                  },
+                  "type": "array",
+                  "title": "Response Get All Incidents Api V1 Containment Incidents Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mesh/register": {
+      "post": {
+        "tags": [
+          "Distributed Telemetry Mesh"
+        ],
+        "summary": "Register Node",
+        "description": "Registers an edge telemetry agent into the global control plane mesh.",
+        "operationId": "register_node_api_v1_mesh_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EdgeNode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdgeNode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mesh/heartbeat": {
+      "post": {
+        "tags": [
+          "Distributed Telemetry Mesh"
+        ],
+        "summary": "Node Heartbeat",
+        "description": "Processes liveness heartbeats and dynamic telemetry statistics from edge nodes.",
+        "operationId": "node_heartbeat_api_v1_mesh_heartbeat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeartbeatPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EdgeNode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mesh/nodes": {
+      "get": {
+        "tags": [
+          "Distributed Telemetry Mesh"
+        ],
+        "summary": "List Mesh Nodes",
+        "description": "Lists all registered edge nodes, regions, and their current health status.",
+        "operationId": "list_mesh_nodes_api_v1_mesh_nodes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EdgeNode"
+                  },
+                  "type": "array",
+                  "title": "Response List Mesh Nodes Api V1 Mesh Nodes Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/usage": {
+      "get": {
+        "tags": [
+          "SaaS Billing"
+        ],
+        "summary": "Api Get Billing Usage",
+        "description": "Returns instantaneous billing usage, event counters, and quota progress.",
+        "operationId": "api_get_billing_usage_api_v1_billing_usage_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "default-tenant",
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/checkout": {
+      "post": {
+        "tags": [
+          "SaaS Billing"
+        ],
+        "summary": "Api Create Checkout",
+        "description": "Creates Stripe checkout session for Team Pro ($99/mo) or Enterprise ($499/mo).",
+        "operationId": "api_create_checkout_api_v1_billing_checkout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/webhook": {
+      "post": {
+        "tags": [
+          "SaaS Billing"
+        ],
+        "summary": "Api Stripe Webhook",
+        "description": "Receives and verifies Stripe webhook events.",
+        "operationId": "api_stripe_webhook_api_v1_billing_webhook_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/create-checkout-session": {
+      "post": {
+        "tags": [
+          "Stripe Billing"
+        ],
+        "summary": "Create Stripe Checkout Session",
+        "description": "Creates an authenticated Stripe Checkout Session containing metadata for automated quota boosts.",
+        "operationId": "create_stripe_checkout_session_api_v1_billing_create_checkout_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutSessionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhook/stripe": {
+      "post": {
+        "tags": [
+          "Stripe Billing"
+        ],
+        "summary": "Stripe Webhook",
+        "description": "Listens for verified Stripe webhook events and automatically boosts tenant usage quotas.",
+        "operationId": "stripe_webhook_api_v1_webhook_stripe_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incident/contain": {
+      "post": {
+        "tags": [
+          "Incident Containment"
+        ],
+        "summary": "Trigger Auto Containment",
+        "description": "Triggers sub-millisecond process freezing via cgroupv2 when a critical security violation is detected.",
+        "operationId": "trigger_auto_containment_api_v1_incident_contain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentContainmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentContainmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/swarm/orchestrate/stream": {
+      "post": {
+        "tags": [
+          "Fractal Swarm Orchestration"
+        ],
+        "summary": "Orchestrate Swarm Stream",
+        "description": "Real-time recursive Server-Sent Events (SSE) stream coordinating Meta-Agent delegation\nacross dynamic clusters of specialized sub-agents.",
+        "operationId": "orchestrate_swarm_stream_api_v1_swarm_orchestrate_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HierarchicalSwarmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/benchmark/latency": {
+      "get": {
+        "tags": [
+          "Latency Benchmark & SLA"
+        ],
+        "summary": "Get Latency Sla Metrics",
+        "description": "Returns real-time sub-microsecond latency distribution and kernel Ring-Buffer health indicators.",
+        "operationId": "get_latency_sla_metrics_api_v1_benchmark_latency_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatencySlaReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mesh/crdt/sync": {
+      "post": {
+        "tags": [
+          "Distributed Policy Mesh"
+        ],
+        "summary": "Sync Crdt State",
+        "description": "Merges incoming CRDT policy state from peer edge nodes using Last-Write-Wins (LWW) conflict resolution.",
+        "operationId": "sync_crdt_state_api_v1_mesh_crdt_sync_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CRDTSyncPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mesh/crdt/state": {
+      "get": {
+        "tags": [
+          "Distributed Policy Mesh"
+        ],
+        "summary": "Get Crdt State",
+        "description": "Exports full local CRDT policy state for edge peer replication.",
+        "operationId": "get_crdt_state_api_v1_mesh_crdt_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cluster/crdt-status": {
+      "get": {
+        "tags": [
+          "Distributed Cluster"
+        ],
+        "summary": "Get Crdt Cluster Status",
+        "description": "Returns multi-region CRDT state synchronization health and PTP timestamp synchronization.",
+        "operationId": "get_crdt_cluster_status_api_v1_cluster_crdt_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Metrics",
+        "description": "Endpoint that serves Prometheus metrics.",
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register Endpoint",
+        "operationId": "register_endpoint_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Verify Otp Endpoint",
+        "operationId": "verify_otp_endpoint_api_auth_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/resend-otp": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Resend Otp Endpoint",
+        "operationId": "resend_otp_endpoint_api_auth_resend_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login Endpoint",
+        "operationId": "login_endpoint_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Me Endpoint",
+        "operationId": "get_me_endpoint_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout Endpoint",
+        "operationId": "logout_endpoint_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "summary": "Oauth Config",
+        "operationId": "oauth_config__well_known_openid_configuration_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "summary": "Oauth Config",
+        "operationId": "oauth_config__well_known_oauth_authorization_server_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/authorize": {
+      "get": {
+        "summary": "Oauth Authorize",
+        "operationId": "oauth_authorize_oauth_authorize_get",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Redirect Uri"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Oauth Token",
+        "operationId": "oauth_token_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Live",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Live",
+        "operationId": "health_live_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Ready",
+        "description": "Real readiness: reflects live DB connectivity and real eBPF state.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/android/devices": {
+      "get": {
+        "tags": [
+          "Android Sentinel"
+        ],
+        "summary": "Get Android Devices",
+        "operationId": "get_android_devices_api_android_devices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/android/summary": {
+      "get": {
+        "tags": [
+          "Android Sentinel"
+        ],
+        "summary": "Get Android Summary",
+        "operationId": "get_android_summary_api_android_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/android/token": {
+      "post": {
+        "tags": [
+          "Android Sentinel"
+        ],
+        "summary": "Create Android Token",
+        "operationId": "create_android_token_api_android_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AndroidTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/android/command": {
+      "post": {
+        "tags": [
+          "Android Sentinel"
+        ],
+        "summary": "Execute Android Command",
+        "operationId": "execute_android_command_api_android_command_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AndroidCommandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/android/policy": {
+      "post": {
+        "tags": [
+          "Android Sentinel"
+        ],
+        "summary": "Apply Android Policy",
+        "operationId": "apply_android_policy_api_android_policy_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AndroidPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/host": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Api Host Metrics",
+        "description": "Real host metrics (CPU/memory/uptime) via psutil; never fabricates values.",
+        "operationId": "api_host_metrics_api_system_host_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/system/status": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Api System Status",
+        "description": "Real kernel/database health snapshot from live eBPF map + PostgreSQL state.",
+        "operationId": "api_system_status_api_system_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Api Events",
+        "description": "Returns REAL persisted security events from PostgreSQL.",
+        "operationId": "api_events_api_events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/threats": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Api Threats",
+        "description": "Returns REAL detected threats from PostgreSQL.",
+        "operationId": "api_threats_api_threats_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/stream": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Api Metrics Stream",
+        "description": "Authenticated Server-Sent-Events stream of real live telemetry.",
+        "operationId": "api_metrics_stream_api_metrics_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/cognitive/state": {
+      "get": {
+        "tags": [
+          "Cognitive Engine"
+        ],
+        "summary": "Api Cognitive State",
+        "description": "Returns current Affective State Vector (PAD Model), Stress Index, and scaled Kernel Telemetry.",
+        "operationId": "api_cognitive_state_api_cognitive_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cognitive/stimulus": {
+      "post": {
+        "tags": [
+          "Cognitive Engine"
+        ],
+        "summary": "Api Cognitive Stimulus",
+        "description": "Processes conversational stimulus, updates emotional state vector, creates inner monologue, and syncs to eBPF.",
+        "operationId": "api_cognitive_stimulus_api_cognitive_stimulus_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CognitiveStimulusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cognitive/prosody": {
+      "get": {
+        "tags": [
+          "Cognitive Engine"
+        ],
+        "summary": "Api Cognitive Prosody",
+        "description": "Returns dynamic acoustic prosody synthesis parameters derived from the real-time Affective Vector.",
+        "operationId": "api_cognitive_prosody_api_cognitive_prosody_get",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Text"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cognitive/stream": {
+      "get": {
+        "tags": [
+          "Cognitive Engine"
+        ],
+        "summary": "Api Cognitive Stream",
+        "description": "Real-time SSE stream broadcasting live cognitive pulses and affective state shifts.",
+        "operationId": "api_cognitive_stream_api_cognitive_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/simulate/query": {
+      "post": {
+        "tags": [
+          "Security API"
+        ],
+        "summary": "Api Simulate Query",
+        "description": "Evaluates a proposed SQL query or agent mutation against active AST and kernel security policies.",
+        "operationId": "api_simulate_query_api_simulate_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySimulateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/security/status": {
+      "get": {
+        "tags": [
+          "Security API"
+        ],
+        "summary": "Api Security Status",
+        "description": "Returns active Agent-eBPF Linux kernel hooks, latency stats, and total blocked threats count.",
+        "operationId": "api_security_status_api_security_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ebpf/sock-ops/telemetry": {
+      "get": {
+        "tags": [
+          "Security API"
+        ],
+        "summary": "Api Sock Ops Telemetry",
+        "description": "Returns real-time socket lifecycle telemetry, database filters, and ring buffer latency stats.",
+        "operationId": "api_sock_ops_telemetry_api_ebpf_sock_ops_telemetry_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sse": {
+      "get": {
+        "summary": "Sse",
+        "operationId": "sse_sse_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "tags": [
+          "MCP Core"
+        ],
+        "summary": "Handle Mcp Messages",
+        "operationId": "handle_mcp_messages_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/security-rule": {
+      "post": {
+        "tags": [
+          "Security Rules"
+        ],
+        "summary": "Api Add Security Rule",
+        "description": "Adds a security rule with RBAC and token scope verification.",
+        "operationId": "api_add_security_rule_tools_security_rule_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/portal": {
+      "post": {
+        "tags": [
+          "SaaS Billing"
+        ],
+        "summary": "Api Create Portal",
+        "description": "Generates customer billing portal session.",
+        "operationId": "api_create_portal_api_v1_billing_portal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forensics/simulate-dag": {
+      "post": {
+        "tags": [
+          "Forensics"
+        ],
+        "summary": "Api Simulate Forensics Dag",
+        "description": "Simulates blast radius DAG, cascading table impact, and RTO downtime for a blocked query.",
+        "operationId": "api_simulate_forensics_dag_api_v1_forensics_simulate_dag_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateDAGRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit/export-manifest": {
+      "get": {
+        "tags": [
+          "Compliance & Audit"
+        ],
+        "summary": "Api Export Audit Manifest",
+        "description": "Exports cryptographic SHA-256 sealed SOC-2 / HIPAA audit vault manifest for S3 partitions.",
+        "operationId": "api_export_audit_manifest_api_v1_audit_export_manifest_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "default-tenant",
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenant/helm-command": {
+      "get": {
+        "tags": [
+          "Tenant Management"
+        ],
+        "summary": "Api Get Helm Command",
+        "description": "Generates 1-click Helm installation script for Kubernetes cluster onboarding.",
+        "operationId": "api_get_helm_command_api_v1_tenant_helm_command_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "default-tenant",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ksec_live_...",
+              "title": "Api Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AndroidCommandRequest": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "command_type": {
+            "type": "string",
+            "title": "Command Type",
+            "example": "LOCK"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "command_type"
+        ],
+        "title": "AndroidCommandRequest"
+      },
+      "AndroidPolicyRequest": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "default": "sentinel-strict"
+          },
+          "spec": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Spec",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "title": "AndroidPolicyRequest"
+      },
+      "AndroidTokenRequest": {
+        "properties": {
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "default": "sentinel-strict"
+          },
+          "duration_hours": {
+            "type": "integer",
+            "title": "Duration Hours",
+            "default": 24
+          }
+        },
+        "type": "object",
+        "title": "AndroidTokenRequest"
+      },
+      "ApplyCompiledRuleRequest": {
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/CompiledRule"
+          },
+          "pid": {
+            "type": "integer",
+            "title": "Pid",
+            "description": "Optional target process ID to immediately bind the rule",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule"
+        ],
+        "title": "ApplyCompiledRuleRequest"
+      },
+      "CRDTSyncPayload": {
+        "properties": {
+          "source_node_id": {
+            "type": "string",
+            "title": "Source Node Id"
+          },
+          "records": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "records"
+        ],
+        "title": "CRDTSyncPayload"
+      },
+      "CheckoutRequest": {
+        "properties": {
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "plan_tier": {
+            "type": "string",
+            "title": "Plan Tier",
+            "default": "team_pro"
+          },
+          "success_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Url"
+          },
+          "cancel_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Url"
+          }
+        },
+        "type": "object",
+        "title": "CheckoutRequest"
+      },
+      "CheckoutSessionCreateRequest": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Customer Tenant ID receiving quota boost"
+          },
+          "plan_tier": {
+            "type": "string",
+            "title": "Plan Tier",
+            "description": "Subscription plan tier (pro, enterprise)",
+            "default": "enterprise"
+          },
+          "quota_boost": {
+            "type": "integer",
+            "title": "Quota Boost",
+            "description": "Additional eBPF telemetry inspections credited",
+            "default": 250000
+          },
+          "success_url": {
+            "type": "string",
+            "title": "Success Url",
+            "default": "https://ksec.space/dashboard/billing?success=true"
+          },
+          "cancel_url": {
+            "type": "string",
+            "title": "Cancel Url",
+            "default": "https://ksec.space/dashboard/billing?canceled=true"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id"
+        ],
+        "title": "CheckoutSessionCreateRequest"
+      },
+      "CheckoutSessionRequest": {
+        "properties": {
+          "plan_tier": {
+            "type": "string",
+            "title": "Plan Tier",
+            "description": "Target tier: developer, pro, enterprise",
+            "default": "enterprise"
+          },
+          "success_url": {
+            "type": "string",
+            "title": "Success Url",
+            "default": "https://ksec.space/dashboard/billing?session_id={CHECKOUT_SESSION_ID}"
+          },
+          "cancel_url": {
+            "type": "string",
+            "title": "Cancel Url",
+            "default": "https://ksec.space/dashboard/billing?cancelled=true"
+          }
+        },
+        "type": "object",
+        "title": "CheckoutSessionRequest"
+      },
+      "CognitiveStimulusRequest": {
+        "properties": {
+          "user_input": {
+            "type": "string",
+            "title": "User Input",
+            "description": "Conversational user message or system stimulus"
+          },
+          "is_mutation": {
+            "type": "boolean",
+            "title": "Is Mutation",
+            "description": "Flag indicating if the action involves database mutation or critical operations",
+            "default": false
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_input"
+        ],
+        "title": "CognitiveStimulusRequest"
+      },
+      "CompileRequest": {
+        "properties": {
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query",
+            "description": "Natural language policy prompt"
+          },
+          "natural_language_rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Natural Language Rule",
+            "description": "Natural language security intent rule"
+          }
+        },
+        "type": "object",
+        "title": "CompileRequest"
+      },
+      "CompiledEbpfRule": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "description": "Unique policy identifier (e.g. pol-net-01)"
+          },
+          "rule_name": {
+            "type": "string",
+            "title": "Rule Name",
+            "description": "Short summary description of the rule"
+          },
+          "target_comm": {
+            "type": "string",
+            "title": "Target Comm",
+            "description": "Target process executable or binary name (e.g. python3, nc, curl)"
+          },
+          "allowed_ports": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Allowed Ports",
+            "description": "List of permitted network ports"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "TCP",
+              "UDP",
+              "ALL"
+            ],
+            "title": "Protocol",
+            "description": "Target transport layer protocol",
+            "default": "TCP"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "ALLOW",
+              "DROP",
+              "LOG_ONLY"
+            ],
+            "title": "Action",
+            "description": "Enforcement action verdict",
+            "default": "ALLOW"
+          },
+          "risk_level": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ],
+            "title": "Risk Level",
+            "description": "AI evaluated threat risk level",
+            "default": "LOW"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "description": "Security rationale provided by the AI compiler"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy_id",
+          "rule_name",
+          "target_comm",
+          "rationale"
+        ],
+        "title": "CompiledEbpfRule"
+      },
+      "CompiledRule": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "target_comm": {
+            "type": "string",
+            "title": "Target Comm"
+          },
+          "allowed_ports": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Allowed Ports"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "risk_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Risk Score"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "target_comm",
+          "allowed_ports",
+          "action",
+          "risk_score",
+          "explanation"
+        ],
+        "title": "CompiledRule"
+      },
+      "EdgeNode": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "hostname": {
+            "type": "string",
+            "title": "Hostname"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "default": "us-east-1"
+          },
+          "ip_address": {
+            "type": "string",
+            "title": "Ip Address"
+          },
+          "ebpf_probes_loaded": {
+            "type": "integer",
+            "title": "Ebpf Probes Loaded",
+            "default": 1
+          },
+          "active_kprobes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Active Kprobes",
+            "default": [
+              "tcp_v4_connect"
+            ]
+          },
+          "cpu_usage_pct": {
+            "type": "number",
+            "title": "Cpu Usage Pct",
+            "default": 0.0
+          },
+          "memory_mb": {
+            "type": "number",
+            "title": "Memory Mb",
+            "default": 0.0
+          },
+          "last_heartbeat_timestamp": {
+            "type": "number",
+            "title": "Last Heartbeat Timestamp"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ONLINE"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "hostname",
+          "ip_address"
+        ],
+        "title": "EdgeNode"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HeartbeatPayload": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "cpu_usage_pct": {
+            "type": "number",
+            "title": "Cpu Usage Pct",
+            "default": 0.0
+          },
+          "memory_mb": {
+            "type": "number",
+            "title": "Memory Mb",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id"
+        ],
+        "title": "HeartbeatPayload"
+      },
+      "HierarchicalSwarmRequest": {
+        "properties": {
+          "meta_agent_id": {
+            "type": "string",
+            "title": "Meta Agent Id",
+            "description": "Executive Meta-Agent ID (e.g. CEO-MetaAgent-01)"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective",
+            "description": "High-level enterprise strategic objective"
+          },
+          "sub_agents": {
+            "items": {
+              "$ref": "#/components/schemas/SubAgent"
+            },
+            "type": "array",
+            "title": "Sub Agents",
+            "description": "Injected specialized sub-agent swarm"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta_agent_id",
+          "objective"
+        ],
+        "title": "HierarchicalSwarmRequest"
+      },
+      "IncidentContainmentRequest": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid",
+            "description": "Target process PID committing security violation"
+          },
+          "comm": {
+            "type": "string",
+            "title": "Comm",
+            "description": "Binary executable name (e.g. nc, python3)",
+            "default": "unknown"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Rationale for triggering automated quarantine"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARN",
+              "CRIT",
+              "crit"
+            ],
+            "title": "Severity",
+            "description": "Incident severity level",
+            "default": "CRIT"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid",
+          "reason"
+        ],
+        "title": "IncidentContainmentRequest"
+      },
+      "IncidentContainmentResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "incident_id": {
+            "type": "string",
+            "title": "Incident Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "enforced_by": {
+            "type": "string",
+            "title": "Enforced By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "incident_id",
+          "message",
+          "enforced_by"
+        ],
+        "title": "IncidentContainmentResponse"
+      },
+      "IncidentReport": {
+        "properties": {
+          "incident_id": {
+            "type": "string",
+            "title": "Incident Id"
+          },
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "comm": {
+            "type": "string",
+            "title": "Comm"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "timestamp_ns": {
+            "type": "integer",
+            "title": "Timestamp Ns"
+          },
+          "action_taken": {
+            "type": "string",
+            "title": "Action Taken"
+          },
+          "forensics_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Forensics Snapshot"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "CONTAINED"
+          }
+        },
+        "type": "object",
+        "required": [
+          "incident_id",
+          "pid",
+          "comm",
+          "reason",
+          "timestamp_ns",
+          "action_taken",
+          "forensics_snapshot"
+        ],
+        "title": "IncidentReport"
+      },
+      "IntentLeaseRequest": {
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "title": "Intent Id",
+            "description": "Unique Intent Identifier (e.g. intent-net-01)"
+          },
+          "pid": {
+            "type": "integer",
+            "title": "Pid",
+            "description": "Target Process ID running under agent execution context"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "ALLOW",
+              "DENY",
+              "allow",
+              "deny"
+            ],
+            "title": "Action",
+            "description": "Policy action verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "pid",
+          "action"
+        ],
+        "title": "IntentLeaseRequest"
+      },
+      "IntentLeaseResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Execution status",
+            "default": "success"
+          },
+          "intent_id": {
+            "type": "string",
+            "title": "Intent Id",
+            "description": "Granted intent identifier"
+          },
+          "pid": {
+            "type": "integer",
+            "title": "Pid",
+            "description": "Target Process ID"
+          },
+          "enforced_in_kernel": {
+            "type": "boolean",
+            "title": "Enforced In Kernel",
+            "description": "Whether policy was synchronized to eBPF map",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "pid"
+        ],
+        "title": "IntentLeaseResponse"
+      },
+      "IsolateRequest": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid",
+            "description": "Target process PID to immediately freeze and isolate"
+          },
+          "comm": {
+            "type": "string",
+            "title": "Comm",
+            "description": "Process name / binary executable",
+            "default": "unknown"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Containment rationale",
+            "default": "Manual security quarantine triggered from dashboard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid"
+        ],
+        "title": "IsolateRequest"
+      },
+      "LatencySlaReport": {
+        "properties": {
+          "p50_us": {
+            "type": "number",
+            "title": "P50 Us",
+            "description": "50th percentile latency in microseconds"
+          },
+          "p90_us": {
+            "type": "number",
+            "title": "P90 Us",
+            "description": "90th percentile latency in microseconds"
+          },
+          "p99_us": {
+            "type": "number",
+            "title": "P99 Us",
+            "description": "99th percentile latency in microseconds"
+          },
+          "p999_us": {
+            "type": "number",
+            "title": "P999 Us",
+            "description": "99.9th percentile latency in microseconds"
+          },
+          "target_sla_us": {
+            "type": "number",
+            "title": "Target Sla Us",
+            "description": "Target SLA ceiling in microseconds",
+            "default": 50.0
+          },
+          "sla_status": {
+            "type": "string",
+            "title": "Sla Status",
+            "description": "SLA compliance rating: COMPLIANT, BREACH",
+            "default": "COMPLIANT"
+          },
+          "ring_buffer": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ring Buffer"
+          },
+          "active_crdt_policies": {
+            "type": "integer",
+            "title": "Active Crdt Policies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p50_us",
+          "p90_us",
+          "p99_us",
+          "p999_us",
+          "ring_buffer",
+          "active_crdt_policies"
+        ],
+        "title": "LatencySlaReport"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "PolicyCompilationResult": {
+        "properties": {
+          "natural_query": {
+            "type": "string",
+            "title": "Natural Query"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/CompiledRule"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "overall_safety_rating": {
+            "type": "string",
+            "title": "Overall Safety Rating"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "natural_query",
+          "rules",
+          "overall_safety_rating"
+        ],
+        "title": "PolicyCompilationResult"
+      },
+      "PortalRequest": {
+        "properties": {
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "return_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Url"
+          }
+        },
+        "type": "object",
+        "title": "PortalRequest"
+      },
+      "QuerySimulateRequest": {
+        "properties": {
+          "payload": {
+            "type": "string",
+            "title": "Payload",
+            "description": "SQL query or agent mutation to simulate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "QuerySimulateRequest"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name",
+            "default": "Autonomous AI Corp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
+      "ReleaseRequest": {
+        "properties": {
+          "incident_id": {
+            "type": "string",
+            "title": "Incident Id",
+            "description": "Target incident ID to release and unfreeze"
+          }
+        },
+        "type": "object",
+        "required": [
+          "incident_id"
+        ],
+        "title": "ReleaseRequest"
+      },
+      "ResendOtpRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ResendOtpRequest"
+      },
+      "SimulateDAGRequest": {
+        "properties": {
+          "payload": {
+            "type": "string",
+            "title": "Payload"
+          },
+          "agent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id",
+            "default": "langchain-db-agent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SimulateDAGRequest"
+      },
+      "SubAgent": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id",
+            "description": "Unique sub-agent identifier"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "Functional role: SECURITY, FINANCE, DEVOPS, LEGAL"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Underlying LLM model",
+            "default": "gemini-2.5-flash"
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "Domain-specific system instructions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_id",
+          "role",
+          "system_prompt"
+        ],
+        "title": "SubAgent"
+      },
+      "UsageResponse": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "used_requests": {
+            "type": "integer",
+            "title": "Used Requests"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "active_policies": {
+            "type": "integer",
+            "title": "Active Policies"
+          },
+          "latency_overhead_ms": {
+            "type": "number",
+            "title": "Latency Overhead Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "plan",
+          "used_requests",
+          "limit",
+          "active_policies",
+          "latency_overhead_ms"
+        ],
+        "title": "UsageResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyOtpRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "otp_code": {
+            "type": "string",
+            "title": "Otp Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "otp_code"
+        ],
+        "title": "VerifyOtpRequest"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
+      },
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

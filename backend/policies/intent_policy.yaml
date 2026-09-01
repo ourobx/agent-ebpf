@@ -1,0 +1,16 @@
+version: "1.0"
+policies:
+  - id: "intent-net-01"
+    name: "AI Agent Outbound Restrictions"
+    target_comm: "python3"
+    allowed_ports: [443, 80, 8000, 5432, 6379]
+    action: "ALLOW" # ALLOW or DENY
+  - id: "intent-exec-02"
+    name: "Block Unauthorized Shell Spawning"
+    target_comm: "nc"
+    action: "DENY"
+  - id: "intent-db-03"
+    name: "Enforce Read-Only Database Leases"
+    target_comm: "node"
+    allowed_ports: [5432]
+    action: "ALLOW"
