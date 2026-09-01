@@ -1,11 +1,11 @@
 import { i as __toESM, n as __exportAll } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
-import { _ as createRootRoute, d as HeadContent, g as createFileRoute, h as lazyRouteComponent, m as Outlet, p as createRouter, u as Scripts, v as useRouter, y as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as createRootRoute, b as require_jsx_runtime, d as HeadContent, g as createFileRoute, h as lazyRouteComponent, m as Outlet, p as createRouter, u as Scripts, v as Navigate, y as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { a as union, i as string, n as number, r as object, t as literal } from "../_libs/zod.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-HxZotxRs.js
-var router_HxZotxRs_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-6_DVKMDm.js
+var router_6_DVKMDm_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AppErrorComponent({ error }) {
@@ -276,6 +276,10 @@ function PreviewHostBridge() {
 }
 var styles_default = "/assets/styles-By2walgb.css";
 var Route$1 = createRootRoute({
+	notFoundComponent: () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Navigate, {
+		to: "/",
+		replace: true
+	}),
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -355,4 +359,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_HxZotxRs_exports as t };
+export { getRouter, router_6_DVKMDm_exports as t };

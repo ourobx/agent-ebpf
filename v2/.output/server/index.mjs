@@ -1,5 +1,5 @@
 globalThis.__nitro_main__ = import.meta.url;
-import { a as toEventHandler, c as serve, i as defineLazyEventHandler, n as HTTPError, r as defineHandler, s as NodeResponse, t as H3Core } from "./_libs/h3+rou3+srvx.mjs";
+import { a as defineLazyEventHandler, i as defineHandler, l as NodeResponse, n as HTTPError, o as sendRedirect, r as defineEventHandler, s as toEventHandler, t as H3Core, u as serve } from "./_libs/h3+rou3+srvx.mjs";
 import { i as withoutTrailingSlash, n as joinURL, r as withLeadingSlash, t as decodePath } from "./_libs/ufo.mjs";
 import { existsSync, promises, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -25,26 +25,26 @@ var public_assets_data_default = {
 		"size": 30851,
 		"path": "../public/og.jpg"
 	},
-	"/assets/routes-ImEX56hS.js": {
+	"/assets/index-BsAgOUpm.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"10522-SML8HYdcUgZSbjiXqFGSuh4yIRE\"",
-		"mtime": "2026-09-01T06:26:00.985Z",
+		"etag": "\"664a7-iDP1OKqa5x5aOY4hk09cIfbNM+0\"",
+		"mtime": "2026-09-01T07:03:10.781Z",
+		"size": 418983,
+		"path": "../public/assets/index-BsAgOUpm.js"
+	},
+	"/assets/routes-DJZI7iO7.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"10522-yHxAdnTp6vx8LHp/VJyESUf8K60\"",
+		"mtime": "2026-09-01T07:03:10.782Z",
 		"size": 66850,
-		"path": "../public/assets/routes-ImEX56hS.js"
+		"path": "../public/assets/routes-DJZI7iO7.js"
 	},
 	"/assets/styles-D2cVFE43.css": {
 		"type": "text/css; charset=utf-8",
 		"etag": "\"9cc8-TvYpkYIDGDjnnDvSszGNyZ5Svf8\"",
-		"mtime": "2026-09-01T06:26:00.986Z",
+		"mtime": "2026-09-01T07:03:10.783Z",
 		"size": 40136,
 		"path": "../public/assets/styles-D2cVFE43.css"
-	},
-	"/assets/index-DoKEOrJ0.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"663f5-LHH0Y/VeSe1EEWI0N6e4faWvbdY\"",
-		"mtime": "2026-09-01T06:26:00.980Z",
-		"size": 418805,
-		"path": "../public/assets/index-DoKEOrJ0.js"
 	},
 	"/__grok/icon-180.png": {
 		"type": "image/png",
@@ -81,19 +81,19 @@ var public_assets_data_default = {
 		"size": 1059,
 		"path": "../public/__grok/install/assets/homescreen/logo-grok.svg"
 	},
-	"/__grok/install/assets/homescreen/ob-ipad.png": {
-		"type": "image/png",
-		"etag": "\"18dd3-wlRwrpmBImStuiu+4poVz7ANin4\"",
-		"mtime": "2026-08-31T20:33:44.000Z",
-		"size": 101843,
-		"path": "../public/__grok/install/assets/homescreen/ob-ipad.png"
-	},
 	"/__grok/install/assets/homescreen/ob-phone.png": {
 		"type": "image/png",
 		"etag": "\"194bc-oZradWHIHO68q2glHU0Gk5ttpWA\"",
 		"mtime": "2026-08-31T20:33:44.000Z",
 		"size": 103612,
 		"path": "../public/__grok/install/assets/homescreen/ob-phone.png"
+	},
+	"/__grok/install/assets/homescreen/ob-ipad.png": {
+		"type": "image/png",
+		"etag": "\"18dd3-wlRwrpmBImStuiu+4poVz7ANin4\"",
+		"mtime": "2026-08-31T20:33:44.000Z",
+		"size": 101843,
+		"path": "../public/__grok/install/assets/homescreen/ob-ipad.png"
 	},
 	"/__grok/install/assets/homescreen/plus.svg": {
 		"type": "image/svg+xml",
@@ -600,6 +600,12 @@ async function grokPwaMiddleware(event, next) {
 	return result;
 }
 //#endregion
+//#region server/middleware/routes.ts
+var routes_default = defineEventHandler((event) => {
+	const pathname = (event.node.req.url || "/").split("?")[0];
+	if (pathname === "/landing.html" || pathname === "/landing" || pathname === "/home" || pathname === "/index.html" || pathname === "/index" || pathname === "/console" || pathname === "/app" || pathname === "/dashboard") return sendRedirect(event, "/#", 302);
+});
+//#endregion
 //#region #nitro/virtual/routing
 var findRouteRules = /* @__PURE__ */ (() => {
 	const $0 = [{
@@ -634,7 +640,11 @@ var findRoute = /* @__PURE__ */ (() => {
 		};
 	});
 })();
-var globalMiddleware = [toEventHandler(static_default), toEventHandler(grokPwaMiddleware)].filter(Boolean);
+var globalMiddleware = [
+	toEventHandler(static_default),
+	toEventHandler(grokPwaMiddleware),
+	toEventHandler(routes_default)
+].filter(Boolean);
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/error/prod.mjs
 var errorHandler = (error, event) => {

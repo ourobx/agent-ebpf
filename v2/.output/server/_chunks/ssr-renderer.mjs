@@ -1,4 +1,4 @@
-import { n as HTTPError, o as toRequest } from "../_libs/h3+rou3+srvx.mjs";
+import { c as toRequest, n as HTTPError } from "../_libs/h3+rou3+srvx.mjs";
 //#region #nitro/virtual/vite-services
 function lazyService(loader) {
 	let promise, mod;

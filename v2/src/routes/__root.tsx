@@ -1,10 +1,11 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Navigate, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
+  notFoundComponent: () => <Navigate to="/" replace />,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
