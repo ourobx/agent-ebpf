@@ -9,8 +9,8 @@ import time
 import uuid
 import httpx
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Request, Header, HTTPException, status, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request, Header, HTTPException, status, Depends, Query
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.guard.pii_engine import pii_engine, PIICategory, PIIAction
@@ -18,6 +18,7 @@ from src.guard.injection_guard import injection_guard, InjectionVerdict
 from src.guard.policy_loader import policy_loader, SecurityPolicy, RuleAction
 from src.guard.compliance_report import compliance_engine, ComplianceReport
 from backend.app.core.clickhouse_client import ch_engine
+from backend.app.core.fast_path_cache import fast_path_cache
 from backend.app.schemas.telemetry import EbpfEvent
 
 router = APIRouter()
@@ -174,7 +175,46 @@ async def guard_chat_completions(
             headers={"X-KSEC-Verdict": "BLOCKED", "X-KSEC-Latency-Ms": str(round((time.time() - start_time) * 1000, 2))}
         )
 
-    # 2. Upstream Execution / Mock Fallback
+    # 2. Fast-Path Cache Lookup (Canonical Hash + Determinism Gate)
+    cache_key = fast_path_cache.generate_canonical_hash(
+        tenant_id=tenant_id,
+        provider="openai",
+        model=payload.model,
+        messages=[m.model_dump() for m in payload.messages],
+        temperature=payload.temperature,
+        max_tokens=payload.max_tokens
+    )
+    is_cacheable = fast_path_cache.is_cacheable_request(payload.temperature, ingress_report.threat_score)
+
+    if is_cacheable:
+        cached_response = await fast_path_cache.get(cache_key)
+        if cached_response:
+            cache_latency_ms = round((time.time() - start_time) * 1000, 2)
+            # If streaming was requested, replay simulated SSE token stream
+            if payload.stream:
+                return StreamingResponse(
+                    fast_path_cache.stream_sse_replay(cached_response),
+                    media_type="text/event-stream",
+                    headers={
+                        "X-KSEC-Verdict": "ALLOWED",
+                        "X-KSEC-Cache": "HIT",
+                        "X-KSEC-Latency-Ms": str(cache_latency_ms)
+                    }
+                )
+            # Return cached JSON response
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=cached_response,
+                headers={
+                    "X-KSEC-Verdict": "ALLOWED",
+                    "X-KSEC-Cache": "HIT",
+                    "X-KSEC-Policy": policy.policy_name,
+                    "X-KSEC-Latency-Ms": str(cache_latency_ms),
+                    "X-KSEC-Redacted": "false"
+                }
+            )
+
+    # 3. Upstream Execution / Mock Fallback
     raw_completion_text = ""
     upstream_token = authorization.replace("Bearer ", "") if authorization else None
 
@@ -198,7 +238,7 @@ async def guard_chat_completions(
         # Autonomous / Mock local mode response
         raw_completion_text = f"Safe response from ksec.space AI Firewall Gateway: Received {len(payload.messages)} message(s) under policy '{policy.policy_name}'."
 
-    # 3. Egress Protection: Scan model response for PII and Secrets
+    # 4. Egress Protection: Scan model response for PII and Secrets
     block_cats = [
         PIICategory(r.pattern) for r in policy.egress_rules 
         if r.action == RuleAction.BLOCK and r.pattern in PIICategory.__members__
@@ -241,9 +281,12 @@ async def guard_chat_completions(
             }
         )
 
-    # 4. Successful Response Generation
+    # 5. Successful Response Generation & Cache Write Gate
     total_latency_ms = round((time.time() - start_time) * 1000, 2)
     response_id = f"chatcmpl-ksec-{uuid.uuid4().hex[:12]}"
+    prompt_tokens = len(combined_user_prompt.split())
+    completion_tokens = len(egress_report.sanitized_text.split())
+    total_tokens = prompt_tokens + completion_tokens
 
     response_payload = {
         "id": response_id,
@@ -261,9 +304,9 @@ async def guard_chat_completions(
             }
         ],
         "usage": {
-            "prompt_tokens": len(combined_user_prompt.split()),
-            "completion_tokens": len(egress_report.sanitized_text.split()),
-            "total_tokens": len(combined_user_prompt.split()) + len(egress_report.sanitized_text.split())
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens
         },
         "ksec_firewall": {
             "verdict": "ALLOWED",
@@ -274,11 +317,20 @@ async def guard_chat_completions(
         }
     }
 
+    # Security Gate: Only cache verified, clean responses (prevent cache poisoning)
+    if is_cacheable and fast_path_cache.validate_egress_security(
+        should_block=egress_report.should_block,
+        has_pii_violation=egress_report.has_violation,
+        is_threat=ingress_report.is_blocked
+    ):
+        await fast_path_cache.put(cache_key, response_payload, tokens=total_tokens)
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=response_payload,
         headers={
             "X-KSEC-Verdict": "ALLOWED",
+            "X-KSEC-Cache": "MISS",
             "X-KSEC-Policy": policy.policy_name,
             "X-KSEC-Latency-Ms": str(total_latency_ms),
             "X-KSEC-Redacted": str(egress_report.has_violation).lower()
@@ -360,4 +412,25 @@ async def get_compliance_summary(tenant_id: Optional[str] = "global"):
         "sla_latency_ms": report.metrics.avg_latency_ms,
         "compliance_status": "VERIFIED_COMPLIANT",
         "audit_seal": report.audit_seal_sha256[:16] + "..."
+    }
+
+
+@router.get("/v1/guard/cache/stats", tags=["AI Firewall & Guardrails"])
+async def get_cache_stats():
+    """Returns LLM Provider Fast-Path Cache real-time metrics and savings."""
+    stats = fast_path_cache.get_stats()
+    return {
+        "status": "success",
+        "cache": stats.model_dump()
+    }
+
+
+@router.post("/v1/guard/cache/purge", tags=["AI Firewall & Guardrails"])
+async def purge_cache(tenant_id: Optional[str] = Query(None, description="Tenant ID prefix to invalidate")):
+    """Purges L1 and L2 cache for a specific tenant or entire cache."""
+    cleared = await fast_path_cache.invalidate(prefix=tenant_id)
+    return {
+        "status": "success",
+        "message": f"Successfully invalidated {cleared} cache entry(ies).",
+        "cleared_count": cleared
     }

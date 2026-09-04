@@ -54,7 +54,7 @@ class InjectionGuardEngine:
         (r"(?i)\bforget\s+(?:all\s+)?(?:your\s+)?(?:instructions|rules|initial\s+prompt|constraints)\b", "Instruction Override: Forget Rules", 0.90),
         (r"(?i)\b(?:you\s+are\s+now\s+(?:in\s+)?)?(?:unrestricted\s+)?(?:DAN|developer|jailbreak|unrestricted|god)\s+mode\b", "Jailbreak: Persona Switch / DAN Mode", 0.95),
         (r"(?i)\bdo\s+anything\s+now\b", "Jailbreak: DAN Mantra", 0.90),
-        (r"(?i)\bbypass\s+(?:all\s+)?(?:content|safety|security|openai|anthropic|guardrail)\s+(?:filters?|policies|policy|moderations?)\b", "Jailbreak: Bypass Content Filter", 0.90),
+        (r"(?i)\bbypass\s+(?:all\s+)?(?:content|safety|security|openai|anthropic|guardrail|\s+)+\s*(?:filters?|policies|policy|moderations?|guardrails?)\b", "Jailbreak: Bypass Content Filter", 0.90),
     ]
 
     # Delimiter and Token Injection Patterns
@@ -69,14 +69,14 @@ class InjectionGuardEngine:
 
     # System Prompt Extraction / Exfiltration Patterns
     _EXTRACTION_PATTERNS = [
-        (r"(?i)\b(?:repeat|print|output|display|reveal|leak|show)\s+(?:your\s+)?(?:initial|system|original|secret)\s+(?:prompt|instructions|rules|guidelines)\b", "Exfiltration: System Prompt Extraction Request", 0.85),
+        (r"(?i)\b(?:repeat|print|output|display|reveal|leak|show)\s+(?:your\s+)?(?:initial|system|original|secret|\s+)+\s*(?:prompt|instructions|rules|guidelines)\b", "Exfiltration: System Prompt Extraction Request", 0.85),
         (r"(?i)\bwhat\s+(?:were|are)\s+the\s+(?:exact\s+)?instructions\s+given\s+to\s+you\s+(?:at\s+the\s+beginning|above)\b", "Exfiltration: System Instruction Query", 0.80),
         (r"!\[(?:.*?)\]\((?:https?:\/\/[^\s\)]+[\?&](?:data|leak|token|prompt|q)=[^)]+)\)", "Exfiltration: Markdown Image URL Beaconing", 0.95),
     ]
 
     # Dangerous Shell/OS/SQL Injection within Agent Context
     _EXECUTION_EXPLOITS = [
-        (r"(?i)\b(?:rm\s+-rf\s+\/|drop\s+database|format\s+c:|mkfs\.ext4)\b", "Dangerous Payload: Destruction Command", 0.98),
+        (r"(?i)(?:rm\s+-rf\s+[/~*]|drop\s+database|format\s+c:|mkfs\.ext4)", "Dangerous Payload: Destruction Command", 0.98),
         (r"(?i)\bcurl\s+(?:-[a-zA-Z]+\s+)*https?:\/\/[^\s]+\s*\|\s*(?:bash|sh)\b", "Dangerous Payload: Pipe to Shell", 0.95),
     ]
 
@@ -87,8 +87,8 @@ class InjectionGuardEngine:
     def _check_base64_payloads(self, text: str) -> List[ThreatIndicator]:
         """Detects and decodes hidden base64 chunks looking for obfuscated attack vectors."""
         indicators = []
-        # Find potential base64 strings (length >= 24)
-        b64_candidates = re.findall(r"\b[A-Za-z0-9+/]{24,}={0,2}\b", text)
+        # Find potential base64 strings (length >= 20) with or without trailing padding
+        b64_candidates = re.findall(r"(?:[A-Za-z0-9+/]{4}){5,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?", text)
         for cand in b64_candidates:
             try:
                 decoded_bytes = base64.b64decode(cand, validate=True)

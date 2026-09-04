@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 
-from backend.app.api.v1.endpoints import stream, intent, compiler, containment, mesh, billing, stripe_webhook, incident, swarm_stream, benchmark, forensics, audit, auth, guard_proxy
+from backend.app.api.v1.endpoints import stream, intent, compiler, containment, mesh, billing, stripe_webhook, incident, swarm_stream, benchmark, forensics, audit, auth, guard_proxy, red_team
 from backend.app.core.broadcaster import event_broadcaster
 from backend.app.core.ebpf_loader import ebpf_loader
 from backend.app.middleware.saas_auth import SaaSAuthMiddleware
@@ -84,6 +84,8 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api")
 app.include_router(guard_proxy.router, prefix="/api")
 app.include_router(guard_proxy.router, prefix="")
+app.include_router(red_team.router, prefix="/api/v1")
+app.include_router(red_team.router, prefix="/api")
 
 # Prometheus Metrics Instrumentation (metrics.ksec.space)
 try:

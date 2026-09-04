@@ -273,10 +273,11 @@ async def serve_landing_alias():
 @app.get("/app", include_in_schema=False)
 @app.get("/dashboard", include_in_schema=False)
 async def serve_console():
-    index_path = os.path.join(BASE_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path, media_type="text/html")
-    raise HTTPException(status_code=404, detail="index.html not found")
+    for p in ["index.html", "landing.html"]:
+        full_p = os.path.join(BASE_DIR, p)
+        if os.path.exists(full_p):
+            return FileResponse(full_p, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Console interface not found")
 
 @app.get("/whitepaper", include_in_schema=False)
 @app.get("/docs/whitepaper", include_in_schema=False)
