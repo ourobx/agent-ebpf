@@ -6,10 +6,11 @@ Tests live HTTP, OAuth2, AST Simulation, SaaS Multi-Tenant Auth, and MCP JSON-RP
 import json
 import threading
 import time
+import os
 import urllib.parse
 import urllib.request
 
-BASE = "http://127.0.0.1:8000"
+BASE = os.getenv("BASE_URL", "https://api.ksec.space")
 
 
 def run_live_tests():

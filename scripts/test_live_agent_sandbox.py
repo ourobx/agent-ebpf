@@ -27,7 +27,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 
-GATEWAY_URL = os.getenv("GATEWAY_URL", "http://127.0.0.1:8000")
+GATEWAY_URL = os.getenv("GATEWAY_URL", "https://api.ksec.space")
 AGENT_ID = os.getenv("AGENT_ID", "agent-sandbox-sentinel-01")
 JWT_TOKEN = os.getenv("JWT_TOKEN", "")
 

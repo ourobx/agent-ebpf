@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     android_enterprise_id: str = ""
 
     # Security / CORS
-    cors_origins: str = "https://ksec.space,http://localhost:8000,http://localhost:3000"
+    cors_origins: str = "https://ksec.space,https://api.ksec.space,https://metrics.ksec.space"
 
     # eBPF / runtime
     xdp_interface: str = "eth0"

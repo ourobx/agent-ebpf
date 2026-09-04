@@ -26,7 +26,7 @@ def main():
             print(f"  - Package installation notice: {e}")
 
     # 2. Browser launcher helper thread
-    target_url = "http://localhost:8000"
+    target_url = os.getenv("KSEC_LIVE_URL", "https://ksec.space")
     print(f"\n[2/3] Live gateway configured at {target_url}...")
     
     def open_browser():

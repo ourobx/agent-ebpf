@@ -64,7 +64,7 @@ export function ComplianceSeal() {
               size="lg"
               className="gap-2 font-mono text-xs shadow-[0_0_15px_rgba(0,255,102,0.25)]"
             >
-              <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer">
+              <a href="https://ksec.space/docs" target="_blank" rel="noreferrer">
                 Verify Open API Seal
                 <ExternalLink className="size-4" />
               </a>

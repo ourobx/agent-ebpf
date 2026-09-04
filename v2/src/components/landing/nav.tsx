@@ -58,7 +58,7 @@ export function SiteNav() {
           </nav>
           <div className="hidden items-center gap-2.5 md:flex">
             <Button asChild variant="ghost" size="sm" className="font-mono text-xs text-muted-foreground hover:text-foreground">
-              <a href="http://localhost:8000" target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
+              <a href="https://ksec.space/console" target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
                 <Terminal className="size-3.5 text-primary" />
                 Console Login
               </a>
@@ -93,7 +93,7 @@ export function SiteNav() {
               ))}
               <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
                 <Button asChild variant="outline" className="w-full" size="lg">
-                  <a href="http://localhost:8000" target="_blank" rel="noreferrer">
+                  <a href="https://ksec.space/console" target="_blank" rel="noreferrer">
                     Console Login
                   </a>
                 </Button>

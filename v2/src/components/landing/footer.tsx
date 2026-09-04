@@ -46,7 +46,7 @@ export function SiteFooter() {
                 <li><a href="#sdk" className="text-muted-foreground hover:text-primary transition-colors">Python Shield</a></li>
                 <li><a href="#sdk" className="text-muted-foreground hover:text-primary transition-colors">FastMCP Server</a></li>
                 <li><a href="https://github.com/ourobx/agent-ebpf" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">GitHub Repository</a></li>
-                <li><a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">API Docs (Swagger)</a></li>
+                <li><a href="https://ksec.space/docs" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">API Docs (Swagger)</a></li>
               </ul>
             </div>
 
@@ -59,7 +59,7 @@ export function SiteFooter() {
                 <li><span className="text-muted-foreground">ISO/IEC 27001 Ready</span></li>
                 <li><span className="text-muted-foreground">EU AI Act 2026 Art. 14</span></li>
                 <li><span className="text-muted-foreground">HIPAA Data Vault</span></li>
-                <li><a href="http://localhost:8000" target="_blank" rel="noreferrer" className="text-primary hover:underline transition-colors font-medium">SecOps Console →</a></li>
+                <li><a href="https://ksec.space/console" target="_blank" rel="noreferrer" className="text-primary hover:underline transition-colors font-medium">SecOps Console →</a></li>
               </ul>
             </div>
           </div>

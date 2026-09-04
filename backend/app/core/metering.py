@@ -16,7 +16,7 @@ except ImportError:
 
 class SaaSQuotaEngine:
     def __init__(self, redis_url: str = None):
-        self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://redis:6379/0")
         self._in_memory_counters: Dict[str, int] = {}
         self.redis_client = None
 
