@@ -62,6 +62,8 @@ async def add_security_headers(request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     return response
 
 app.add_middleware(SaaSAuthMiddleware)
@@ -118,7 +120,10 @@ async def serve_landing(request: Request):
 
 @app.api_route("/assets/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
 async def proxy_assets(request: Request, path: str):
-    """Proxies static JS/CSS frontend bundles from v2 Nitro server."""
+    """Proxies static JS/CSS frontend bundles from v2 Nitro server with path validation."""
+    if ".." in path or path.startswith("/") or "\\" in path:
+        return Response(status_code=400, content="Invalid asset path.")
+
     try:
         async with httpx.AsyncClient(timeout=4.0) as client:
             resp = await client.request(request.method, f"{FRONTEND_URL}/assets/{path}")
