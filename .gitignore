@@ -17,6 +17,8 @@ yarn-error.log*
 .turbo/
 .next/
 out/
+.output/
+v2/.output/
 
 # eBPF / C compilation artifacts
 *.o
@@ -37,6 +39,7 @@ credentials.json
 *.sqlite
 *.sqlite3
 ksec_auth.db
+audit.json
 .claude/
 .cursor/
 .kiro/

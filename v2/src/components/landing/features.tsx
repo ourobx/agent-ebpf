@@ -24,16 +24,21 @@ export function Features() {
             return (
               <article
                 key={feature.id}
-                className="rounded-2xl bg-card p-6 shadow-[0_0_0_1px_rgb(255_255_255_/_0.08)] transition-[box-shadow] duration-150 hover:shadow-[0_0_0_1px_rgb(255_255_255_/_0.13)] sm:p-7"
+                className="rounded-2xl bg-card p-6 shadow-[0_0_0_1px_rgb(255_255_255_/_0.08)] card-hover-lift sm:p-7 group"
               >
-                <div className="flex size-10 items-center justify-center rounded-md bg-muted text-primary">
+                <div className="flex size-10 items-center justify-center rounded-md bg-muted text-primary transition-all duration-200 group-hover:scale-110 group-hover:bg-primary/15 group-hover:shadow-[0_0_12px_rgba(0,255,102,0.3)]">
                   <Icon className="size-5" strokeWidth={1.75} />
                 </div>
-                <h3 className="mt-5 text-lg font-medium tracking-tight">{feature.title}</h3>
+                <h3 className="mt-5 text-lg font-medium tracking-tight text-foreground group-hover:text-primary transition-colors duration-200">
+                  {feature.title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {feature.body}
                 </p>
-                <p className="mt-4 font-mono text-xs text-primary">{feature.meta}</p>
+                <p className="mt-4 font-mono text-xs text-primary flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-primary animate-pulse-dot" />
+                  {feature.meta}
+                </p>
               </article>
             );
           })}

@@ -1,0 +1,4 @@
+# Next.js Standalone Robots
+User-agent: *
+Allow: /
+Sitemap: https://ksec.space/sitemap.xml

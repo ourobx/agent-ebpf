@@ -1,0 +1,42 @@
+# ==============================================================================
+# 🛡️ ksec.space Enterprise VPC / On-Prem Isolated Sidecar Deployment
+# Zero External Data Leakage · In-VPC Guardrail Proxy & eBPF Intent Sandbox
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # 1. ksec.space AI Firewall & Policy Engine Sidecar
+  ksec-sidecar:
+    image: ksec/agent-ebpf-backend:2.0.0
+    container_name: ksec-vpc-sidecar
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - NODE_ENV=production
+      - ENVIRONMENT=production
+      - KSEC_MODE=enforcing
+      - KSEC_TENANT_ID=${KSEC_TENANT_ID:-enterprise-vpc}
+      - UPSTREAM_OPENAI_BASE_URL=${UPSTREAM_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ksec-sidecar-vault-key-2026}
+    volumes:
+      - ./policy.yaml:/app/policy.yaml:ro
+      - ksec_sidecar_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz').read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+volumes:
+  ksec_sidecar_data:
+    driver: local

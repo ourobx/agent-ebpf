@@ -24,7 +24,8 @@ services:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
   # 2. Redis In-Memory Store
   redis:
@@ -98,10 +99,11 @@ services:
     networks:
       - ksec-net
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 15s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   # 5. Watchtower Auto-Updater
   watchtower:
@@ -111,6 +113,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
+      - DOCKER_API_VERSION=1.44
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=300
     networks:

@@ -6,81 +6,104 @@ import { cn } from "@/lib/utils";
 
 export function Pricing({ onSelect }: { onSelect: (plan: PlanId) => void }) {
   return (
-    <section id="pricing" className="scroll-mt-24 border-t border-border py-20 sm:py-24">
+    <section id="pricing" className="scroll-mt-24 border-t border-border py-20 sm:py-24 bg-background">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-          Transparent Pricing
-        </p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-          Predictable Multi-Tenant Pricing
-        </h2>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Built for AI scale. Transparent metered event quotas backed by
-          sub-microsecond kernel defense guarantees.
-        </p>
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          {PLANS.map((plan) => (
-            <article
-              key={plan.id}
-              className={cn(
-                "flex flex-col rounded-3xl p-6 sm:p-7",
-                plan.featured
-                  ? "bg-primary text-primary-foreground shadow-[0_0_0_1px_rgb(255_255_255_/_0.12)]"
-                  : "bg-card shadow-[0_0_0_1px_rgb(255_255_255_/_0.08)]",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p
-                  className={cn(
-                    "font-mono text-xs uppercase tracking-wider",
-                    plan.featured ? "text-primary-foreground/70" : "text-muted-foreground",
-                  )}
-                >
-                  {plan.kicker}
-                </p>
-                {plan.featured ? (
-                  <Badge className="border-transparent bg-primary-foreground/15 text-primary-foreground">
-                    Most Popular
-                  </Badge>
-                ) : null}
-              </div>
-              <p className="mt-5 flex items-baseline gap-1">
-                <span className="text-4xl font-semibold tracking-tight">{plan.price}</span>
-                <span
-                  className={cn(
-                    "text-sm",
-                    plan.featured ? "text-primary-foreground/70" : "text-muted-foreground",
-                  )}
-                >
-                  {plan.period}
-                </span>
-              </p>
-              <p
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
+            Predictable Quotas &amp; Metering
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl text-foreground">
+            Built for Multi-Agent AI Scale
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Transparent event quotas backed by sub-microsecond Ring-0 defense guarantees. No surprise overages.
+          </p>
+        </div>
+
+        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+          {PLANS.map((plan) => {
+            const isFeatured = plan.variant === "hero";
+
+            return (
+              <article
+                key={plan.id}
                 className={cn(
-                  "mt-3 text-sm leading-relaxed",
-                  plan.featured ? "text-primary-foreground/80" : "text-muted-foreground",
+                  "flex flex-col rounded-3xl p-6 sm:p-8 card-hover-lift transition-all duration-200 relative overflow-hidden border",
+                  isFeatured
+                    ? "bg-primary text-primary-foreground border-primary shadow-[0_0_25px_rgba(0,255,102,0.2)] animate-border-glow"
+                    : "bg-card border-border/80 shadow-sm",
                 )}
               >
-                {plan.blurb}
-              </p>
-              <ul className="mt-6 flex flex-1 flex-col gap-3">
-                {plan.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                className="mt-8 w-full"
-                size="lg"
-                variant={plan.featured ? "secondary" : "default"}
-                onClick={() => onSelect(plan.id)}
-              >
-                {plan.cta}
-              </Button>
-            </article>
-          ))}
+                <div className="flex items-center justify-between gap-2">
+                  <p
+                    className={cn(
+                      "font-mono text-xs uppercase tracking-wider font-semibold",
+                      isFeatured ? "text-primary-foreground/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {plan.kicker}
+                  </p>
+                  {isFeatured && (
+                    <Badge className="border-transparent bg-primary-foreground/20 text-primary-foreground font-mono text-[11px] font-bold">
+                      Most Popular
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono">{plan.price}</span>
+                  <span
+                    className={cn(
+                      "text-sm font-mono",
+                      isFeatured ? "text-primary-foreground/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {plan.cadence}
+                  </span>
+                </p>
+
+                <p
+                  className={cn(
+                    "mt-3 text-sm leading-relaxed",
+                    isFeatured ? "text-primary-foreground/90" : "text-muted-foreground",
+                  )}
+                >
+                  {plan.description}
+                </p>
+
+                <ul className="mt-8 flex flex-1 flex-col gap-3.5">
+                  {plan.bullets.map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-sm">
+                      <Check
+                        className={cn(
+                          "mt-0.5 size-4 shrink-0",
+                          isFeatured ? "text-primary-foreground" : "text-primary",
+                        )}
+                        strokeWidth={2.5}
+                      />
+                      <span className={isFeatured ? "text-primary-foreground font-medium" : "text-foreground/90"}>
+                        {bullet}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className={cn(
+                    "mt-8 w-full font-mono text-xs font-bold transition-transform active:scale-[0.98]",
+                    isFeatured
+                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md"
+                      : "shadow-[0_0_12px_rgba(0,255,102,0.2)]",
+                  )}
+                  size="lg"
+                  variant={isFeatured ? "secondary" : "default"}
+                  onClick={() => onSelect(plan.id)}
+                >
+                  {plan.cta}
+                </Button>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

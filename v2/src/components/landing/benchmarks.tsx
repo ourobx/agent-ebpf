@@ -14,7 +14,7 @@ export function Benchmarks() {
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
           Why Fortune 500 AI platforms choose Ring-0 eBPF over user-space reverse proxies.
         </p>
-        <div className="mt-10 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_rgb(255_255_255_/_0.08)]">
+        <div className="mt-10 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_rgb(255_255_255_/_0.08)] card-hover-lift">
           <table className="w-full min-w-[720px] border-collapse text-left text-sm">
             <thead className="bg-muted">
               <tr>
@@ -40,13 +40,22 @@ export function Benchmarks() {
                 <tr
                   key={row.name}
                   className={cn(
-                    "border-t border-border",
-                    row.highlight ? "bg-primary/5" : "bg-card",
+                    "border-t border-border transition-colors duration-150",
+                    row.highlight 
+                      ? "bg-primary/5 hover:bg-primary/10 font-medium" 
+                      : "bg-card hover:bg-muted/40",
                   )}
                 >
-                  <td className="px-4 py-4 font-medium first:pl-5">{row.name}</td>
-                  <td className="px-4 py-4 font-mono tabular-nums">{row.latency}</td>
-                  <td className="px-4 py-4 font-mono tabular-nums">{row.p99}</td>
+                  <td className="px-4 py-4 font-medium first:pl-5 flex items-center gap-2">
+                    {row.highlight && <span className="size-2 rounded-full bg-primary animate-pulse-dot inline-block" />}
+                    {row.name}
+                  </td>
+                  <td className={cn("px-4 py-4 font-mono tabular-nums", row.highlight && "text-primary font-bold drop-shadow-[0_0_6px_rgba(0,255,102,0.3)]")}>
+                    {row.latency}
+                  </td>
+                  <td className={cn("px-4 py-4 font-mono tabular-nums", row.highlight && "text-primary font-medium")}>
+                    {row.p99}
+                  </td>
                   <td className="px-4 py-4 text-muted-foreground">{row.drift}</td>
                   <td className="px-4 py-4 text-muted-foreground">{row.contention}</td>
                   <td className="px-4 py-4 pr-5 text-muted-foreground">{row.guarantee}</td>

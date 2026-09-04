@@ -2238,7 +2238,6 @@ aside svg, header svg, table svg, button svg, .icon svg, .svg-icon svg, .metric-
   .panel,
   .widget {
     padding: 12px !important;
-    border-radius: 8px !important;
   }
 
   .metric-value {
@@ -2249,5 +2248,84 @@ aside svg, header svg, table svg, button svg, .icon svg, .svg-icon svg, .metric-
     font-size: 16px !important;
   }
 }
+
+/* ==========================================================================
+   Cyberpunk & Real-Time Observability Animation Layer
+   ========================================================================== */
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+    box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.3);
+  }
+}
+
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  70%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes log-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ambient-glow {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@keyframes border-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 25px 2px rgba(16, 185, 129, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-log-in {
+  animation: log-in 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.card-hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.3);
+}
+
 
 

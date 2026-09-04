@@ -107,8 +107,30 @@ class ClickHouseIngestionEngine:
                 print(f"[INFO] [ClickHouse] Flushed batch of {len(batch)} eBPF events.")
             except Exception as exc:
                 print(f"[ERROR] [ClickHouse] Batch insertion failed: {exc}")
-        else:
-            # Fallback mock flush simulation
+
+    def push(self, event: EbpfEvent, tenant_id: str = "global", node_id: str = "ksec-gateway-01"):
+        """Safe fire-and-forget helper to append an event to the buffer."""
+        try:
+            ts = datetime.now(timezone.utc)
+            details_map = event.details or {}
+            row = [
+                ts,
+                tenant_id,
+                node_id,
+                event.pid,
+                int(details_map.get("uid", 0)),
+                event.comm,
+                event.event_type,
+                event.syscall,
+                event.severity,
+                str(details_map.get("src_ip", "0.0.0.0")),
+                str(details_map.get("dst_ip", "0.0.0.0")),
+                int(details_map.get("sport", 0)),
+                int(details_map.get("dport", 0)),
+                str(details_map)
+            ]
+            self.buffer.append(row)
+        except Exception:
             pass
 
 

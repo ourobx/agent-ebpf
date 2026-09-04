@@ -1,72 +1,78 @@
 import { Logo } from "@/components/landing/logo";
-import { NAV } from "@/components/landing/content";
+import { ShieldCheck, Globe, Activity, Github, Terminal } from "lucide-react";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border py-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-        <div className="max-w-sm">
-          <Logo />
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Autonomous Ring-0 defense engine for enterprise AI agents. Linux 6.8+
-            eBPF LSM. Deterministic, microsecond-scale.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-x-8 gap-y-6">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Product
+    <footer className="border-t border-border bg-[#030406] py-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-sm">
+            <Logo />
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Deterministic Ring-0 defense engine for enterprise AI agents. Built on Linux 6.8+ eBPF LSM and zero-TOCTOU cryptographic leases. Sub-50µs SLA.
             </p>
-            <ul className="mt-3 space-y-2">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    className="text-sm text-foreground/90 hover:text-primary"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            
+            {/* Global Edge Region SLA Badge */}
+            <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-border/80 bg-card p-3 font-mono text-xs">
+              <div className="relative flex size-2 items-center justify-center">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-ok opacity-75 animate-ping-slow" />
+                <span className="relative inline-flex size-2 rounded-full bg-ok" />
+              </div>
+              <span className="text-foreground font-medium">12 Global PoPs</span>
+              <span className="text-muted-foreground">· 99.999% Kernel SLA · Active</span>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Resources
-            </p>
-            <ul className="mt-3 space-y-2">
-              <li>
-                <a
-                  href="https://github.com/ourobx/agent-ebpf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-foreground/90 hover:text-primary"
-                >
-                  GitHub
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.npmjs.com/package/@ourobx/shield"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-foreground/90 hover:text-primary"
-                >
-                  npm @ourobx/shield
-                </a>
-              </li>
-              <li>
-                <a href="#signup" className="text-sm text-foreground/90 hover:text-primary">
-                  Pilot access
-                </a>
-              </li>
-            </ul>
+
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-wider text-foreground">
+                Core Engine
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><a href="#architecture" className="text-muted-foreground hover:text-primary transition-colors">Architecture</a></li>
+                <li><a href="#features" className="text-muted-foreground hover:text-primary transition-colors">Ring-0 LSM</a></li>
+                <li><a href="#simulator" className="text-muted-foreground hover:text-primary transition-colors">Interactive Testbed</a></li>
+                <li><a href="#benchmarks" className="text-muted-foreground hover:text-primary transition-colors">Benchmark SLA</a></li>
+                <li><a href="#calculator" className="text-muted-foreground hover:text-primary transition-colors">ROI Calculator</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-wider text-foreground">
+                SDK &amp; FastMCP
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><a href="#sdk" className="text-muted-foreground hover:text-primary transition-colors">TypeScript SDK</a></li>
+                <li><a href="#sdk" className="text-muted-foreground hover:text-primary transition-colors">Python Shield</a></li>
+                <li><a href="#sdk" className="text-muted-foreground hover:text-primary transition-colors">FastMCP Server</a></li>
+                <li><a href="https://github.com/ourobx/agent-ebpf" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">GitHub Repository</a></li>
+                <li><a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">API Docs (Swagger)</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-wider text-foreground">
+                Compliance &amp; Trust
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><span className="text-muted-foreground">SOC-2 Type II Sealed</span></li>
+                <li><span className="text-muted-foreground">ISO/IEC 27001 Ready</span></li>
+                <li><span className="text-muted-foreground">EU AI Act 2026 Art. 14</span></li>
+                <li><span className="text-muted-foreground">HIPAA Data Vault</span></li>
+                <li><a href="http://localhost:8000" target="_blank" rel="noreferrer" className="text-primary hover:underline transition-colors font-medium">SecOps Console →</a></li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-2 border-t border-border px-4 pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
-        <p>© 2026 KSEC. SOC-2 Type II &amp; HIPAA Ready Infrastructure.</p>
-        <p className="font-mono">{"P99 < 50µs · 0% TOCTOU"}</p>
+
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-border/60 pt-8 gap-4 text-xs text-muted-foreground">
+          <p>© 2026 KSEC Autonomous AI Defense. All rights reserved. Deterministic Ring-0 Engine.</p>
+          <div className="flex items-center gap-4 font-mono">
+            <span>v2.0.0-PROD</span>
+            <span>·</span>
+            <span>Linux 6.8+ eBPF LSM</span>
+          </div>
+        </div>
       </div>
     </footer>
   );

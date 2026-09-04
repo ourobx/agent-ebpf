@@ -21,7 +21,10 @@ class AuthDatabase:
     """
 
     def __init__(self, db_path: str = "ksec_auth.db"):
-        self.db_path = db_path
+        self.db_path = os.getenv("AUTH_DB_PATH", db_path)
+        db_dir = os.path.dirname(os.path.abspath(self.db_path))
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         self._lock = threading.Lock()
         self._init_db()
 

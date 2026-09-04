@@ -47,6 +47,22 @@
     font-family: var(--font-sans);
   }
 
+  /* Custom high-tech scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070809;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e2621;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00ff66;
+  }
+
   h1,
   h2,
   h3,
@@ -69,24 +85,16 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .motion-safe-only {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
+/* ==========================================================================
+   Global Keyframes (Cyberpunk High-Density Defense Animations)
+   ========================================================================== */
 @keyframes fade-up {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
     filter: blur(4px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
     filter: blur(0);
@@ -94,26 +102,135 @@
 }
 
 @keyframes pulse-dot {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7);
   }
   50% {
     opacity: 0.35;
+    transform: scale(0.82);
+    box-shadow: 0 0 8px 2px rgba(0, 255, 102, 0.3);
+  }
+}
+
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  70%, 100% {
+    transform: scale(2.5);
+    opacity: 0;
   }
 }
 
 @keyframes log-in {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px) scale(0.98);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
+@keyframes radar-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes radar-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes ambient-glow {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes kernel-scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes verdict-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes verdict-pop-danger {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes border-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px -3px rgba(0, 255, 102, 0.2), 0 0 0 1px rgba(0, 255, 102, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 28px 2px rgba(0, 255, 102, 0.38), 0 0 0 1px rgba(0, 255, 102, 0.6);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==========================================================================
+   Utility Classes & Interactive Micro-Animations
+   ========================================================================== */
 .hero-grid {
   background-image:
     linear-gradient(
@@ -133,9 +250,10 @@
 .hero-wash {
   background: radial-gradient(
     ellipse 80% 50% at 50% -8%,
-    color-mix(in oklab, var(--color-primary) 8%, transparent),
+    color-mix(in oklab, var(--color-primary) 12%, transparent),
     transparent 60%
   );
+  animation: ambient-glow 5s ease-in-out infinite;
 }
 
 .stagger-in > * {
@@ -158,8 +276,62 @@
   animation-delay: 320ms;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .stagger-in > * {
-    animation: none;
-  }
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-radar-slow {
+  transform-origin: 260px 260px;
+  animation: radar-spin 80s linear infinite;
+}
+
+.animate-radar-reverse {
+  transform-origin: 260px 260px;
+  animation: radar-spin-reverse 55s linear infinite;
+}
+
+.animate-log-in {
+  animation: log-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-verdict-ok {
+  animation: verdict-pop 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-verdict-danger {
+  animation: verdict-pop-danger 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-border-glow {
+  animation: border-glow-pulse 3.5s ease-in-out infinite;
+}
+
+.card-hover-lift {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 255, 102, 0.35);
+}
+
+.scan-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #00ff66 50%, transparent 100%);
+  box-shadow: 0 0 14px #00ff66;
+  animation: kernel-scan 0.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #00ff66 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

@@ -17,6 +17,7 @@ export * from './telemetry/index.js';
 export * from './interceptors/langchain.js';
 export * from './interceptors/providers.js';
 export * from './interceptors/vercel-ai.js';
+export * from './firewall.js';
 export class KsecShield {
     config;
     cache;

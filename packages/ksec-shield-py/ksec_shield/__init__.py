@@ -17,11 +17,14 @@ from .integrations.crewai import KsecCrewAIToolWrapper
 from .integrations.llamaindex import KsecLlamaIndexHandler
 from .integrations.autogen import KsecAutoGenHook
 from .integrations.providers import UniversalProviderAdapter, LLMProvider
+from .firewall import KsecAIFirewall, create_guarded_openai_client
 
-__version__ = "1.0.0"
+__version__ = "2.1.0"
 
 __all__ = [
     "KsecShield",
+    "KsecAIFirewall",
+    "create_guarded_openai_client",
     "guard",
     "PolicyRule",
     "ShieldTelemetryEvent",

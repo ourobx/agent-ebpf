@@ -4,6 +4,9 @@ frontend/node_modules
 frontend/.next
 packages/*/node_modules
 packages/*/dist
+v2/node_modules
+v2/.output
+v2/.nitro
 venv
 .venv
 __pycache__

@@ -170,6 +170,11 @@ try:
 except ImportError:
     benchmark_router = None
 
+try:
+    from backend.app.api.v1.endpoints.guard_proxy import router as guard_proxy_router
+except ImportError:
+    guard_proxy_router = None
+
 app = FastAPI(
     title="Agent-eBPF MCP Gateway",
     version="2.0.0-ULTRA",
@@ -198,6 +203,9 @@ if swarm_stream_router:
     app.include_router(swarm_stream_router, prefix="/api/v1")
 if benchmark_router:
     app.include_router(benchmark_router, prefix="/api/v1")
+if guard_proxy_router:
+    app.include_router(guard_proxy_router, prefix="/api")
+    app.include_router(guard_proxy_router, prefix="")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

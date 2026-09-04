@@ -801,6 +801,584 @@
         }
       }
     },
+    "/api/v1/guard/inspect": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Inspect Text",
+        "description": "Direct inspection endpoint: Evaluates text for prompt injection (ingress)\nand sensitive data / PII leakage (egress).",
+        "operationId": "inspect_text_api_v1_guard_inspect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardInspectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/completions": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Guard Chat Completions",
+        "description": "Drop-in OpenAI-compatible Chat Completions L7 AI Firewall Proxy.\n1. Intercepts incoming prompt -> Ingress Prompt Injection & Jailbreak check.\n2. Passes to upstream LLM (or mock response if standalone mode).\n3. Intercepts model completion -> Egress PII & Secret Redaction/Block check.\n4. Records audit telemetry to ClickHouse immutable log.",
+        "operationId": "guard_chat_completions_api_v1_chat_completions_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-ksec-policy-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Ksec-Policy-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guard/policy": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Upload Policy",
+        "description": "Uploads and activates a declarative YAML AI Constitution policy.",
+        "operationId": "upload_policy_api_v1_guard_policy_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guard/policies": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "List Policies",
+        "description": "Lists all active registered security policies.",
+        "operationId": "list_policies_api_v1_guard_policies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guard/compliance/report": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Get Compliance Report",
+        "description": "Generates a cryptographically signed compliance certificate & audit report\ncovering KVKK, GDPR, EU AI Act 2026, and SOC-2 standards.",
+        "operationId": "get_compliance_report_api_v1_guard_compliance_report_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "global",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "period_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 30,
+              "title": "Period Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/guard/compliance/summary": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Get Compliance Summary",
+        "description": "Returns real-time dashboard summary metrics for AI Firewall & Compliance.",
+        "operationId": "get_compliance_summary_api_v1_guard_compliance_summary_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "global",
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/guard/inspect": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Inspect Text",
+        "description": "Direct inspection endpoint: Evaluates text for prompt injection (ingress)\nand sensitive data / PII leakage (egress).",
+        "operationId": "inspect_text_v1_guard_inspect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardInspectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Guard Chat Completions",
+        "description": "Drop-in OpenAI-compatible Chat Completions L7 AI Firewall Proxy.\n1. Intercepts incoming prompt -> Ingress Prompt Injection & Jailbreak check.\n2. Passes to upstream LLM (or mock response if standalone mode).\n3. Intercepts model completion -> Egress PII & Secret Redaction/Block check.\n4. Records audit telemetry to ClickHouse immutable log.",
+        "operationId": "guard_chat_completions_v1_chat_completions_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-ksec-policy-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Ksec-Policy-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/guard/policy": {
+      "post": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Upload Policy",
+        "description": "Uploads and activates a declarative YAML AI Constitution policy.",
+        "operationId": "upload_policy_v1_guard_policy_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/guard/policies": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "List Policies",
+        "description": "Lists all active registered security policies.",
+        "operationId": "list_policies_v1_guard_policies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/guard/compliance/report": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Get Compliance Report",
+        "description": "Generates a cryptographically signed compliance certificate & audit report\ncovering KVKK, GDPR, EU AI Act 2026, and SOC-2 standards.",
+        "operationId": "get_compliance_report_v1_guard_compliance_report_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "global",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "period_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 30,
+              "title": "Period Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/guard/compliance/summary": {
+      "get": {
+        "tags": [
+          "AI Firewall & Guardrails"
+        ],
+        "summary": "Get Compliance Summary",
+        "description": "Returns real-time dashboard summary metrics for AI Firewall & Compliance.",
+        "operationId": "get_compliance_summary_v1_guard_compliance_summary_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "global",
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cluster/crdt-status": {
       "get": {
         "tags": [
@@ -1786,9 +2364,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Data"
+                "$ref": "#/components/schemas/SecurityRuleRequest"
               }
             }
           },
@@ -2089,6 +2665,91 @@
           "records"
         ],
         "title": "CRDTSyncPayload"
+      },
+      "ChatCompletionRequest": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "gpt-4o"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "default": 0.7
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens"
+          },
+          "stream": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "ChatCompletionRequest"
+      },
+      "ChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage"
       },
       "CheckoutRequest": {
         "properties": {
@@ -2437,6 +3098,42 @@
           "ip_address"
         ],
         "title": "EdgeNode"
+      },
+      "GuardInspectRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Text to inspect for Prompt Injection and PII leakage"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id",
+            "default": "global"
+          },
+          "check_ingress": {
+            "type": "boolean",
+            "title": "Check Ingress",
+            "default": true
+          },
+          "check_egress": {
+            "type": "boolean",
+            "title": "Check Egress",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "GuardInspectRequest"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2814,6 +3511,20 @@
         ],
         "title": "PolicyCompilationResult"
       },
+      "PolicyUploadRequest": {
+        "properties": {
+          "yaml_content": {
+            "type": "string",
+            "title": "Yaml Content",
+            "description": "Declarative YAML AI Constitution policy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "yaml_content"
+        ],
+        "title": "PolicyUploadRequest"
+      },
       "PortalRequest": {
         "properties": {
           "tenant_id": {
@@ -2917,6 +3628,26 @@
           "email"
         ],
         "title": "ResendOtpRequest"
+      },
+      "SecurityRuleRequest": {
+        "properties": {
+          "ip_address": {
+            "type": "string",
+            "title": "Ip Address",
+            "example": "192.168.1.50"
+          },
+          "rule_id": {
+            "type": "integer",
+            "title": "Rule Id",
+            "default": 100,
+            "example": 101
+          }
+        },
+        "type": "object",
+        "required": [
+          "ip_address"
+        ],
+        "title": "SecurityRuleRequest"
       },
       "SimulateDAGRequest": {
         "properties": {

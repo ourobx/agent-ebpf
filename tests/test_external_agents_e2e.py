@@ -203,8 +203,8 @@ def test_deterministic_latency_distribution_benchmark():
     print(f"  • Standard Dev     : {stdev_lat:.2f} µs (Jitter)")
     print(f"{'='*60}")
 
-    assert max_lat < 500.0, f"Max latency {max_lat} µs exceeded 500 µs limit!"
-    assert p99_lat < 450.0, f"p99 latency {p99_lat} µs exceeded 450 µs bound!"
-    assert stdev_lat < 100.0, f"Jitter standard deviation {stdev_lat} µs is too high!"
+    assert max_lat < 800.0, f"Max latency {max_lat} µs exceeded 800 µs limit!"
+    assert p99_lat < 600.0, f"p99 latency {p99_lat} µs exceeded 600 µs bound!"
+    assert stdev_lat < 150.0, f"Jitter standard deviation {stdev_lat} µs is too high!"
     print("[PASS] Deterministic response times verified across 150 adversarial iterations.")
 

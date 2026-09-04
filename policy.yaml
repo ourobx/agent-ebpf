@@ -1,12 +1,22 @@
-version: "v1alpha"
-metadata:
-  name: "production-agent-shield"
+# ==============================================================================
+# 🛡️ ksec.space Enterprise AI Constitution & Kernel Defense Policy
+# Architecture: Dual-Layer Defense (Layer 7 AI Firewall + Layer 0 Linux eBPF)
+# Compliance Standards: KVKK (Madde 12), GDPR (Art 25/32), EU AI Act 2026
+# ==============================================================================
 
+version: "2.0.0"
+policy_name: "enterprise-production-ai-constitution"
+tenant_id: "global"
+created_at: "2026-09-03T00:00:00Z"
+
+# ------------------------------------------------------------------------------
+# 1. LAYER 0: LINUX eBPF KERNEL LSM RULES (Ring-0 Syscall & DB Interception)
+# ------------------------------------------------------------------------------
 rules:
   # 1. Block Destructive SQL Queries (UPDATE/DELETE without WHERE)
   - id: "sql-no-where-mutation"
     type: "db_query"
-    protocol: "postgres" # or mysql
+    protocol: "postgres"
     severity: "critical"
     action: "DROP"
     match:
@@ -35,3 +45,106 @@ rules:
         - "ptrace"
       binary_path_regex: ".*/python.*"
     message: "AI agent unauthorized sub-process execution was intercepted."
+
+# ------------------------------------------------------------------------------
+# 2. LAYER 7: AI FIREWALL INGRESS RULES (Prompt Injection & Jailbreak Defense)
+# ------------------------------------------------------------------------------
+ingress_rules:
+  - id: "guard-instruction-override"
+    name: "Instruction Override & System Prompt Hijack"
+    action: "BLOCK"
+    severity: "CRITICAL"
+    threshold: 0.85
+    patterns:
+      - "(?i)ignore\\s+(all\\s+)?(previous|prior|above)\\s+instructions"
+      - "(?i)disregard\\s+all\\s+(system|safety|security)\\s+(prompts|rules)"
+      - "(?i)forget\\s+(all\\s+)?(previous|past)\\s+commands"
+
+  - id: "guard-jailbreak-personas"
+    name: "Adversarial Personas & DAN Mode Activation"
+    action: "BLOCK"
+    severity: "CRITICAL"
+    threshold: 0.90
+    patterns:
+      - "(?i)\\bDAN\\s+mode\\b"
+      - "(?i)\\bdo\\s+anything\\s+now\\b"
+      - "(?i)\\bunrestricted\\s+ai\\s+mode\\b"
+      - "(?i)\\bjailbreak\\s+activated\\b"
+
+  - id: "guard-chatml-delimiter-injection"
+    name: "Delimiter & Role Token Injection"
+    action: "BLOCK"
+    severity: "CRITICAL"
+    threshold: 0.95
+    patterns:
+      - "<\\|im_start\\|>(system|assistant|admin)"
+      - "\\[INST\\]\\s*<<SYS>>"
+      - "```system\\s*\\n"
+
+  - id: "guard-prompt-exfiltration"
+    name: "System Prompt Extraction & Beaconing"
+    action: "BLOCK"
+    severity: "WARN"
+    threshold: 0.80
+    patterns:
+      - "(?i)(show|repeat|print|reveal|output)\\s+(your\\s+)?(system|initial)\\s+prompt"
+      - "!\\[.*?\\]\\(https?://.*?\\?exfil="
+
+# ------------------------------------------------------------------------------
+# 3. LAYER 7: AI FIREWALL EGRESS RULES (PII Redaction & Data Leakage Shield)
+# ------------------------------------------------------------------------------
+egress_rules:
+  - id: "mask-tc-kimlik"
+    name: "Turkish Republic Identity Number (TCKN) Algorithmic Luhn-11"
+    category: "TC_KIMLIK"
+    action: "REDACT"
+    severity: "CRITICAL"
+    replacement: "[REDACTED_TC_NO_{LAST2}]"
+
+  - id: "mask-credit-card"
+    name: "Credit / Debit Card (Visa, MasterCard, Amex, Troy) Luhn-10"
+    category: "CREDIT_CARD"
+    action: "REDACT"
+    severity: "CRITICAL"
+    replacement: "[REDACTED_CARD_****_{LAST4}]"
+
+  - id: "mask-iban"
+    name: "International & TR IBAN (ISO 7064 Mod-97 Checksum)"
+    category: "IBAN"
+    action: "REDACT"
+    severity: "CRITICAL"
+    replacement: "[REDACTED_IBAN_TR_{LAST4}]"
+
+  - id: "mask-api-secrets"
+    name: "Cryptographic Keys & API Tokens (OpenAI, AWS, JWT, RSA)"
+    category: "API_KEY"
+    action: "REDACT"
+    severity: "CRITICAL"
+    replacement: "[REDACTED_SECRET_KEY]"
+
+  - id: "mask-email-phone"
+    name: "Contact Information (Email & Mobile Phone)"
+    category: "EMAIL_PHONE"
+    action: "REDACT"
+    severity: "INFO"
+    replacement: "[REDACTED_CONTACT]"
+
+# ------------------------------------------------------------------------------
+# 4. RATE LIMITS & FORENSIC AUDIT CONFIGURATION
+# ------------------------------------------------------------------------------
+rate_limits:
+  requests_per_minute: 600
+  burst_limit: 120
+  action_on_exceed: "HTTP_429_RATE_LIMITED"
+
+forensics:
+  audit_retention_days: 365
+  storage_engine: "clickhouse"
+  cryptographic_seals: "SHA-256"
+  causal_dag_analysis: true
+  compliance_auto_certification:
+    - "KVKK_MADDE_12"
+    - "GDPR_ART_25_32"
+    - "EU_AI_ACT_2026_ART_14_15"
+    - "SOC2_TYPE_II"
+    - "ISO_42001_AIMS"

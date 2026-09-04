@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ksec-ebpf-guard
+  namespace: ksec-system
+  labels:
+    app.kubernetes.io/name: ksec-shield
+    app.kubernetes.io/part-of: ksec-space
+spec:
+  selector:
+    matchLabels:
+      name: ksec-ebpf-guard
+  template:
+    metadata:
+      labels:
+        name: ksec-ebpf-guard
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: ksec-firewall-sidecar
+          image: ksec/agent-ebpf-backend:2.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              hostPort: 8000
+              name: http-guard
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: KSEC_TENANT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          securityContext:
+            privileged: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CAP_BPF
+                - CAP_NET_ADMIN
+                - CAP_PERFMON
+                - CAP_SYS_RESOURCE
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          volumeMounts:
+            - name: sys-fs-bpf
+              mountPath: /sys/fs/bpf
+            - name: policy-config
+              mountPath: /app/policy.yaml
+              subPath: policy.yaml
+      volumes:
+        - name: sys-fs-bpf
+          hostPath:
+            path: /sys/fs/bpf
+            type: Directory
+        - name: policy-config
+          configMap:
+            name: ksec-ai-constitution
