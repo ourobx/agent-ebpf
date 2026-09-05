@@ -8,6 +8,8 @@ venv/
 *.egg-info/
 dist/
 build/
+.coverage
+htmlcov
 
 # Node.js
 node_modules/
@@ -19,6 +21,12 @@ yarn-error.log*
 out/
 .output/
 v2/.output/
+v2/.nitro/
+v2/node_modules/
+frontend/node_modules/
+frontend/.next/
+packages/*/node_modules/
+packages/*/dist/
 
 # eBPF / C compilation artifacts
 *.o
@@ -40,9 +48,10 @@ credentials.json
 *.sqlite3
 ksec_auth.db
 audit.json
+
+# IDE / Agent artifacts
 .claude/
 .cursor/
 .kiro/
-
 .agents/artifacts/
 .vscode/

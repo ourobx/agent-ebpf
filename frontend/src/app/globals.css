@@ -57,3 +57,71 @@ button, a, input, select, textarea {
 .btn-press:active {
   transform: scale(0.97);
 }
+
+/* Ouroboros Cyberpunk Neon Keyframes */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cyber-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(0, 255, 170, 0.45))
+            drop-shadow(0 0 25px rgba(0, 245, 212, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 18px rgba(0, 255, 170, 0.8))
+            drop-shadow(0 0 45px rgba(0, 245, 212, 0.55));
+  }
+}
+
+.ouroboros-glow-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: cyber-pulse 4s ease-in-out infinite;
+}
+
+.ouroboros-spin {
+  animation: spin-slow 35s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Cyber Grid & Continuous Block Connector Lines */
+.cyber-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.block-connector {
+  position: relative;
+}
+
+.block-connector::after {
+  content: "";
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(to bottom, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 0));
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+

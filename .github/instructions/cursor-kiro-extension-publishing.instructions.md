@@ -6,7 +6,7 @@ applyTo:
   - **/publish-openvsx.js
   - **/.github/workflows/publish*.yml
   - **/00-extension-registries.md
-deployedAt: "2026-09-04T21:15:57.102Z"
+deployedAt: "2026-09-05T06:58:01.608Z"
 ---
 
 # cursor-kiro-extension-publishing
