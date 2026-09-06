@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     llvm \
     libbpf-dev \
     linux-headers-generic \
-    bpftool \
+    linux-tools-common \
+    linux-tools-generic \
     iproute2 \
     make \
     gcc \
