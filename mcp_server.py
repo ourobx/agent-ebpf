@@ -335,8 +335,39 @@ async def serve_sitemap():
         return FileResponse(sitemap_path, media_type="application/xml")
     raise HTTPException(status_code=404, detail="sitemap.xml not found")
 
+@app.get("/ksec_enterprise_ouroboros.svg", include_in_schema=False)
+@app.get("/assets/ksec_enterprise_ouroboros.svg", include_in_schema=False)
+@app.get("/favicon.svg", include_in_schema=False)
+async def serve_svg_logo():
+    for candidate in [
+        os.path.join(BASE_DIR, "ksec_enterprise_ouroboros.svg"),
+        os.path.join(BASE_DIR, "docs", "ksec_enterprise_ouroboros.svg"),
+        os.path.join(BASE_DIR, "assets", "ksec_enterprise_ouroboros.svg"),
+        os.path.join(BASE_DIR, "frontend", "public", "assets", "ksec_enterprise_ouroboros.svg"),
+    ]:
+        if os.path.exists(candidate):
+            return FileResponse(candidate, media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="SVG logo not found")
+
+@app.get("/assets/{filepath:path}", include_in_schema=False)
+async def serve_assets_folder(filepath: str):
+    if ".." in filepath:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    for base in [
+        os.path.join(BASE_DIR, "assets"),
+        os.path.join(BASE_DIR, "frontend", "public", "assets"),
+        os.path.join(BASE_DIR, "v2", "public", "assets"),
+    ]:
+        full_path = os.path.join(base, filepath)
+        if os.path.exists(full_path) and os.path.isfile(full_path):
+            return FileResponse(full_path)
+    raise HTTPException(status_code=404, detail="Asset not found")
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def serve_favicon():
+    svg_path = os.path.join(BASE_DIR, "ksec_enterprise_ouroboros.svg")
+    if os.path.exists(svg_path):
+        return FileResponse(svg_path, media_type="image/svg+xml")
     logo_path = os.path.join(BASE_DIR, "ourobx_logo.png")
     if os.path.exists(logo_path):
         return FileResponse(logo_path, media_type="image/png")

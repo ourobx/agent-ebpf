@@ -129,10 +129,25 @@ async def proxy_assets(request: Request, path: str):
     try:
         async with httpx.AsyncClient(timeout=4.0) as client:
             resp = await client.request(request.method, f"{FRONTEND_URL}/assets/{path}")
-            return Response(
-                content=resp.content if request.method == "GET" else b"",
-                status_code=resp.status_code,
-                headers=dict(resp.headers)
-            )
+            if resp.status_code == 200:
+                return Response(
+                    content=resp.content if request.method == "GET" else b"",
+                    status_code=resp.status_code,
+                    headers=dict(resp.headers)
+                )
     except Exception:
-        return Response(status_code=404)
+        pass
+
+    for base in ["assets", "public/assets", "frontend/public/assets", "v2/public/assets", "/app/assets"]:
+        local_p = os.path.join(base, path)
+        if os.path.exists(local_p) and os.path.isfile(local_p):
+            return FileResponse(local_p)
+    return Response(status_code=404)
+
+@app.api_route("/ksec_enterprise_ouroboros.svg", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/favicon.svg", methods=["GET", "HEAD"], include_in_schema=False)
+async def serve_root_svg(request: Request):
+    for candidate in ["ksec_enterprise_ouroboros.svg", "docs/ksec_enterprise_ouroboros.svg", "assets/ksec_enterprise_ouroboros.svg", "/app/ksec_enterprise_ouroboros.svg"]:
+        if os.path.exists(candidate):
+            return FileResponse(candidate, media_type="image/svg+xml")
+    return Response(status_code=404)
