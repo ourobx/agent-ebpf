@@ -5,35 +5,27 @@ export function Logo({ className }: { className?: string }) {
     <a
       href="#hero"
       className={cn(
-        "flex items-center gap-2 text-foreground no-underline",
+        "inline-flex items-center gap-2.5 text-foreground no-underline select-none group",
         className,
       )}
     >
-      <svg
-        viewBox="0 0 32 32"
-        className="size-7"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle
-          cx="16"
-          cy="16"
-          r="13"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          className="opacity-35"
+      <div className="relative size-7 shrink-0 flex items-center justify-center">
+        <img
+          src="/assets/ksec_enterprise_ouroboros.svg"
+          alt="KSEC Sovereign Infrastructure Mark"
+          width={28}
+          height={28}
+          className="w-full h-full object-contain transition-transform duration-300 ease-out group-hover:scale-105"
         />
-        <circle
-          cx="16"
-          cy="16"
-          r="8.5"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          className="opacity-70"
-        />
-        <circle cx="16" cy="16" r="3.6" fill="currentColor" className="text-primary" />
-      </svg>
-      <span className="text-base font-semibold tracking-tight">KSEC</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="font-sans text-base font-bold tracking-[0.08em] text-white">
+          KSEC
+        </span>
+        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-medium tracking-widest text-[#00F59B] bg-[#00F59B]/10 border border-[#00F59B]/20 leading-none">
+          RING-0
+        </span>
+      </div>
     </a>
   );
 }

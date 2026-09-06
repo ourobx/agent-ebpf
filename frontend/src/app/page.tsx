@@ -110,22 +110,22 @@ export default function HomePage() {
         <div className="relative overflow-hidden rounded-3xl border border-zinc-800/90 bg-gradient-to-br from-zinc-950 via-black to-cyan-950/40 p-5 sm:p-8 lg:p-10 backdrop-blur-2xl shadow-2xl">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-4 flex-1 text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
-                <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#06b6d4] animate-pulse"></span>
-                <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
-                  KSEC v2.0 // Sovereign AI Security Engine
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded border border-emerald-800 bg-emerald-950/80 text-emerald-400 font-mono font-semibold">
-                  ● Ring-0 Active
+              {/* Clean Single Status Badge */}
+              <div className="flex items-center justify-center lg:justify-start">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F59B]/20 bg-[#00F59B]/5 text-xs font-mono text-[#00F59B]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#00F59B] animate-pulse"></span>
+                  <span>Linux 6.8+ eBPF · Ring-0 AI Security</span>
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white font-mono leading-tight">
-                Deterministic Kernel Defense for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">All Autonomous AI Agents</span>
+              {/* Authoritative Single Headline */}
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white font-mono leading-tight">
+                Kernel-Level AI Defense. <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F59B] via-[#00D27F] to-cyan-400">Deterministic at Ring-0.</span>
               </h1>
 
-              <p className="text-xs sm:text-sm text-zinc-300 font-mono leading-relaxed max-w-2xl">
-                Sub-35µs Linux eBPF guardrails protecting LangChain, Claude Code, OpenAI Swarms, Gemini Spark, and Vercel AI SDK. Intercept prompt injection, TOCTOU race conditions, and rogue tool mutations at the OS boundary.
+              {/* Crisp Subtitle */}
+              <p className="text-xs sm:text-sm text-zinc-400 font-mono leading-relaxed max-w-2xl">
+                Sub-35µs kernel infrastructure intercepting prompt injections, TOCTOU race conditions, and unauthorized tool calls before network sockets transmit.
               </p>
 
               {/* Live KPI Strip */}

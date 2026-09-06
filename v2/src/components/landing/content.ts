@@ -1,15 +1,10 @@
 export type PlanId = "community" | "pro" | "enterprise";
 
 export const NAV = [
-  { href: "#architecture-flow", label: "Kernel Substrate" },
-  { href: "#frontier-matrix", label: "Frontier AI Defense" },
-  { href: "#neural-interceptor", label: "Neural vs Ring-0" },
-  { href: "#features", label: "eBPF LSM Specs" },
-  { href: "#simulator", label: "Live Testbed" },
-  { href: "#global-map", label: "Global Mesh" },
-  { href: "#benchmarks", label: "Microsecond SLA" },
-  { href: "#sdk", label: "FastMCP & SDKs" },
-  { href: "#pricing", label: "Quota & Pricing" },
+  { href: "#architecture-flow", label: "Architecture" },
+  { href: "#features", label: "Kernel Specs" },
+  { href: "#simulator", label: "Simulator" },
+  { href: "#pricing", label: "Pricing" },
 ] as const;
 
 export const FRONTIER_MODELS = [
