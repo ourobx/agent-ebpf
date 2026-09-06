@@ -5,10 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Overview", icon: "🛡️" },
-  { href: "/docs", label: "Docs", icon: "📖" },
-  { href: "/policies", label: "Policies", icon: "⚡" },
-  { href: "/dashboard/mesh", label: "Enterprise", icon: "🌐" },
+  { href: "/docs", label: "Docs" },
+  { href: "/policies", label: "Policies" },
+  { href: "/dashboard/mesh", label: "Enterprise" },
 ];
 
 export default function Navigation() {
@@ -20,7 +19,7 @@ export default function Navigation() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  // Lock body scrolling when drawer is open for a native, seamless mobile experience
+  // Lock body scrolling when drawer is open
   useEffect(() => {
     if (mobileMenuOpen) {
       const originalOverflow = document.body.style.overflow;
@@ -44,32 +43,25 @@ export default function Navigation() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-black/85 backdrop-blur-xl transition-all safe-top">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-black/80 backdrop-blur-md transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Brand Logo & Compact Status */}
+            {/* Brand Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 sm:gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-lg p-1"
+              className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-md p-1"
               aria-label="KSEC Home"
             >
-              <span className="relative flex h-3 w-3">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 shadow-[0_0_12px_#06b6d4]"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
               </span>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm sm:text-base font-bold tracking-wider text-cyan-400 font-mono uppercase">
-                    KSEC // eBPF
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded border border-cyan-800/80 bg-cyan-950/60 text-cyan-300 font-mono hidden xs:inline">
-                    Ring-0
-                  </span>
-                </div>
-                <span className="text-[9px] text-zinc-500 font-mono hidden sm:inline leading-none">
-                  AI Security Guardrails
-                </span>
-              </div>
+              <span className="text-base font-bold tracking-widest text-zinc-100 font-mono uppercase group-hover:text-cyan-400 transition-colors">
+                KSEC
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/80 text-zinc-400 font-mono">
+                v2.0
+              </span>
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -80,66 +72,66 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-2 rounded-lg transition font-medium flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                    className={`px-3 py-1.5 rounded-md transition font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                       isActive
-                        ? "bg-cyan-950/70 text-cyan-300 border border-cyan-800/80 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/70"
+                        ? "bg-zinc-900 text-cyan-400 border border-zinc-700/80 shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50"
                     }`}
                   >
-                    <span className="text-xs">{item.icon}</span>
-                    <span>{item.label}</span>
+                    {item.label}
                   </Link>
                 );
               })}
             </nav>
 
-            {/* Right Status Badge & Mobile Hamburger Button */}
-            <div className="flex items-center gap-1.5 sm:gap-3">
-              {/* NPM link on desktop */}
+            {/* Right Status & Actions */}
+            <div className="flex items-center gap-3">
+              {/* Clean Status Badge */}
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-900/40 bg-emerald-950/20 text-[11px] font-mono text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Ring-0 Guarded</span>
+              </div>
+
+              {/* NPM Command Link */}
               <a
                 href="https://www.npmjs.com/package/@ourobx/shield"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cyan-800/60 bg-cyan-950/40 text-[11px] font-mono text-cyan-300 hover:bg-cyan-900/50 hover:text-cyan-200 transition"
-                title="Official NPM Package: @ourobx/shield"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 bg-zinc-900 text-xs font-mono text-zinc-300 hover:text-white hover:border-zinc-700 transition"
               >
-                <span>📦</span>
-                <span>npm @ourobx/shield</span>
+                <span>npm i @ourobx/shield</span>
               </a>
 
-              {/* Status Badge */}
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-emerald-800/60 bg-emerald-950/30 text-[10px] sm:text-[11px] font-mono text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="hidden xs:inline">ksec:</span>
-                <span>live</span>
-              </div>
-
-              {/* Mobile Hamburger Toggle Button (44px touch target) */}
+              {/* Mobile Hamburger Toggle Button */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden flex items-center justify-center w-10 h-10 min-w-[40px] rounded-lg border border-zinc-800 bg-zinc-900/80 text-zinc-200 hover:text-white hover:bg-zinc-800 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-md border border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:text-white hover:bg-zinc-800 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-navigation-drawer"
               >
-                <div className="w-5 h-4 relative flex flex-col justify-between items-center">
-                  <span
-                    className={`block h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? "rotate-45 translate-y-1.5 bg-cyan-400" : ""
-                    }`}
-                  />
-                  <span
-                    className={`block h-0.5 w-5 bg-current rounded-full transition-all duration-200 ease-in-out ${
-                      mobileMenuOpen ? "opacity-0 scale-0" : ""
-                    }`}
-                  />
-                  <span
-                    className={`block h-0.5 w-5 bg-current rounded-full transform transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? "-rotate-45 -translate-y-2 bg-cyan-400" : ""
-                    }`}
-                  />
-                </div>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  {mobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
               </button>
             </div>
           </div>
@@ -148,22 +140,17 @@ export default function Navigation() {
         {/* Mobile Backdrop Overlay */}
         {mobileMenuOpen && (
           <div
-            className="fixed inset-0 top-14 sm:top-16 bg-black/75 backdrop-blur-sm z-40 transition-opacity duration-200 md:hidden"
+            className="fixed inset-0 top-14 bg-black/70 backdrop-blur-sm z-40 transition-opacity md:hidden"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
         )}
 
-        {/* Mobile Drawer Menu (Slide-down + smooth scroll) */}
+        {/* Mobile Drawer Menu */}
         {mobileMenuOpen && (
           <div
-            id="mobile-navigation-drawer"
-            className="md:hidden relative z-50 border-b border-zinc-800 bg-zinc-950/98 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-1.5 font-mono text-xs shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain"
+            className="md:hidden relative z-50 border-b border-zinc-800 bg-zinc-950/98 backdrop-blur-xl px-4 pt-3 pb-5 space-y-1 font-mono text-xs shadow-2xl"
           >
-            <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider px-2 py-1">
-              Navigation Menu
-            </div>
-
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -171,78 +158,61 @@ export default function Navigation() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3.5 py-3 rounded-lg font-medium transition-all flex items-center justify-between min-h-[44px] active:scale-[0.98] ${
+                  className={`px-3 py-2.5 rounded-md font-medium transition flex items-center justify-between ${
                     isActive
-                      ? "bg-cyan-950/80 text-cyan-300 border border-cyan-800/80 shadow-[0_0_14px_rgba(6,182,212,0.25)] font-bold"
-                      : "text-zinc-300 hover:bg-zinc-900/80 hover:text-white"
+                      ? "bg-zinc-900 text-cyan-400 border border-zinc-800"
+                      : "text-zinc-300 hover:bg-zinc-900/60 hover:text-white"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base">{item.icon}</span>
-                    <span className="text-xs tracking-wide">{item.label}</span>
-                  </div>
-                  <span className={`text-xs ${isActive ? "text-cyan-400 font-bold" : "text-zinc-600"}`}>
-                    →
-                  </span>
+                  <span>{item.label}</span>
+                  <span className="text-zinc-600 text-xs">→</span>
                 </Link>
               );
             })}
 
-            {/* Quick Actions in Mobile Drawer */}
-            <div className="pt-3 border-t border-zinc-800/80 mt-3 flex flex-col gap-2">
+            <div className="pt-3 border-t border-zinc-800/80 mt-2 flex flex-col gap-2">
               <a
                 href="https://www.npmjs.com/package/@ourobx/shield"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-cyan-800/60 bg-cyan-950/40 text-cyan-300 font-semibold text-xs min-h-[44px] active:scale-[0.98] transition"
+                className="flex items-center justify-between px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 text-zinc-300 text-xs font-mono"
               >
-                <div className="flex items-center gap-2">
-                  <span>📦</span>
-                  <span>npm @ourobx/shield</span>
-                </div>
-                <span className="text-[10px] text-cyan-400 font-mono">v1.2.0 ↗</span>
+                <span>npm i @ourobx/shield</span>
+                <span className="text-zinc-500">v1.2.0 ↗</span>
               </a>
-
-              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-[11px] text-zinc-400">
-                <span>Kernel Guardrails</span>
-                <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Ring-0 Active
-                </span>
-              </div>
             </div>
           </div>
         )}
       </header>
 
-      {/* Mobile Bottom Quick Navigation App-Bar (Safe-Area Aware & Touch Optimized) */}
+      {/* Mobile Bottom Bar */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800/90 bg-zinc-950/95 backdrop-blur-xl px-1.5 pt-1.5 safe-bottom flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.85)]"
-        aria-label="Mobile Bottom Navigation"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800/90 bg-zinc-950/95 backdrop-blur-xl px-4 py-2 flex items-center justify-around shadow-2xl"
+        aria-label="Mobile Navigation"
       >
+        <Link
+          href="/"
+          className={`flex flex-col items-center text-[10px] font-mono transition ${
+            pathname === "/" ? "text-cyan-400 font-bold" : "text-zinc-400"
+          }`}
+        >
+          <span className="text-xs">✦</span>
+          <span>Home</span>
+        </Link>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg transition-all min-w-[50px] min-h-[46px] active:scale-95 ${
-                isActive ? "text-cyan-300 font-bold" : "text-zinc-400 hover:text-zinc-200"
+              className={`flex flex-col items-center text-[10px] font-mono transition ${
+                isActive ? "text-cyan-400 font-bold" : "text-zinc-400"
               }`}
             >
-              <span className={`text-base transition-transform ${isActive ? "scale-110" : "opacity-75"}`}>
-                {item.icon}
+              <span className="text-xs">
+                {item.label === "Docs" ? "◈" : item.label === "Policies" ? "⚡" : "⬡"}
               </span>
-              <span
-                className={`text-[9px] tracking-tight truncate max-w-[58px] ${
-                  isActive ? "text-cyan-400 font-bold" : "text-zinc-400"
-                }`}
-              >
-                {item.label.split(" ")[0]}
-              </span>
-              {isActive && (
-                <span className="w-1.5 h-1 rounded-full bg-cyan-400 mt-0.5 shadow-[0_0_8px_#06b6d4]"></span>
-              )}
+              <span>{item.label}</span>
             </Link>
           );
         })}
@@ -250,4 +220,5 @@ export default function Navigation() {
     </>
   );
 }
+
 
