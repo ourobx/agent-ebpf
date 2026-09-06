@@ -101,7 +101,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-12 sm:space-y-16 cyber-grid">
+    <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 pb-28 sm:pb-16 space-y-10 sm:space-y-16 cyber-grid">
       
       {/* =========================================================================
           BLOCK 1: SOVEREIGN AI AGENT GUARDIAN (Hero & Real-Time Radar)

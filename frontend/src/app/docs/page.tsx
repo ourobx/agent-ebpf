@@ -31,7 +31,7 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 pb-28 sm:pb-16 space-y-6">
       {/* Docs Header Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-gradient-to-r from-zinc-950 via-black to-cyan-950/40 p-4 sm:p-6 backdrop-blur shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1.5 text-center md:text-left">

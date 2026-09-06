@@ -187,16 +187,16 @@ export default function Navigation() {
 
       {/* Mobile Bottom Bar */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800/90 bg-zinc-950/95 backdrop-blur-xl px-4 py-2 flex items-center justify-around shadow-2xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800/90 bg-zinc-950/95 backdrop-blur-xl px-2 py-1.5 safe-bottom flex items-center justify-around shadow-[0_-10px_25px_rgba(0,0,0,0.85)]"
         aria-label="Mobile Navigation"
       >
         <Link
           href="/"
-          className={`flex flex-col items-center text-[10px] font-mono transition ${
-            pathname === "/" ? "text-cyan-400 font-bold" : "text-zinc-400"
+          className={`flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-[10px] font-mono transition active:scale-95 ${
+            pathname === "/" ? "text-cyan-400 font-bold" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          <span className="text-xs">✦</span>
+          <span className="text-sm">✦</span>
           <span>Home</span>
         </Link>
         {NAV_ITEMS.map((item) => {
@@ -205,11 +205,11 @@ export default function Navigation() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center text-[10px] font-mono transition ${
-                isActive ? "text-cyan-400 font-bold" : "text-zinc-400"
+              className={`flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-[10px] font-mono transition active:scale-95 ${
+                isActive ? "text-cyan-400 font-bold" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              <span className="text-xs">
+              <span className="text-sm">
                 {item.label === "Docs" ? "◈" : item.label === "Policies" ? "⚡" : "⬡"}
               </span>
               <span>{item.label}</span>
