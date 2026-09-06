@@ -44,16 +44,16 @@ export default function Navigation() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-black/80 backdrop-blur-md transition-all">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-black/85 backdrop-blur-xl transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Brand Logo */}
             <Link
               href="/"
-              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F59B] rounded-md p-1"
+              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F59B] rounded-md p-0.5 transition-opacity hover:opacity-90"
               aria-label="KSEC Home"
             >
-              <EnterpriseLogo size={32} />
+              <EnterpriseLogo size={30} />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -64,9 +64,9 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 rounded-md transition font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                    className={`px-3 py-1.5 rounded-md transition font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F59B] ${
                       isActive
-                        ? "bg-zinc-900 text-cyan-400 border border-zinc-700/80 shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+                        ? "bg-zinc-900 text-[#00F59B] border border-zinc-700/80 shadow-[0_0_12px_rgba(0,245,155,0.12)]"
                         : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50"
                     }`}
                   >
@@ -76,29 +76,24 @@ export default function Navigation() {
               })}
             </nav>
 
-            {/* Right Status & Actions */}
-            <div className="flex items-center gap-3">
-              {/* Clean Status Badge */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-900/40 bg-emerald-950/20 text-[11px] font-mono text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Ring-0 Guarded</span>
-              </div>
-
-              {/* NPM Command Link */}
+            {/* Simplified Right Actions */}
+            <div className="flex items-center gap-2.5">
+              {/* GitHub Link */}
               <a
-                href="https://www.npmjs.com/package/@ourobx/shield"
+                href="https://github.com/ourobx/agent-ebpf"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 bg-zinc-900 text-xs font-mono text-zinc-300 hover:text-white hover:border-zinc-700 transition"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 bg-zinc-900/90 text-xs font-mono text-zinc-300 hover:text-white hover:border-zinc-700 transition"
               >
-                <span>npm i @ourobx/shield</span>
+                <span>GitHub</span>
+                <span className="text-zinc-500 text-[10px]">↗</span>
               </a>
 
               {/* Mobile Hamburger Toggle Button */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden flex items-center justify-center w-9 h-9 rounded-md border border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:text-white hover:bg-zinc-800 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-md border border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:text-white hover:bg-zinc-800 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#00F59B]"
                 aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileMenuOpen}
               >
@@ -152,7 +147,7 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`px-3 py-2.5 rounded-md font-medium transition flex items-center justify-between ${
                     isActive
-                      ? "bg-zinc-900 text-cyan-400 border border-zinc-800"
+                      ? "bg-zinc-900 text-[#00F59B] border border-zinc-800"
                       : "text-zinc-300 hover:bg-zinc-900/60 hover:text-white"
                   }`}
                 >
@@ -164,13 +159,13 @@ export default function Navigation() {
 
             <div className="pt-3 border-t border-zinc-800/80 mt-2 flex flex-col gap-2">
               <a
-                href="https://www.npmjs.com/package/@ourobx/shield"
+                href="https://github.com/ourobx/agent-ebpf"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-between px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 text-zinc-300 text-xs font-mono"
               >
-                <span>npm i @ourobx/shield</span>
-                <span className="text-zinc-500">v1.2.0 ↗</span>
+                <span>GitHub Repository</span>
+                <span className="text-zinc-500">↗</span>
               </a>
             </div>
           </div>
@@ -185,7 +180,7 @@ export default function Navigation() {
         <Link
           href="/"
           className={`flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-[10px] font-mono transition active:scale-95 ${
-            pathname === "/" ? "text-cyan-400 font-bold" : "text-zinc-400 hover:text-zinc-200"
+            pathname === "/" ? "text-[#00F59B] font-bold" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           <span className="text-sm">✦</span>
@@ -198,12 +193,10 @@ export default function Navigation() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-[10px] font-mono transition active:scale-95 ${
-                isActive ? "text-cyan-400 font-bold" : "text-zinc-400 hover:text-zinc-200"
+                isActive ? "text-[#00F59B] font-bold" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              <span className="text-sm">
-                {item.label === "Docs" ? "◈" : item.label === "Policies" ? "⚡" : "⬡"}
-              </span>
+              <span className="text-sm">{item.label === "Docs" ? "📖" : item.label === "Policies" ? "⚡" : "🏢"}</span>
               <span>{item.label}</span>
             </Link>
           );
@@ -212,5 +205,3 @@ export default function Navigation() {
     </>
   );
 }
-
-
