@@ -59,7 +59,10 @@ class AndroidDeviceManager:
             return
 
         if not os.path.exists(self.key_path):
-            logger.warning(f"Service Account key file '{self.key_path}' not found. Real Android API calls require this JSON key.")
+            if os.getenv("ANDROID_SA_KEY_PATH") or os.getenv("ANDROID_ENTERPRISE_ID"):
+                logger.warning(f"Service Account key file '{self.key_path}' not found. Real Android API calls require this JSON key.")
+            else:
+                logger.debug(f"Android AM API service account key '{self.key_path}' not found (offline/unconfigured mode).")
             self.is_configured = False
             return
 

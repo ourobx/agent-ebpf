@@ -100,7 +100,7 @@ async def lifespan(app: FastAPI):
         if settings.is_production:
             logger.error("Startup blocked: PostgreSQL unavailable", error=str(exc))
             raise
-        logger.warning("PostgreSQL unavailable during startup (non-production)", error=str(exc))
+        logger.info("Non-production environment: PostgreSQL offline (standalone mode active)")
 
     # Register async event loop for eBPF ring buffer event broadcaster
     try:
