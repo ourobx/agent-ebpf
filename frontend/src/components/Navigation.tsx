@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { EnterpriseLogo } from "./EnterpriseLogo";
 
 const NAV_ITEMS = [
   { href: "/docs", label: "Docs" },
@@ -49,19 +50,10 @@ export default function Navigation() {
             {/* Brand Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-md p-1"
+              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F59B] rounded-md p-1"
               aria-label="KSEC Home"
             >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
-              </span>
-              <span className="text-base font-bold tracking-widest text-zinc-100 font-mono uppercase group-hover:text-cyan-400 transition-colors">
-                KSEC
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/80 text-zinc-400 font-mono">
-                v2.0
-              </span>
+              <EnterpriseLogo size={32} />
             </Link>
 
             {/* Desktop Navigation Links */}

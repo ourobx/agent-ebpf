@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   title: "KSEC // Agent-eBPF Enterprise AI Defense",
   description: "Deterministic Ring-0 eBPF Runtime Security and Observability for AI Agents",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/assets/ksec_enterprise_ouroboros.svg",
+    shortcut: "/assets/ksec_enterprise_ouroboros.svg",
+    apple: "/assets/ksec_enterprise_ouroboros.svg",
   },
 };
 
