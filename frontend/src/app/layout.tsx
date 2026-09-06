@@ -6,10 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "KSEC // Agent-eBPF Enterprise AI Defense",
   description: "Deterministic Ring-0 eBPF Runtime Security and Observability for AI Agents",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/assets/ksec_enterprise_ouroboros.svg",
-    shortcut: "/assets/ksec_enterprise_ouroboros.svg",
-    apple: "/assets/ksec_enterprise_ouroboros.svg",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -17,7 +18,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#000000",
+  themeColor: "#040605",
 };
 
 export default function RootLayout({
