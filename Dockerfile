@@ -1,9 +1,9 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# eBPF CO-RE derleme ve runtime bağımlılıkları
+# eBPF CO-RE derleme ve runtime bağımlılıkları (Linux 6.8+ eBPF LSM & bpftool)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     llvm \
@@ -14,20 +14,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     gcc \
     curl \
-    python3.11 \
-    python3.11-dev \
+    python3 \
+    python3-dev \
     python3-pip \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 
 WORKDIR /app
 
 # Python paketlerinin yüklenmesi
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip --break-system-packages && \
+    pip install --no-cache-dir -r requirements.txt --break-system-packages
 
 # Proje dosyalarının kopyalanması
 COPY . .
