@@ -5,7 +5,7 @@ chcp 65001 >nul
 cls
 
 echo =======================================================================
-echo   🛡️ Agent-eBPF: Otonom Kernel Guvenlik ve Zihin Platformu
+echo   🛡️ Agent-eBPF: Otonom Kernel Safety and  Brain Platform
 echo   1-Click Turnkey Launcher
 echo =======================================================================
 echo.

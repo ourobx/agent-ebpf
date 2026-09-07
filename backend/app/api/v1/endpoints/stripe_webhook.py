@@ -39,7 +39,7 @@ async def create_stripe_checkout_session(payload: CheckoutSessionCreateRequest):
     """
     Creates an authenticated Stripe Checkout Session containing metadata for automated quota boosts.
     """
-    if stripe and STRIPE_SECRET_KEY.startswith("sk_live_"):
+    if stripe and STRIPE_SECRET_KEY.startswith("sk_live_") and not STRIPE_SECRET_KEY.endswith("_mock"):
         try:
             session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
