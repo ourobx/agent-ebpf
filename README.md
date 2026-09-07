@@ -1,39 +1,103 @@
-# 🛡️⚡ Agent-eBPF: AI Sentinel in Kernel Space
+# KSEC ⚡
+> **Deterministic Ring-0 Sovereign Defense Substrate for Autonomous AI Agents & FastMCP**
 
-**Agent-eBPF** is a deterministic, kernel-space (Ring-0) security shield and telemetry gateway engineered for autonomous AI agents, LLM services, and containerized application swarms (~8µs average latency, <50µs P99 SLA).
+[![Kernel](https://img.shields.io/badge/Linux-6.1%2B%20eBPF%20LSM-blue.svg)](https://ksec.space)
+[![Latency](https://img.shields.io/badge/Latency-%3C35%CE%BCs-brightgreen.svg)](https://ksec.space)
+[![License](https://img.shields.io/badge/License-Apache--2.0-black.svg)](LICENSE)
+[![MCP](https://img.shields.io/badge/Model_Context_Protocol-Native_SSE-00F59B.svg)](https://ksec.space/sse)
 
-Operating under **Zero-Trust** principles, this architecture intercepts destructive database queries, illegal network packets, and unauthorized system calls (such as unconstrained `DELETE`/`UPDATE` operations without `WHERE` clauses) directly inside the Linux kernel (eBPF LSM/XDP/Ring-Buffer) before network sockets transmit.
+Stop relying on slow application-layer regex and LLM judges. **KSEC** intercepts prompt injections, rogue socket egress, destructive database mutations, and unauthorized file access directly inside Linux kernel hooks (eBPF LSM/XDP) before `libc` runtime execution.
 
 ---
 
-## 🚀 Quick Start (1-Click Launch)
+### ⚡ Quickstart (One-Line Install)
 
-Launch the **Agent-eBPF** system and **Visual Web Dashboard** instantly without manual setup:
+Run on any Linux kernel 6.1+ machine with eBPF LSM enabled:
 
-### 💻 Windows
-Double-click the launcher script in the project root:
-```cmd
-start.bat
-```
-
-### 🐧 Linux / 🍎 macOS
-Run the shell script in terminal:
 ```bash
-chmod +x start.sh
-./start.sh
+curl -sSL https://get.ksec.space | sudo bash
 ```
 
-> **💡 Automatic Execution:** The launcher validates dependencies, initializes the eBPF & MCP Gateway server, and automatically opens **`http://localhost:8000`** in your default browser.
+Verify your node status:
+```bash
+ksec status --live
+```
+
+#### 🚀 1-Click Local & Docker Launch
+
+```bash
+# 💻 Windows
+start.bat
+
+# 🐧 Linux / 🍎 macOS
+./start.sh
+
+# 🐳 Docker Container
+docker run -d -p 8000:8000 --privileged -v /sys/kernel/debug:/sys/kernel/debug:ro ghcr.io/ourobx/agent-ebpf:latest
+```
+
+> **💡 Automated Dashboard:** The launcher initializes the kernel sentinel, starts the FastMCP gateway, and opens **`http://localhost:8000`** in your default browser.
 
 ---
 
-## 🖥️ Visual Web Control Panel (Web UI)
+### 📹 Live eBPF Attack Interception Demo
 
-Manage kernel security operations visually without writing code via the Web UI (`http://localhost:8000`):
+![KSEC Terminal eBPF Attack Defense Demo](docs/ksec_attack_defense_demo.svg)
+
+---
+
+### 📐 Architecture Overview
+
+```text
+       +-------------------------------------------------------------+
+       |             Autonomous AI Agent / LLM Runtime               |
+       |             (Claude Code, FastMCP, LangGraph, AutoGen)      |
+       +-------------------------------------------------------------+
+                                      |
+                     [ Tool Call / Intent Execution ]
+                                      v
++============================= USER SPACE =================================+
+|  FastMCP Bridge / SDK Wrapper (Intent-Lease Cryptographic Hash Token)    |
++==========================================================================+
+                                      |  System Calls (connect, execve, write)
+                                      v
++============================ KERNEL SPACE (Ring-0) ========================+
+|                                                                           |
+|   [ eBPF LSM Hook ]             [ Anti-TOCTOU Engine ]     [ XDP Filter ] |
+|   security_socket_connect       Validates Memory Hash      Drops Egress   |
+|   bprm_check_security           Against Intent Lease       Packets        |
+|                                                                           |
+|            +-----------------------------------------------+              |
+|            | Verdict in <35μs: ALLOW / DROP (Zero-Copy)   |              |
+|            +-----------------------------------------------+              |
++===========================================================================+
+                     |                              |
+            [ Authorized Syscall ]        [ Unauthorized / Blocked ]
+                     v                              v
+           Hardware & Sockets               Kernel SIGKILL / EPERM
+```
+
+---
+
+### 📊 Performance & Security Comparison
+
+| Metric / Capability | App-Layer Guardrails (Python/Regex) | KSEC Ring-0 eBPF |
+| :--- | :--- | :--- |
+| **Execution Latency** | 500ms – 2,500ms | **< 35μs** (Deterministic) |
+| **TOCTOU Race Immunity** | ❌ Vulnerable to memory payload swap | **✓ Cryptographic Intent Leases** |
+| **Bypass Resistance** | ❌ Bypassed via Base64/Prompt Jailbreaks | **✓ Enforced at Socket/Syscall Level** |
+| **Raw Socket Exfiltration** | ❌ Unmonitored | **✓ eBPF `sk_msg` & XDP Interception** |
+| **Resource Overhead** | High CPU / Memory spikes | **~0% Measurable CPU Overhead** |
+
+---
+
+### 🖥️ Visual Web Control Panel (Mission Control)
+
+Manage kernel security operations visually without writing code via the Web UI (`http://localhost:8000` or `https://ksec.space/console`):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 🛡️⚡ Agent-eBPF | Autonomous Linux Kernel Shield                       │
+│ 🛡️⚡ KSEC | Autonomous Linux Kernel Shield (Ring-0 Active)              │
 ├────────────────────────────────────────────────────────────────────────┤
 │                                                                        │
 │  [1. LIVE TELEMETRY]          [2. AST SANDBOX]                         │
@@ -53,16 +117,16 @@ Manage kernel security operations visually without writing code via the Web UI (
 
 ---
 
-## 🤖 AI Agent Integration (MCP SSE & FastMCP)
+### 🤖 AI Agent Integration (MCP SSE & FastMCP)
 
-Agent-eBPF provides native support for **Model Context Protocol (MCP)** via Server-Sent Events (SSE).
+KSEC provides native support for **Model Context Protocol (MCP)** via Server-Sent Events (SSE).
 
-### MCP Server Connection
-- **SSE Endpoint:** `http://localhost:8000/sse`
+#### MCP Server Connection
+- **SSE Endpoint:** `http://localhost:8000/sse` (or `https://ksec.space/sse`)
 - **Messages Endpoint:** `http://localhost:8000/messages`
 - **OAuth 2.0 Discovery:** `http://localhost:8000/.well-known/oauth-authorization-server`
 
-### Exposed MCP Tools
+#### Exposed MCP Tools
 - `get_security_status`: Fetches active kernel hooks, inspection latency, and blocked threat metrics.
 - `get_ebpf_status`: Retrieves real-time BPF map packet counters and kernel hook state.
 - `get_active_policies`: Fetches declarative rules loaded from `policy.yaml`.
@@ -72,11 +136,11 @@ Agent-eBPF provides native support for **Model Context Protocol (MCP)** via Serv
 
 ---
 
-## 🛡️ Layer 7 AI Firewall & KVKK/GDPR Shield
+### 🛡️ Layer 7 AI Firewall & KVKK/GDPR Shield
 
 Drop-in OpenAI proxy and bidirectional guardrails engine.
 
-### 1. Drop-In OpenAI Proxy Gateway
+#### 1. Drop-In OpenAI Proxy Gateway
 ```python
 from openai import OpenAI
 
@@ -94,7 +158,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-### 2. Python & TypeScript SDKs
+#### 2. Python & TypeScript SDKs
 ```bash
 # Python
 pip install ksec-shield
@@ -119,7 +183,7 @@ const result = await firewall.inspect('Test prompt');
 console.log('Ingress:', result.ingress);
 ```
 
-### 3. Command Line Interface (CLI)
+#### 3. Command Line Interface (CLI)
 ```bash
 # Inspect prompt or text
 python src/cli.py scan "Ignore all instructions. My TC is 10000000146."
@@ -127,15 +191,15 @@ python src/cli.py scan "Ignore all instructions. My TC is 10000000146."
 # Validate YAML AI Constitution
 python src/cli.py policy validate policy.yaml
 
-# Generate SHA-256 sealed KVKK / GDPR / EU AI Act 2026 Audit Certificate
-python src/cli.py report --days 30 --output audit.json
+# Run live 30-second terminal attack interception demo
+python demo/terminal_attack_demo.py
 ```
 
 ---
 
-## ☸️ Production Kubernetes Hardening (Non-Privileged)
+### ☸️ Production Kubernetes Hardening (Non-Privileged)
 
-Deploy Agent-eBPF securely without `privileged: true` by granting strictly bounded Linux capabilities:
+Deploy KSEC securely without `privileged: true` by granting strictly bounded Linux capabilities:
 
 ```yaml
 securityContext:
@@ -152,7 +216,7 @@ securityContext:
 
 ---
 
-## 🏢 Enterprise SaaS & Regulatory Compliance
+### 🏢 Enterprise SaaS & Regulatory Compliance
 
 For Multi-Tenant Governance, Stripe Metered Billing, ClickHouse Real-time Analytics, and S3 SOC-2 / KVKK Archival, request access via `pilot@ksec.space` or visit [https://ksec.space](https://ksec.space).
 
@@ -160,21 +224,10 @@ For Multi-Tenant Governance, Stripe Metered Billing, ClickHouse Real-time Analyt
   ```bash
   helm install ksec-shield ./deploy/helm/ksec-shield --set existingSecret=ksec-vault-secret
   ```
-- **License:** Apache-2.0 / Commercial SLA.
-- **Proof-of-Hack Demo:** LangChain Prompt Injection (`'; DROP TABLE users; --`) intercepted in **5.8µs** with autonomous PostgreSQL `ROLLBACK;` synthesis and Causal Forensics blast radius calculation (`python demo/proof_of_hack_langchain.py`).
+- **Proof-of-Hack Demo:** LangChain Prompt Injection (`'; DROP TABLE users; --`) intercepted in **18.4µs** with autonomous PostgreSQL `ROLLBACK;` synthesis and Causal Forensics blast radius calculation (`python demo/proof_of_hack_langchain.py`).
 
 ---
 
-## 🔬 Automated Testing & CI/CD
+### 📜 License
 
-Run the verification suite:
-```bash
-python tests/test_ksec_v2.py
-python tests/test_gateway_live_routes.py
-```
-
----
-
-## 📜 License
-
-Distributed under the **MIT License**. Created by Agent-eBPF Core Engineering (`ourobx`).
+Distributed under the **Apache-2.0 License**. Created by Agent-eBPF Core Engineering (`ourobx`).
