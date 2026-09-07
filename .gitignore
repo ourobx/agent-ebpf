@@ -54,5 +54,6 @@ audit.json
 .claude/
 .cursor/
 .kiro/
+.github/
 .agents/artifacts/
 .vscode/
