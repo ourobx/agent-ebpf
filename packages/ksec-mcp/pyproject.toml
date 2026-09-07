@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ksec-mcp"
+version = "2.0.0"
+description = "Deterministic Ring-0 eBPF LSM Security Middleware for FastMCP & Autonomous AI Agents"
+readme = "README.md"
+authors = [{ name = "KSEC Sovereign Engineering", email = "pilot@ksec.space" }]
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Security",
+    "Intended Audience :: Developers"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "httpx>=0.24.0"
+]
+
+[project.urls]
+Homepage = "https://ksec.space"
+Repository = "https://github.com/ourobx/agent-ebpf"
+Documentation = "https://ksec.space/docs"
