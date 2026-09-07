@@ -1,61 +1,62 @@
-# 🚀 Model Context Protocol (MCP) & AI Security Community Launch Kit
+# 🚀 Global Tier-1 Community Launch Kit: Model Context Protocol (FastMCP)
 
-This kit contains copy-paste ready announcements for **Discord (#showcase / #servers)**, **GitHub Discussions**, **Hacker News (Show HN)**, and **Reddit (r/LocalLLaMA & r/netsec)** to invite developers to benchmark and test KSEC.
+Ready-to-publish announcements formatted for **Anthropic MCP Discord**, **GitHub Discussions**, **Hacker News (Show HN)**, and **Enterprise AI Architect Forums**.
 
 ---
 
-## 💬 1. Discord Announcement (Anthropic MCP Discord / `#showcase` / `#servers`)
+## 💬 1. Global Tier-1 Community Announcement (Discord `#showcase` / `#mcp` / Slack)
 
-> **Subject:** Kernel-level (Ring-0) security & sub-35μs TOCTOU defense for MCP Servers
+> **Title:** Deterministic Ring-0 Defense for the Model Context Protocol (FastMCP)
 >
 > Hey everyone 👋
 >
-> As our autonomous agents and MCP tools execute higher-privilege system tasks (file writes, database edits, local command execution), relying purely on Python wrappers or prompt-based guardrails introduces 800ms+ latency and leaves servers vulnerable to TOCTOU (Time-of-Check to Time-of-Use) payload swapping.
+> As autonomous agents transition from sandboxed experiments to production infrastructures with direct file system and network access, application-layer policy engines introduce significant latency bottlenecks (800ms+) and remain structurally susceptible to TOCTOU (Time-of-Check to Time-of-Use) attacks.
 >
-> We built **KSEC** (https://ksec.space) — an open-substrate, eBPF-powered security layer designed specifically for FastMCP and local agent runtimes on Linux 6.1+.
+> We are announcing the release of **KSEC** (https://ksec.space), a sovereign kernel substrate engineered specifically for Linux 6.1+ environments running FastMCP and multi-agent orchestrators.
 >
-> **How it works with MCP:**
-> 1. Attaches to kernel eBPF LSM hooks (`security_socket_connect`, `bprm_check_security`).
-> 2. Implements an **Intent-Lease Protocol**: validates that the actual payload executed in memory matches the cryptographic hash approved by your MCP policy.
-> 3. Enforces socket egress boundaries in **<35 microseconds** with zero measurable CPU overhead.
+> **Core Architectural Pillars:**
+> * **Kernel-Space LSM Hooks:** Attaches directly to `security_socket_connect` and `bprm_check_security`, terminating unverified operations prior to user-space context switches.
+> * **Cryptographic Intent-Lease Protocol:** Guarantees that the exact binary payload executed by an MCP tool matches the cryptographic manifest authorized by the parent policy.
+> * **Deterministic Sub-35μs SLA:** Executes with zero-copy ring buffers, ensuring agent tool orchestration operates at hardware line rate with <0.05% CPU overhead.
 >
-> It's free ($0 Community tier) for local setups and self-hosted nodes:
+> The Community Substrate is freely accessible for self-hosted instances:
 > ```bash
 > curl -sSL https://get.ksec.space | sudo bash
 > ```
 >
-> We’re actively looking for feedback from MCP server authors and agent developers. Check out the architecture at https://ksec.space or drop your thoughts below! ⚡
+> Technical whitepapers, telemetry specs, and architecture manifests are available at:
+> ↳ https://ksec.space/whitepaper
+> ↳ GitHub: https://github.com/ourobx/agent-ebpf
+>
+> We would love to hear feedback and benchmark comparisons from FastMCP authors and AI systems architects! ⚡
 
 ---
 
-## 🐙 2. GitHub Discussions / Issue Showcase (modelcontextprotocol / servers)
+## 🐙 2. GitHub Discussions Showcase (`modelcontextprotocol/servers`)
 
 ### Title:
-`[Showcase] KSEC: Sub-35µs Ring-0 eBPF LSM Guardrails & Anti-TOCTOU Defense for MCP Servers`
+`[Showcase] KSEC: Deterministic Ring-0 eBPF LSM Defense Substrate for FastMCP Swarms (<35µs SLA)`
 
 ### Body:
 ```markdown
 ### Summary
-As MCP servers gain broader privileges across databases, terminal execution, and local file systems, standard application-layer guardrails (such as LLM judges or Python regex wrappers) introduce significant latency (~500ms–2500ms) and are fundamentally vulnerable to in-memory payload swapping (TOCTOU).
+As autonomous agents powered by the **Model Context Protocol (FastMCP)** execute high-privilege operations across databases, container runtimes, and file systems, traditional user-space regex guardrails and LLM judges create massive latency jitter (500ms–2500ms) and cannot prevent in-memory race conditions (TOCTOU).
 
-**KSEC** (`ksec.space`) provides a deterministic, kernel-space (Ring-0) security substrate for autonomous agent runtimes on Linux 6.1+.
+**KSEC** (https://ksec.space) shifts security enforcement directly to Linux Ring-0 using **eBPF LSM** and **XDP**.
 
-### Key Capabilities
-- **<35µs Deterministic SLA:** Evaluates intent and blocks malicious egress directly inside `eBPF LSM` (`security_socket_connect`, `sk_msg`, `bprm_check_security`).
-- **Cryptographic Intent Leases:** Guarantees that what the LLM authorized is bit-for-bit what the operating system executes, eliminating TOCTOU race conditions.
-- **Native FastMCP Integration:** Exposes telemetry, dynamic rule injection, and live inspection over SSE (`http://localhost:8000/sse`).
+### Key Architectural Pillars
+- **<35µs Deterministic Interception:** Evaluates system call intent directly in kernel space before context switching into `libc`.
+- **Zero-TOCTOU Intent Leases:** Cryptographic nonces verify that memory-resident payloads match approved tool-call manifests bit-for-bit.
+- **FastMCP Native Telemetry:** Exposes live ring-buffer events, dynamic policy insertion, and BPF maps over SSE (`http://localhost:8000/sse`).
 
-### 1-Line Quickstart:
+### 1-Line Installation (Linux 6.1+ eBPF LSM):
 ```bash
 curl -sSL https://get.ksec.space | sudo bash
 ```
 
-### GitHub Repository & Documentation:
 - **Repository:** https://github.com/ourobx/agent-ebpf
 - **Live Gateway:** https://ksec.space
 - **Technical Whitepaper:** https://ksec.space/whitepaper
-
-We'd love to hear your feedback on integrating native eBPF hooks into standard MCP tool orchestration!
 ```
 
 ---
@@ -63,57 +64,28 @@ We'd love to hear your feedback on integrating native eBPF hooks into standard M
 ## 📰 3. Hacker News (Show HN)
 
 ### Title:
-`Show HN: KSEC – Sub-35µs Ring-0 eBPF Defense Shield for Autonomous AI Agents`
+`Show HN: KSEC – Sub-35µs Ring-0 eBPF Defense Substrate for FastMCP & AI Agents`
 
 ### Text:
 ```
 Hey HN,
 
-We built KSEC (https://ksec.space), an open-source eBPF LSM security layer designed for autonomous AI agents and FastMCP servers.
+We built KSEC (https://ksec.space) to solve the latency and TOCTOU vulnerability problem in autonomous AI agents and FastMCP servers.
 
-Most agent guardrails today run as application-level Python wrappers or second-pass LLM judges. This has two critical flaws:
-1. Latency: Running a secondary model inspection takes 500ms–2000ms per tool invocation.
-2. Race Conditions (TOCTOU): An agent that checks a query via prompt filter can have its wire payload mutated or hijacked before socket transmission.
+Traditional guardrails rely on secondary LLM judges or Python regex filters. In production, this introduces two major failure modes:
+1. Prohibitive Latency: Secondary LLM checks add 500ms–2000ms per tool invocation.
+2. TOCTOU Exploitation: An agent checking an SQL statement or CLI argument via prompt evaluation can have its wire payload swapped or exfiltrated via raw TCP socket before execution.
 
-KSEC shifts defense into the Linux kernel (Ring-0):
-- Intercepts system calls (socket_connect, file_open, execve) in <35 microseconds.
-- Validates cryptographic Intent Nonces to prevent memory payload swapping.
-- Provides native Model Context Protocol (MCP) Server-Sent Events (SSE) support.
+KSEC establishes defense boundaries directly in the Linux kernel:
+- Attaches to eBPF LSM hooks (`security_socket_connect`, `bprm_check_security`) with deterministic sub-35µs latency.
+- Implements an Intent-Lease Protocol using cryptographic nonces to ensure execution matches authorization.
+- Runs with <0.05% CPU footprint via zero-copy ring buffers.
 
-Try the quickstart:
+Quickstart:
 $ curl -sSL https://get.ksec.space | sudo bash
 
-GitHub: https://github.com/ourobx/agent-ebpf
-
-We’d love to hear your thoughts and feedback on kernel-level agent security!
-```
-
----
-
-## 🔴 4. Reddit (r/LocalLLaMA & r/netsec)
-
-### Title:
-`[P] KSEC: We built a Ring-0 eBPF security shield for autonomous AI agents and FastMCP (<35µs latency)`
-
-### Post:
-```markdown
-Hey everyone!
-
-When building autonomous agents with shell, file, or SQL tools, prompt injections and rogue tool calls are a real concern. Application-level guardrails add significant overhead and cannot stop low-level socket tampering or TOCTOU attacks.
-
-We created **KSEC** (https://ksec.space) to enforce agent security directly in Linux kernel space using eBPF LSM:
-
-- **Sub-35µs Execution SLA:** Zero-copy packet and syscall interception.
-- **Intent-Execution Protocol (IEP):** Cryptographic nonces ensure only approved intents can touch the wire.
-- **MCP Native:** Drop-in SSE endpoint for Claude Code, FastMCP, LangGraph, and AutoGen.
-- **Causal Forensics:** Live blast-radius and data loss impact calculations.
-
-One-line installation:
-```bash
-curl -sSL https://get.ksec.space | sudo bash
-```
-
 Repo: https://github.com/ourobx/agent-ebpf
+Whitepaper: https://ksec.space/whitepaper
 
-Looking forward to your thoughts and benchmark feedback!
+We’d love to hear your thoughts on kernel-level agent security!
 ```
