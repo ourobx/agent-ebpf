@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1350 420" width="100%" height="100%">
+  <defs>
+    <radialGradient id="horizCoreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00FF66" stop-opacity="0.32"/>
+      <stop offset="70%" stop-color="#00F0FF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#050706" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="horizSpineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FF66"/>
+      <stop offset="35%" stop-color="#00F59B"/>
+      <stop offset="75%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#00994D"/>
+    </linearGradient>
+    <linearGradient id="laserSeparator" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00FF66" stop-opacity="0"/>
+      <stop offset="25%" stop-color="#00FF66" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#00F0FF" stop-opacity="1"/>
+      <stop offset="75%" stop-color="#00F59B" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#00FF66" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="horizGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#050706" rx="24"/>
+  <g transform="translate(190, 210) scale(0.48)">
+    <circle cx="0" cy="0" r="320" fill="url(#horizCoreGlow)"/>
+    <circle cx="0" cy="0" r="310" fill="none" stroke="#00FF66" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.4"/>
+    <circle cx="0" cy="0" r="290" fill="none" stroke="#00F0FF" stroke-width="1" stroke-dasharray="16 24" opacity="0.35"/>
+    <path d="M 0 -270 C 150 -270 270 -150 270 0 C 270 150 150 270 0 270 C -150 270 -270 150 -270 0 C -270 -150 -150 -270 0 -270 Z" fill="none" stroke="#0A1610" stroke-width="54" stroke-linejoin="round"/>
+    <path d="M -10 -258 C 130 -258 248 -142 248 0 C 248 135 138 248 0 248 C -138 248 -248 135 -248 0 C -248 -135 -138 -248 -15 -248" fill="none" stroke="url(#horizSpineGrad)" stroke-width="22" stroke-linecap="round" filter="url(#horizGlow)"/>
+    <path d="M -10 -258 C 130 -258 248 -142 248 0 C 248 135 138 248 0 248 C -138 248 -248 135 -248 0 C -248 -135 -138 -248 -15 -248" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="14 36" opacity="0.85"/>
+    <g transform="translate(-30, -290)">
+      <polygon points="35,32 75,5 95,38 70,62 30,55" fill="#071A12" stroke="#00FF66" stroke-width="2.5"/>
+      <circle cx="78" cy="28" r="4.5" fill="#00F0FF" filter="url(#horizGlow)"/>
+      <line x1="30" y1="35" x2="5" y2="48" stroke="#00FF66" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g filter="url(#horizGlow)">
+      <polygon points="0,-115 100,55 -100,55" fill="#0A1C14" fill-opacity="0.85" stroke="#00FF66" stroke-width="2.5"/>
+      <circle cx="0" cy="-115" r="9" fill="#00FF66"/>
+      <circle cx="100" cy="55" r="9" fill="#00F59B"/>
+      <circle cx="-100" cy="55" r="9" fill="#00F0FF"/>
+    </g>
+    <g transform="translate(0, -5)">
+      <circle cx="0" cy="0" r="36" fill="#040806" stroke="#00FF66" stroke-width="2"/>
+      <circle cx="0" cy="0" r="24" fill="#021008" stroke="#00F0FF" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="12" fill="#00FF66" filter="url(#horizGlow)"/>
+      <circle cx="0" cy="0" r="4" fill="#FFFFFF"/>
+    </g>
+  </g>
+  <line x1="375" y1="65" x2="375" y2="355" stroke="url(#laserSeparator)" stroke-width="2" filter="url(#horizGlow)"/>
+  <g transform="translate(425, 205)">
+    <text x="0" y="25" font-family="'IBM Plex Sans', 'Inter', sans-serif" font-size="94" font-weight="900" letter-spacing="12" fill="#FFFFFF" filter="url(#horizGlow)">
+      K<tspan fill="#00FF66">S</tspan><tspan fill="#00F59B">E</tspan><tspan fill="#00F0FF">C</tspan>
+    </text>
+    <text x="4" y="72" font-family="'IBM Plex Mono', 'JetBrains Mono', monospace" font-size="14" font-weight="600" letter-spacing="6" fill="#00F59B">
+      SOVEREIGN AI DEFENSE SUBSTRATE
+    </text>
+    <text x="4" y="104" font-family="'IBM Plex Mono', 'JetBrains Mono', monospace" font-size="11" font-weight="400" letter-spacing="3.5" fill="#7E9389">
+      RING-0 DETERMINISTIC LSM // ZERO-TOCTOU // SUB-35µs SLA
+    </text>
+    <g transform="translate(4, -100)">
+      <rect width="135" height="24" rx="4" fill="#00FF66" fill-opacity="0.1" stroke="#00FF66" stroke-width="1"/>
+      <circle cx="14" cy="12" r="3.5" fill="#00FF66" filter="url(#horizGlow)"/>
+      <text x="26" y="16" font-family="'IBM Plex Mono', monospace" font-size="10" font-weight="700" fill="#00FF66" letter-spacing="1.5">
+        ksec.space
+      </text>
+    </g>
+    <g transform="translate(150, -100)">
+      <rect width="110" height="24" rx="4" fill="#00F0FF" fill-opacity="0.08" stroke="#00F0FF" stroke-width="1"/>
+      <text x="10" y="16" font-family="'IBM Plex Mono', monospace" font-size="10" font-weight="700" fill="#00F0FF" letter-spacing="1.2">
+        LINUX 6.8+
+      </text>
+    </g>
+  </g>
+</svg>

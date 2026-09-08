@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <radialGradient id="markCoreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00FF66" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#00F0FF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#050706" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="markSpineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FF66"/>
+      <stop offset="30%" stop-color="#00F59B"/>
+      <stop offset="70%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#008040"/>
+    </linearGradient>
+    <filter id="markGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#050706" rx="32"/>
+  <circle cx="400" cy="400" r="320" fill="url(#markCoreGlow)"/>
+  <circle cx="400" cy="400" r="310" fill="none" stroke="#00FF66" stroke-width="1.5" stroke-dasharray="3 6" opacity="0.4"/>
+  <circle cx="400" cy="400" r="290" fill="none" stroke="#00F0FF" stroke-width="1" stroke-dasharray="16 24 8 24" opacity="0.35"/>
+  <circle cx="400" cy="400" r="140" fill="none" stroke="#00FF66" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.45"/>
+  <circle cx="400" cy="400" r="110" fill="none" stroke="#00F0FF" stroke-width="1" opacity="0.3"/>
+  <g id="mark-ouroboros-chassis" filter="url(#markGlow)">
+    <path d="M 400 130 C 550 130 670 250 670 400 C 670 550 550 670 400 670 C 250 670 130 550 130 400 C 130 250 250 130 400 130 Z" fill="none" stroke="#0A1610" stroke-width="56" stroke-linejoin="round"/>
+    <path d="M 390 142 C 530 142 648 258 648 400 C 648 535 538 648 400 648 C 262 648 152 535 152 400 C 152 265 262 152 385 152" fill="none" stroke="url(#markSpineGrad)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M 390 142 C 530 142 648 258 648 400 C 648 535 538 648 400 648 C 262 648 152 535 152 400 C 152 265 262 152 385 152" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="14 36" opacity="0.85"/>
+  </g>
+  <g id="mark-stealth-facets" stroke="#00F0FF" stroke-width="1.2" opacity="0.75" fill="none">
+    <polygon points="400,105 450,130 440,165 390,140" fill="#00FF66" fill-opacity="0.12"/>
+    <polygon points="580,210 630,260 595,290 550,245" fill="#00F59B" fill-opacity="0.10"/>
+    <polygon points="650,370 685,420 640,460 610,410" fill="#00F0FF" fill-opacity="0.12"/>
+    <polygon points="580,580 540,630 490,600 535,550" fill="#00FF66" fill-opacity="0.10"/>
+    <polygon points="400,650 350,685 320,640 370,610" fill="#00F59B" fill-opacity="0.12"/>
+    <polygon points="210,580 165,540 200,490 245,535" fill="#00F0FF" fill-opacity="0.10"/>
+    <polygon points="120,400 150,350 185,380 155,430" fill="#00FF66" fill-opacity="0.12"/>
+    <polygon points="210,210 260,170 290,215 240,250" fill="#00F59B" fill-opacity="0.10"/>
+  </g>
+  <g id="mark-jaw-lock" transform="translate(370, 110)">
+    <polygon points="35,32 75,5 95,38 70,62 30,55" fill="#071A12" stroke="#00FF66" stroke-width="2.5"/>
+    <circle cx="78" cy="28" r="4.5" fill="#00F0FF" filter="url(#markGlow)"/>
+    <line x1="30" y1="35" x2="5" y2="48" stroke="#00FF66" stroke-width="3" stroke-linecap="round"/>
+    <line x1="35" y1="52" x2="15" y2="60" stroke="#00F0FF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="mark-tri-kernel-delta" filter="url(#markGlow)">
+    <polygon points="400,285 500,455 300,455" fill="#0A1C14" fill-opacity="0.85" stroke="#00FF66" stroke-width="2.5"/>
+    <polygon points="400,325 465,435 335,435" fill="none" stroke="#00F0FF" stroke-width="1.5" stroke-dasharray="6 6"/>
+    <circle cx="400" cy="285" r="9" fill="#00FF66"/>
+    <circle cx="500" cy="455" r="9" fill="#00F59B"/>
+    <circle cx="300" cy="455" r="9" fill="#00F0FF"/>
+  </g>
+  <g id="mark-optical-sensor" transform="translate(400, 395)">
+    <circle cx="0" cy="0" r="36" fill="#040806" stroke="#00FF66" stroke-width="2"/>
+    <circle cx="0" cy="0" r="24" fill="#021008" stroke="#00F0FF" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="12" fill="#00FF66" filter="url(#markGlow)"/>
+    <circle cx="0" cy="0" r="4" fill="#FFFFFF"/>
+    <line x1="-50" y1="0" x2="-38" y2="0" stroke="#00FF66" stroke-width="2"/>
+    <line x1="38" y1="0" x2="50" y2="0" stroke="#00FF66" stroke-width="2"/>
+    <line x1="0" y1="-50" x2="0" y2="-38" stroke="#00FF66" stroke-width="2"/>
+    <line x1="0" y1="38" x2="0" y2="50" stroke="#00FF66" stroke-width="2"/>
+  </g>
+  <g id="mark-subtext" font-family="'IBM Plex Mono', 'JetBrains Mono', monospace" font-size="11" fill="#7E9389" letter-spacing="4">
+    <text x="400" y="740" text-anchor="middle">RING-0 // ZERO-TOCTOU // SUB-35µs SLA</text>
+  </g>
+</svg>
