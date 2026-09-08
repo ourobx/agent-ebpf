@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <radialGradient id="favObsidian" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#0B130E" />
+      <stop offset="100%" stopColor="#030504" />
+    </radialGradient>
+    <linearGradient id="favLaser" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#00FF66" />
+      <stop offset="50%" stopColor="#00F59B" />
+      <stop offset="100%" stopColor="#00F0FF" />
+    </linearGradient>
+    <filter id="favGlow">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="800" rx="160" fill="url(#favObsidian)" />
+  <circle cx="400" cy="400" r="340" stroke="#00FF66" strokeWidth="6" fill="none" strokeOpacity="0.3" strokeDasharray="16 16" />
+  
+  <!-- Ouroboros Ring -->
+  <path
+    d="M 400 170
+       C 527 170, 630 273, 630 400
+       C 630 527, 527 630, 400 630
+       C 273 630, 170 527, 170 400
+       C 170 273, 273 170, 400 170 Z"
+    fill="#08100C"
+    stroke="url(#favLaser)"
+    strokeWidth="28"
+    filter="url(#favGlow)"
+  />
+  <path
+    d="M 400 170
+       C 527 170, 630 273, 630 400
+       C 630 527, 527 630, 400 630
+       C 273 630, 170 527, 170 400
+       C 170 273, 273 170, 400 170 Z"
+    fill="none"
+    stroke="#FFFFFF"
+    strokeWidth="6"
+  />
+
+  <!-- Jaw Lock -->
+  <polygon points="560,330 670,370 690,400 630,400 580,370" fill="#13241C" stroke="#00FF66" strokeWidth="8" />
+  <polygon points="560,470 670,430 690,400 630,400 580,430" fill="#0A1611" stroke="#00FF66" strokeWidth="8" />
+  <circle cx="630" cy="375" r="14" fill="#00F0FF" />
+  <circle cx="630" cy="375" r="6" fill="#FFFFFF" />
+
+  <!-- Tri-Kernel Delta -->
+  <polygon points="400,280 500,450 300,450" fill="#091811" stroke="#00FF66" strokeWidth="12" strokeLinejoin="round" />
+  <circle cx="400" cy="280" r="18" fill="#FFFFFF" />
+  <circle cx="500" cy="450" r="18" fill="#00FF66" />
+  <circle cx="300" cy="450" r="18" fill="#00F0FF" />
+  <circle cx="400" cy="390" r="10" fill="#00FF66" />
+</svg>

@@ -5,6 +5,8 @@ interface EnterpriseLogoProps {
   className?: string;
   showWordmark?: boolean;
   showSubtitle?: boolean;
+  useSvgAsset?: boolean;
+  variant?: "mark" | "horizontal";
 }
 
 export function EnterpriseLogo({
@@ -12,14 +14,34 @@ export function EnterpriseLogo({
   className = "",
   showWordmark = true,
   showSubtitle = false,
+  useSvgAsset = false,
+  variant = "mark",
 }: EnterpriseLogoProps) {
+  if (variant === "horizontal" && useSvgAsset) {
+    return (
+      <img
+        src="/assets/ksec_brand_logo_horizontal.svg"
+        alt="KSEC Sovereign AI Defense Substrate"
+        style={{ height: size, width: "auto" }}
+        className={`object-contain drop-shadow-[0_0_12px_rgba(0,245,155,0.35)] ${className}`}
+      />
+    );
+  }
+
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Vektörel Kurumsal Amblem (Zero HTTP-dependency Inline Vector) */}
+      {/* Vektörel Kurumsal Amblem */}
       <div
         style={{ width: size, height: size }}
         className="relative shrink-0 flex items-center justify-center transition-transform duration-300 ease-out hover:scale-105"
       >
+        {useSvgAsset ? (
+          <img
+            src="/assets/ksec_brand_mark.svg"
+            alt="KSEC Brand Mark"
+            className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(0,245,155,0.45)]"
+          />
+        ) : (
         <svg
           viewBox="0 0 800 800"
           className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(0,245,155,0.45)]"
@@ -79,6 +101,7 @@ export function EnterpriseLogo({
           <circle cx="400" cy="400" r="75" stroke="#00F59B" strokeWidth="0.75" strokeOpacity="0.2" strokeDasharray="3 9" fill="none" />
           <circle cx="400" cy="400" r="2" fill="#00F59B" opacity="0.5" />
         </svg>
+        )}
       </div>
 
       {/* Kurumsal Tipografi Kilidi (Wordmark Lockup) */}

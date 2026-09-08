@@ -12,7 +12,7 @@ interface OuroborosAnimatedLogoProps {
 export default function OuroborosAnimatedLogo({
   size = "w-48 h-48 sm:w-56 sm:h-56 lg:w-60 lg:h-60",
   className = "",
-  imageSrc = "/assets/ksec_enterprise_ouroboros.svg",
+  imageSrc = "/assets/ksec_loader_animation.svg",
   showAura = true,
 }: OuroborosAnimatedLogoProps) {
   return (
