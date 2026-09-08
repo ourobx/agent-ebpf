@@ -1,24 +1,27 @@
-import React from "react";
-import type { Metadata, Viewport } from "next";
-import Navigation from "@/components/Navigation";
+import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import KsecPreloader from "@/components/KsecPreloader";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
-  title: "KSEC // Agent-eBPF Enterprise AI Defense",
-  description: "Deterministic Ring-0 eBPF Runtime Security and Observability for AI Agents",
-  manifest: "/manifest.json",
+  title: "KSEC // Sovereign AI Defense Substrate",
+  description:
+    "Zero-overhead eBPF LSM enforcement layer for AI workloads. Intercept prompt injections, model exfiltration, and unauthorized execution at Ring-0.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
-    apple: "/apple-touch-icon.png",
+    apple: "/favicon.svg",
   },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
-  themeColor: "#040605",
 };
 
 export default function RootLayout({
@@ -27,22 +30,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark bg-black text-zinc-100 antialiased">
-      <body className="min-h-screen flex flex-col bg-black text-zinc-100 selection:bg-cyan-500/30 selection:text-cyan-200">
-        <Navigation />
-        <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
-        <footer className="border-t border-zinc-800/80 bg-zinc-950 py-6 px-4 sm:px-6 lg:px-8 font-mono text-[11px] text-zinc-500 text-center">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>© 2026 KSEC Space Inc. · Autonomous eBPF Guardrails</span>
-            <div className="flex items-center gap-4 text-zinc-400">
-              <span>Cloudflare Ingress</span>
-              <span>•</span>
-              <span>ClickHouse Columnar</span>
-              <span>•</span>
-              <span className="text-emerald-400">SLA: 99.999%</span>
-            </div>
-          </div>
-        </footer>
+    <html lang="en" className={`${inter.variable} ${mono.variable} dark antialiased`}>
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      </head>
+      <body className="min-h-screen bg-[#050706] text-[#E5F5EC] font-sans selection:bg-[#00FF66]/20 selection:text-[#00FF66]">
+        {/* Full-Screen Cybernetic Loading Animation */}
+        <KsecPreloader />
+        <div className="relative flex min-h-screen flex-col">
+          {children}
+        </div>
       </body>
     </html>
   );

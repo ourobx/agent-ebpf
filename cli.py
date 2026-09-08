@@ -19,11 +19,28 @@ except ImportError:
     from tools import ebpf_loader
 
 app = typer.Typer(
-    name="agent-ebpf",
-    help="Agent-eBPF: Production-Grade eBPF Engine & Security Management CLI",
+    name="ksec",
+    help="KSEC // Sovereign AI Defense Substrate (Linux 6.8+ eBPF LSM)",
     add_completion=False
 )
 console = Console()
+
+def print_banner():
+    banner = """[bold #00FF66]
+    ███████╗  ██████╗  ███████╗  ██████╗     ██╗  ██╗███████╗███████╗ ██████╗
+   ██╔════██╗██╔════╝ ██╔════██╗██╔════╝     ██║ ██╔╝██╔════╝██╔════╝██╔════╝
+   ██║  ██║██║  ███╗███████╔╝██║  ███╗     █████╔╝ ███████╗█████╗  ██║     
+   ██║  ██║██║   ██║██╔════╝ ██║   ██║     ██╔═██╗ ╚════██║██╔══╝  ██║     
+   ╚███████╔╝╚██████╔╝██║      ╚██████╔╝     ██║  ██╗███████║███████╗╚██████╗
+    ╚══════╝  ╚═════╝ ╚═╝       ╚═════╝      ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝[/bold #00FF66]
+[bold #00F59B]   RING-0 DETERMINISTIC LSM // ZERO-TOCTOU ED25519 // SUB-35µs SLA // ksec.space[/bold #00F59B]
+"""
+    console.print(banner)
+
+@app.callback()
+def main_callback():
+    """KSEC Sovereign AI Defense Substrate CLI"""
+    pass
 
 @app.command("build")
 def cmd_build():
@@ -71,9 +88,10 @@ def cmd_unload(interface: str = typer.Option("eth0", "--iface", "-i", help="Netw
 @app.command("status")
 def cmd_status():
     """Status: Displays loaded eBPF program state and packet counters."""
+    print_banner()
     try:
         stats = ebpf_loader.inspect_maps()
-        table = Table(title="Agent-eBPF Kernel Status Report")
+        table = Table(title="KSEC Ring-0 eBPF Kernel Status Report")
         table.add_column("Metric / State", style="cyan")
         table.add_column("Value", style="magenta")
 
@@ -222,4 +240,3 @@ def cmd_export_mcp(
 
 if __name__ == "__main__":
     app()
-

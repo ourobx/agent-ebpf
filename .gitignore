@@ -57,3 +57,5 @@ audit.json
 .github/
 .agents/artifacts/
 .vscode/
+*.tmp-*
+*.tsbuildinfo
