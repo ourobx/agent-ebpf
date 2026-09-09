@@ -1,0 +1,92 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '43 20 * * 4'
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # eBPF Kernel / C Programları
+          - language: c-cpp
+            build-mode: manual
+
+          # Userspace Agent (Rust kullanıyorsanız açık bırakın; Go ise 'go', Python ise 'python' yapın)
+          - language: rust
+            build-mode: manual
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # eBPF ve Kernel derleme araçlarının kurulumu
+      - name: Install eBPF Build Dependencies
+        if: matrix.language == 'c-cpp'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            llvm \
+            libelf-dev \
+            libbpf-dev \
+            linux-headers-$(uname -r) \
+            gcc-multilib \
+            build-essential
+
+      # Rust Userspace Agent bağımlılıkları (Aya / Libbpf-rs)
+      - name: Setup Rust Toolchain
+        if: matrix.language == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: bpfel-unknown-none # Aya tabanlı derlemeler yapılıyorsa
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: +security-extended,security-and-quality
+
+      # C / eBPF Manuel Derleme
+      - name: Build C / eBPF Code
+        if: matrix.language == 'c-cpp' && matrix.build-mode == 'manual'
+        run: |
+          # Projenizde Makefile veya CMake varsa ilgili komutu çalıştırın:
+          if [ -f "Makefile" ]; then
+            make
+          elif [ -f "CMakeLists.txt" ]; then
+            cmake -B build -S .
+            cmake --build build
+          else
+            echo "Özel C/eBPF derleme komutunuzu buraya ekleyin."
+          fi
+
+      # Rust Manuel Derleme
+      - name: Build Rust Code
+        if: matrix.language == 'rust' && matrix.build-mode == 'manual'
+        run: |
+          cargo check --all-targets
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          
